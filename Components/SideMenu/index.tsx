@@ -1,13 +1,9 @@
-import React from 'react'
-import { Button, Dimensions, PixelRatio, StyleSheet, TouchableHighlight, TouchableOpacity, View } from 'react-native'
+import React, { memo } from 'react'
+import { Dimensions, PixelRatio, StyleSheet } from 'react-native'
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedGestureHandler, withSpring, withTiming, Easing } from 'react-native-reanimated'
 import { PanGestureHandler } from 'react-native-gesture-handler'
 
-type Props={
-    title: string
-}
-
-const Box: React.FC<Props> = ({ title }) => {
+const SideMenuC: React.FC = () => {
   const widthUI = useSharedValue(20)
   const pressed = useSharedValue(false)
   const active = useSharedValue('#fff')
@@ -58,7 +54,7 @@ const Box: React.FC<Props> = ({ title }) => {
           <Animated.View style={[{
             flex: 1,
             borderRadius: 13,
-            marginRight: 50
+            marginRight: 50 / PixelRatio.getFontScale()
           }, backgroundColorA]}
           />
         </Animated.View>
@@ -77,4 +73,4 @@ const styles = StyleSheet.create({
   }
 })
 
-export default Box
+export default memo(SideMenuC, (prev, next) => JSON.stringify(prev) === JSON.stringify(next))

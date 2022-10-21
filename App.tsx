@@ -22,11 +22,10 @@ import RNBootSplash from 'react-native-bootsplash'
 import {
   Colors,
   DebugInstructions,
-  Header,
   LearnMoreLinks,
   ReloadInstructions
 } from 'react-native/Libraries/NewAppScreen'
-import Box from './Components/Box'
+import SideMenuC from './Components/SideMenu'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 const Section: React.FC<
@@ -86,7 +85,7 @@ const App = () => {
           barStyle={isDarkMode ? 'light-content' : 'dark-content'}
           backgroundColor={backgroundStyle.backgroundColor}
         />
-        <Box title='a' />
+        <SideMenuC />
 
         <ScrollView
           contentInsetAdjustmentBehavior='automatic'
