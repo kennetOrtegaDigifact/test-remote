@@ -8,8 +8,9 @@
  * @format
  */
 
-import React, { useEffect, type PropsWithChildren } from 'react'
+import React, { useEffect, useRef, type PropsWithChildren } from 'react'
 import {
+  Button,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -25,40 +26,9 @@ import {
   LearnMoreLinks,
   ReloadInstructions
 } from 'react-native/Libraries/NewAppScreen'
-import SideMenuC from './Components/SideMenu'
+import SideMenu from './Components/SideMenu'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-
-const Section: React.FC<
-  PropsWithChildren<{
-    title: string;
-  }>
-> = ({ children, title }) => {
-  const isDarkMode = useColorScheme() === 'dark'
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black
-          }
-        ]}
-      >
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark
-          }
-        ]}
-      >
-        {children}
-      </Text>
-    </View>
-  )
-}
+import DrawerLayout from 'react-native-gesture-handler/DrawerLayout'
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark'
@@ -76,43 +46,41 @@ const App = () => {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter
   }
 
-  return (
-    <GestureHandlerRootView
-      style={{ flex: 1 }}
-    >
-      <SafeAreaView style={backgroundStyle}>
-        <StatusBar
-          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-          backgroundColor={backgroundStyle.backgroundColor}
-        />
-        <SideMenuC />
+  function renderDrawer () {
+    return (
+      <View>
+        <Text>I am in the drawer!</Text>
+      </View>
+    )
+  }
 
-        <ScrollView
-          contentInsetAdjustmentBehavior='automatic'
-          style={backgroundStyle}
+  const drawerRef = useRef(null)
+
+  return (
+
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
+        <DrawerLayout
+          ref={drawerRef}
+          drawerWidth={250}
+          drawerPosition='left'
+          drawerType='front'
+          keyboardDismissMode='on-drag'
+          drawerBackgroundColor='#ddd'
+          renderNavigationView={renderDrawer}
+          onDrawerSlide={() => {
+            console.log('0CDIAJSIDYNAODNHOASYN')
+          }}
         >
-          <View
-            style={{
-              backgroundColor: isDarkMode ? Colors.black : Colors.white
-            }}
-          >
-            <Section title='Step Oneeeee'>
-              Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-              screen and then come back to see your edits.
-            </Section>
-            <Section title='See Your Changes'>
-              <ReloadInstructions />
-            </Section>
-            <Section title='Debug'>
-              <DebugInstructions />
-            </Section>
-            <Section title='Learn More'>
-              Read the docs to discover what to do next:
-            </Section>
-            <LearnMoreLinks />
+          <View>
+            <Button title='open' onPress={() => drawerRef.current.closeDrawer()} />
+            <Button
+              title='close'
+              onPress={() => drawerRef.current.closeDrawer()}
+            />
           </View>
-        </ScrollView>
-      </SafeAreaView>
+        </DrawerLayout>
+      </View>
     </GestureHandlerRootView>
   )
 }
