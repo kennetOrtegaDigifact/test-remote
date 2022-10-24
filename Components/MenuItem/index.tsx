@@ -17,10 +17,9 @@ type menuItemProps = {
     counter: number,
     backgroundColor: string,
     titleStyles: TextStyle,
-    inactiveIconColor: string
 }
 
-const MenuItemC: React.FC<menuItemProps> = ({ title = '', icon = { color: '', type: '', name: '', size: 24 }, inactiveIconColor, backgroundColor, counter = 0, titleStyles, withCounter = false, onPress = () => {} }) => {
+const MenuItemC: React.FC<menuItemProps> = ({ title = '', icon = { color: '', type: '', name: '', size: 24 }, backgroundColor, counter = 0, titleStyles, withCounter = false, onPress = () => {} }) => {
   return (
     <>
       <TouchableHighlight
@@ -45,7 +44,7 @@ const MenuItemC: React.FC<menuItemProps> = ({ title = '', icon = { color: '', ty
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Icon {...icon} />
-            <Text style={[styles.title, { color: inactiveIconColor }, titleStyles]}>{title}</Text>
+            <Text style={[styles.title, { color: theme.white }, titleStyles]}>{title}</Text>
           </View>
           {
             withCounter && (

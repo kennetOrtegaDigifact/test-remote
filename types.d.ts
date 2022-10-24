@@ -5,6 +5,8 @@ export interface Icon {
     type: string
 }
 
-export interface user {
-    taxid: string
+export interface userInterface {
+    taxid: string,
+    country: string,
+    Token: string,
 }

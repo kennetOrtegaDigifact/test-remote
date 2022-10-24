@@ -8,30 +8,31 @@
  * @format
  */
 
-import React, { useEffect, useRef, type PropsWithChildren } from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
-  Button,
   SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View
+  StatusBar
 } from 'react-native'
 import RNBootSplash from 'react-native-bootsplash'
-import {
-  Colors,
-  DebugInstructions,
-  LearnMoreLinks,
-  ReloadInstructions
-} from 'react-native/Libraries/NewAppScreen'
-import SideMenu from './Components/SideMenu'
+
+import { SideMenu } from './Components/SideMenu'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import DrawerLayout from 'react-native-gesture-handler/DrawerLayout'
+import { NativeRouter, Outlet, Route, Routes } from 'react-router-native'
+import { Provider } from 'react-redux'
+import { persistor, store } from './Redux/store'
+import { PersistGate } from 'redux-persist/integration/react'
+import { theme } from './Config/theme'
+import { Layout } from './Components/Layout'
+import { VerifyScreen } from './Views/VerifyScreen'
+import { Login } from './Views/Login'
+import { Consultas } from './Views/Consultas'
+import { Dashboard } from './Views/Dashboard'
+import { Dte } from './Views/DTE'
+import { Productos } from './Views/Productos'
+import { Clientes } from './Views/Clientes'
 
 const App = () => {
-  const isDarkMode = useColorScheme() === 'dark'
+  const drawerRef = useRef(null)
   RNBootSplash.hide({ fade: true })
   useEffect(() => {
     const init = async () => {
@@ -42,66 +43,34 @@ const App = () => {
       console.log('Bootsplash has been hidden successfully')
     })
   }, [])
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter
-  }
-
-  function renderDrawer () {
-    return (
-      <View>
-        <Text>I am in the drawer!</Text>
-      </View>
-    )
-  }
-
-  const drawerRef = useRef(null)
 
   return (
 
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <DrawerLayout
-          ref={drawerRef}
-          drawerWidth={250}
-          drawerPosition='left'
-          drawerType='front'
-          keyboardDismissMode='on-drag'
-          drawerBackgroundColor='#ddd'
-          renderNavigationView={renderDrawer}
-          onDrawerSlide={() => {
-            console.log('0CDIAJSIDYNAODNHOASYN')
-          }}
-        >
-          <View>
-            <Button title='open' onPress={() => drawerRef.current.closeDrawer()} />
-            <Button
-              title='close'
-              onPress={() => drawerRef.current.closeDrawer()}
-            />
-          </View>
-        </DrawerLayout>
-      </View>
+      <NativeRouter basename='/' initialEntries={['/']}>
+        <Provider store={store}>
+          <PersistGate loading={null} persistor={persistor}>
+            <SafeAreaView style={{ flex: 1 }}>
+              <StatusBar barStyle='light-content' backgroundColor={theme.purple} />
+              <SideMenu drawerRef={drawerRef}>
+                <Routes>
+                  <Route path='/' element={<VerifyScreen />} />
+                  <Route path='/Login' element={<Login />} />
+                  <Route path='/GT' element={<Layout drawerRef={drawerRef}><Outlet /></Layout>}>
+                    <Route path='Dashboard' element={<Dashboard key={1} />} />
+                    <Route path='Consultas' element={<Consultas key={2} />} />
+                    <Route path='DTE' element={<Dte key={3} />} />
+                    <Route path='Productos' element={<Productos key={4} />} />
+                    <Route path='Clientes' element={<Clientes key={5} />} />
+                  </Route>
+                </Routes>
+              </SideMenu>
+            </SafeAreaView>
+          </PersistGate>
+        </Provider>
+      </NativeRouter>
     </GestureHandlerRootView>
   )
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600'
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400'
-  },
-  highlight: {
-    fontWeight: '700'
-  }
-})
 
 export default App
