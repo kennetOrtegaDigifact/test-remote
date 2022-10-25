@@ -5,7 +5,7 @@ export interface IconType {
     name: string,
     size: number,
     color: string,
-    type: 'm' | 'a' | 'i' | 'visa'
+    type: 'm' | 'a' | 'i' | 'v'
 }
 
 export interface userInterface {
