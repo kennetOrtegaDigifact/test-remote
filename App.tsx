@@ -52,19 +52,17 @@ const App = () => {
           <PersistGate loading={null} persistor={persistor}>
             <SafeAreaView style={{ flex: 1 }}>
               <StatusBar barStyle='light-content' backgroundColor={theme.purple} />
-              <SideMenu drawerRef={drawerRef}>
-                <Routes>
-                  <Route path='/' element={<VerifyScreen />} />
-                  <Route path='/Login' element={<Login />} />
-                  <Route path='/GT' element={<Layout drawerRef={drawerRef}><Outlet /></Layout>}>
-                    <Route path='Dashboard' element={<Dashboard key={1} />} />
-                    <Route path='Consultas' element={<Consultas key={2} />} />
-                    <Route path='DTE' element={<Dte key={3} />} />
-                    <Route path='Productos' element={<Productos key={4} />} />
-                    <Route path='Clientes' element={<Clientes key={5} />} />
-                  </Route>
-                </Routes>
-              </SideMenu>
+              <Routes>
+                <Route path='/' element={<VerifyScreen />} />
+                <Route path='/Login' element={<Login />} />
+                <Route path='/GT' element={<SideMenu drawerRef={drawerRef}><Layout drawerRef={drawerRef}><Outlet /></Layout></SideMenu>}>
+                  <Route path='Dashboard' element={<Dashboard key={1} />} />
+                  <Route path='Consultas' element={<Consultas key={2} />} />
+                  <Route path='DTE' element={<Dte key={3} />} />
+                  <Route path='Productos' element={<Productos key={4} />} />
+                  <Route path='Clientes' element={<Clientes key={5} />} />
+                </Route>
+              </Routes>
             </SafeAreaView>
           </PersistGate>
         </Provider>
