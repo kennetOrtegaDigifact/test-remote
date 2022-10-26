@@ -8,7 +8,7 @@ export const useFormSchema = () => {
       type: 'picker',
       name: 'country',
       icon: {
-        name: 'web',
+        name: 'map-marker',
         color: theme.white,
         size: 20,
         type: 'm'
@@ -34,10 +34,10 @@ export const useFormSchema = () => {
       name: 'taxid',
       keyboardType: 'default',
       icon: {
-        name: 'idcard',
+        name: 'card-account-details',
         color: theme.white,
         size: 20,
-        type: 'a'
+        type: 'm'
       },
       placeholder: 'Identificador Tributario'
     },
@@ -46,10 +46,10 @@ export const useFormSchema = () => {
       name: 'username',
       keyboardType: 'default',
       icon: {
-        name: 'user',
+        name: 'person',
         color: theme.white,
         size: 20,
-        type: 'a'
+        type: 'i'
       },
       placeholder: 'Nombre de Usuario'
     },

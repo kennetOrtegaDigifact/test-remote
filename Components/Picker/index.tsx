@@ -170,6 +170,7 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
                     type: 'i'
                   }}
                   style={{
+                    flex: 1,
                     borderColor: theme.gray
                   }}
                   placeholder={searchlabel}
