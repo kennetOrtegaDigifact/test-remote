@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, StyleSheet, ScrollView, Image, PixelRatio } from 'react-native'
-import { InputIcon } from '../../Components/InputIcon'
+import { Picker } from '../../Components/Picker'
+import { countriesDictionary, LoginCountries } from '../../Config/dictionary'
 import { fonts, theme } from '../../Config/theme'
 export const Login: React.FC = () => {
   return (
@@ -39,6 +40,26 @@ export const Login: React.FC = () => {
           >Ya eres cliente de Digifact, ingresa con tu Identificador Tributario, usuario y contraseña. Si no recuerdas tu contraseña haz click en recuperar contraseña
           </Text>
         </View>
+        <Picker
+          labelStyle={{
+            color: theme.white
+          }}
+          items={LoginCountries}
+          withSearch
+          searchlabel='Buscar Pais'
+          labelKey='name_es'
+          valueKey='code'
+          defaultValue='-- Seleccione un pais --'
+          inputIcon={{
+            color: theme.white,
+            name: 'web',
+            size: 20,
+            type: 'm'
+          }}
+          style={{
+            borderColor: theme.orange
+          }}
+        />
       </ScrollView>
     </View>
   )

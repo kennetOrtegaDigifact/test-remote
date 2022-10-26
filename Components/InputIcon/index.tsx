@@ -14,7 +14,12 @@ export const InputIcon: React.FC<inputProps> = React.memo(function InputIcon ({ 
   return (
     <>
       <View style={[styles.container, containerStyle]}>
-        <Icon {...icon} />
+        <Icon
+          name={icon?.name || ''}
+          size={icon?.size || 20}
+          type={icon?.type || 'i'}
+          color={icon?.color || theme.purple}
+        />
         <TextInput
           {...props}
           returnKeyType='next'
@@ -27,7 +32,10 @@ export const InputIcon: React.FC<inputProps> = React.memo(function InputIcon ({ 
             }}
           >
             <Icon
-              {...switchIcon}
+              name={switchIcon?.name || ''}
+              size={switchIcon?.size || 20}
+              type={switchIcon?.type || 'i'}
+              color={switchIcon?.color || theme.purple}
             />
           </TouchableOpacity>
         )}

@@ -6,7 +6,7 @@ import Visa from 'react-native-vector-icons/FontAwesome5'
 import { PixelRatio } from 'react-native'
 import { IconType } from '../../types'
 
-const IconC: React.FC<IconType> = ({ color, name, size, type }) => {
+const IconC: React.FC<IconType> = ({ name, size, color, type }) => {
   const material = MaterialIcon.hasIcon(name)
   const ant = AntIcon.hasIcon(name)
   const ionic = Ionicon.hasIcon(name)

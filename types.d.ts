@@ -33,3 +33,10 @@ export type formulario = {
     rules?: Omit<RegisterOptions<FieldValues, FieldPath<FieldValues>>, 'valueAsNumber'|'valueAsDate'|'setValueAs'|'disabled'>,
     style?: ViewStyle
 }
+
+export type countriesDictionaryType ={
+    name_en: string,
+    name_es: string,
+    dial_code: string,
+    code: string
+}
