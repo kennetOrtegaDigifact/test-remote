@@ -56,6 +56,7 @@ type pickerProps={
     searchlabel?: string,
     withSearch?: boolean,
     validateFunction?: () => boolean,
+    onValueChange?: (value: any) => void,
 }
 
 export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
@@ -71,7 +72,8 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
   minHeight = 20,
   searchlabel = 'Buscar...',
   withSearch = false,
-  validateFunction = () => true
+  validateFunction = () => true,
+  onValueChange = () => {}
 }) {
   const scrollY = useRef(new Animated.Value(0)).current
   const [visible, setVisible] = useState<boolean>(false)
@@ -93,6 +95,12 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
       }}
     />
   )
+
+  useEffect(() => {
+    if (select) {
+      onValueChange(select)
+    }
+  }, [select])
   useEffect(() => {
     if (typeof items[0] === 'object') {
       items.push({

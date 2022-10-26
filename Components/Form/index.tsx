@@ -1,24 +1,30 @@
 import React, { useCallback, useState } from 'react'
-import { TextStyle, ViewStyle, View } from 'react-native'
+import { TextStyle, ViewStyle, View, PixelRatio, StyleSheet, Text, TextInputProps, StyleProp, TextInput } from 'react-native'
 import { useForm, Controller, UseFormProps } from 'react-hook-form'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
 import { formulario, IconType } from '../../types'
 import moment from 'moment'
-import { theme } from '../../Config/theme'
+import { fonts, theme } from '../../Config/theme'
 import { InputIcon } from '../InputIcon'
 import { ErrorLabel } from '../ErrorLabel'
+import { TouchableOpacity } from 'react-native-gesture-handler'
+import Icon from '../Icon'
+import { Picker } from '../Picker'
 
 type formProps={
     form: Array<formulario>,
     settings: UseFormProps,
-    onSubmit: () => void,
-    inputStyle: ViewStyle,
-    buttonText: string,
-    buttonTextStyle: TextStyle,
-    buttonIcon: IconType,
+    onSubmit: (values: any) => void,
+    inputStyle?: TextStyle,
+    inputProps?: TextInputProps,
+    buttonText?: string,
+    buttonTextStyle?: TextStyle,
+    buttonStyles?: ViewStyle,
+    buttonIcon?: IconType,
+    containerInputStyle?: ViewStyle
 }
-export const Form: React.FC<formProps> = ({ form, settings, buttonIcon, onSubmit, inputStyle, buttonTextStyle, buttonText }) => {
+export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onSubmit = () => {}, inputStyle, buttonTextStyle, buttonText, buttonStyles, containerInputStyle, inputProps }) => {
   const { control, handleSubmit, formState: { errors }, setValue } = useForm(settings)
   const [date, setDate] = useState<boolean>(false)
   const handleChangeDate = useCallback((e: DateTimePickerEvent, fieldName: string) => {
@@ -30,7 +36,7 @@ export const Form: React.FC<formProps> = ({ form, settings, buttonIcon, onSubmit
     setValue(fieldName, (value[valueKey] || value))
   }, [setValue])
 
-  const handleDefaultValuePicker = useCallback((data: [], labelKey: string, valueKey: string, defaultValue: string, value: {[key: string]: any[]}) => {
+  const handleDefaultValuePicker = useCallback((data: any[], labelKey: string, valueKey: string, defaultValue: string, value: {[key: string]: any[]}) => {
     return data?.find(d => d?.[valueKey] === value || d === value)?.[labelKey || ''] || value || defaultValue
   }, [])
 
@@ -48,6 +54,7 @@ export const Form: React.FC<formProps> = ({ form, settings, buttonIcon, onSubmit
                     onChangeText={onChange}
                     keyboardType={f?.keyboardType || 'default'}
                     placeholder={f?.placeholder || 'default placeholder'}
+                    secureTextEntry={f?.secureTextEntry}
                     icon={{
                       name: f?.icon?.name || 'reorder-three',
                       size: f?.icon?.size || 24,
@@ -59,17 +66,84 @@ export const Form: React.FC<formProps> = ({ form, settings, buttonIcon, onSubmit
                         color: theme.gray
                       }, inputStyle
                     ]}
+                    containerStyle={containerInputStyle}
+                    {...inputProps}
                   />
                 )}
                 rules={f?.rules}
                 name={f?.name}
               />
-              {(errors?.[f?.name]?.message) && (<ErrorLabel message={errors} />)}
+              {(errors?.[f?.name]?.message) && (<ErrorLabel message={errors?.[f?.name!]?.message} />)}
+            </View>
+          )
+        }
+        if (f?.type === 'picker') {
+          return (
+            <View key={JSON.stringify(f)}>
+              <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <Picker
+                    items={f?.picker?.data || []}
+                    defaultValue={handleDefaultValuePicker(f?.picker?.data!, f?.picker?.labelKey!, f?.picker?.valueKey!, f?.picker?.defaultValue!, value)}
+                    labelKey={f?.picker?.labelKey || ''}
+                    valueKey={f?.picker?.valueKey || ''}
+                    inputIcon={{
+                      name: f?.icon?.name || '',
+                      size: f?.icon?.size || 20,
+                      type: f?.icon?.type || 'i',
+                      color: f?.icon?.color || theme.gray50
+                    }}
+                    withSearch={f?.picker?.withSearch}
+                    searchlabel={f?.picker?.searchlabel}
+                    labelStyle={f?.picker?.labelStyle}
+                    style={f?.picker?.style}
+                    onValueChange={(e) => {
+                      handleChangePicker(f?.name, e, f?.picker?.valueKey!)
+                    }}
+                  />
+                )}
+                rules={f?.rules}
+                name={f?.name}
+              />
+              {(errors?.[f?.name]?.message) && (<ErrorLabel message={errors?.[f?.name!]?.message} />)}
             </View>
           )
         }
         return null
       })}
+      <TouchableOpacity
+        style={[styles.button, buttonStyles]}
+        onPress={handleSubmit(onSubmit)}
+      >
+        <Icon
+          name={buttonIcon?.name || ''}
+          size={buttonIcon?.size || 20}
+          color={buttonIcon?.color || theme.gray50}
+          type={buttonIcon?.type || 'i'}
+        />
+        <Text style={[styles.buttonText, buttonTextStyle]}>{buttonText}</Text>
+      </TouchableOpacity>
     </>
   )
 }
+
+const styles = StyleSheet.create({
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13 / PixelRatio.getFontScale(),
+    paddingVertical: 10 / PixelRatio.getFontScale(),
+    paddingHorizontal: 15 / PixelRatio.getFontScale(),
+    marginVertical: 10 / PixelRatio.getFontScale(),
+    backgroundColor: theme.orange
+  },
+  buttonText: {
+    textAlign: 'center',
+    color: theme.gray,
+    fontSize: fonts.subHeader,
+    fontWeight: '600',
+    marginLeft: 5 / PixelRatio.getFontScale()
+  }
+})

@@ -1,10 +1,9 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
-import { FieldErrorsImpl, FieldError } from 'react-hook-form'
 import Icon from '../Icon'
 type props={
-    message: Pick<FieldErrorsImpl<FieldError>, 'message'> | string
+    message: string
 }
 export const ErrorLabel: React.FC<props> = React.memo(function ErrorLabel ({ message = '' }) {
   return (
