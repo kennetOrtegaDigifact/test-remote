@@ -101,16 +101,16 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
       onValueChange(select)
     }
   }, [select])
-  useEffect(() => {
-    if (typeof items[0] === 'object') {
-      items.push({
-        [labelKey!]: defaultValue,
-        [valueKey!]: defaultValue
-      })
-    } else if (typeof items[0] === 'string') {
-      items.push(defaultValue)
-    }
-  }, [])
+  // useEffect(() => {
+  //   if (typeof items[0] === 'object') {
+  //     items.push({
+  //       [labelKey!]: defaultValue,
+  //       [valueKey!]: defaultValue
+  //     })
+  //   } else if (typeof items[0] === 'string') {
+  //     items.push(defaultValue)
+  //   }
+  // }, [])
 
   return (
     <>

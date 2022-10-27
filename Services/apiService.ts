@@ -6,6 +6,7 @@ import DeviceInfo from 'react-native-device-info'
 import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
+import {InfoFiscalUser} from '../types'
 const parser = new XMLParser(options)
 export const loginService = async ({ Username = '', Password = '', taxid, user, country, nit }) => {
   console.log('BODY LOGIN JSON', JSON.stringify({ Username, Password, nit }))
@@ -89,7 +90,20 @@ export const loginService = async ({ Username = '', Password = '', taxid, user, 
                             const infoCount = info.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
                             if (infoCount > 0) {
                               const rinf = info.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-                              const infoFiscalUser = {}
+                              const infoFiscalUser: InfoFiscalUser={
+                              nombre: ''
+                            calle: ''
+                            ciudad: ''
+                            zona: ''
+                            frases: ''
+                            afiliacion: rinf.AfiliacionIVA
+                            postalEstablecimientos: rinf.ESTCODPOSTAL
+                            establecimientos: establecimientosSpliter({ establecimientos: rinf.EST })
+                            dirEstablecimientos: rinf.ESTDIR
+                            cm: rinf.cm
+                            tipoPersoneria: rinf.TipoPersoneria
+                            nit: nit
+                              }
                               infoFiscalUser.nombre = rinf.Nom
                               infoFiscalUser.calle = rinf.Ca
                               infoFiscalUser.ciudad = rinf.cd

@@ -24,7 +24,7 @@ export const SideMenu: React.FC<PropsWithChildren<{drawerRef: React.RefObject<Re
       }}
       >
         <Image
-          source={require('../../Public/img/BlancoHorizontal-07.png')}
+          source={require('../../Public/img/BlancoHorizontal-07.webp')}
           style={{
             width: 190,
             height: 100,

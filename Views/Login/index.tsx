@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
           }}
         >
           <Image
-            source={require('../../Public/img/Logo1.png')}
+            source={require('../../Public/img/Logo1.webp')}
             style={{
               width: 120 / PixelRatio.getFontScale(),
               height: 100 / PixelRatio.getFontScale(),

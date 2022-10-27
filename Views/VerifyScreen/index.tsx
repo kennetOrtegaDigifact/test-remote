@@ -8,20 +8,20 @@ export const VerifyScreen: React.FC = () => {
   const user = useSelector((state: ReduxState) => state.userDB)
   const navigate = useNavigate()
   useEffect(() => {
-    if (user.Token.length) {
+    if (user?.token?.length) {
       setTimeout(() => {
         navigate(`/${user.country}/Dashboard`, { replace: false })
       }, 1000)
     } else {
       setTimeout(() => {
-        navigate('/Login', { replace: false })
+        navigate('/Login', { replace: true })
       }, 1000)
     }
   }, [user])
   return (
     <View style={[styles.container]}>
       <Image
-        source={require('../../Public/img/Logo1.png')}
+        source={require('../../Public/img/Logo1.webp')}
         style={{
           width: 150,
           height: 125,
