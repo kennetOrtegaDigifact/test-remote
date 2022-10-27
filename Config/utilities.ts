@@ -1,10 +1,11 @@
+import { Establecimiento } from '../types'
 
 /**
  * It takes a string, splits it into an array, then maps over the array, and returns an array of
  * objects
  * @returns An array of objects.
  */
-export const establecimientosSpliter = ({ establecimientos = '' }) => {
+export const establecimientosSpliter = ({ establecimientos = '' }): Establecimiento[] => {
   const est = typeof establecimientos === 'string'
     ? establecimientos?.split('|')?.map(e => {
       if (typeof e === 'string') {

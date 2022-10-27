@@ -18,7 +18,8 @@ export type Establecimiento={
     codPostal: string,
     pais: string,
     estado: string,
-    granted: boolean
+    granted?: boolean
+    nit?: string | number
 }
 
 export type InfoFiscalUser={
@@ -42,6 +43,26 @@ export type SharedData={
     creada: Date,
     expira: Date,
     estado: string
+}
+
+export type PermisosPadre = {
+    idRight: number,
+    description: string,
+    granted: boolean
+}
+
+export type PermisoPorAccion = {
+    idActionRight: string|number,
+    description: string,
+    idRight: string|number,
+    page: string,
+    granted: boolean
+}
+
+export type LogoPorEstablecimiento = Array<{[key: number|string]: string}>
+export type Logos={
+    logoGeneral: string,
+    logoPorEstablecimiento: LogoPorEstablecimiento
 }
 
 export type ConfiguracionApp={
@@ -121,6 +142,7 @@ export type formulario = {
     keyboardType?: KeyboardType,
     disabled?: boolean,
     secureTextEntry?: boolean,
+    switchIcon?: IconType,
     picker?: {
         data: Array<any>,
         labelKey: string,

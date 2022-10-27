@@ -6,9 +6,9 @@ import DeviceInfo from 'react-native-device-info'
 import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
-import {InfoFiscalUser} from '../types'
+import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos } from '../types'
 const parser = new XMLParser(options)
-export const loginService = async ({ Username = '', Password = '', taxid, user, country, nit }) => {
+export const loginService = async ({ Username = '', Password = '', taxid = '', user = '', country = '', nit = '' }) => {
   console.log('BODY LOGIN JSON', JSON.stringify({ Username, Password, nit }))
   return globalThis.fetch(urlWsToken, {
     method: 'POST',
@@ -90,19 +90,19 @@ export const loginService = async ({ Username = '', Password = '', taxid, user, 
                             const infoCount = info.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
                             if (infoCount > 0) {
                               const rinf = info.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-                              const infoFiscalUser: InfoFiscalUser={
-                              nombre: ''
-                            calle: ''
-                            ciudad: ''
-                            zona: ''
-                            frases: ''
-                            afiliacion: rinf.AfiliacionIVA
-                            postalEstablecimientos: rinf.ESTCODPOSTAL
-                            establecimientos: establecimientosSpliter({ establecimientos: rinf.EST })
-                            dirEstablecimientos: rinf.ESTDIR
-                            cm: rinf.cm
-                            tipoPersoneria: rinf.TipoPersoneria
-                            nit: nit
+                              const infoFiscalUser: InfoFiscalUser = {
+                                nombre: '',
+                                calle: '',
+                                ciudad: '',
+                                zona: '',
+                                frases: '',
+                                afiliacion: '',
+                                postalEstablecimientos: 1010,
+                                establecimientos: establecimientosSpliter({ establecimientos: '' }),
+                                dirEstablecimientos: '',
+                                cm: '',
+                                tipoPersoneria: '',
+                                nit
                               }
                               infoFiscalUser.nombre = rinf.Nom
                               infoFiscalUser.calle = rinf.Ca
@@ -143,13 +143,20 @@ export const loginService = async ({ Username = '', Password = '', taxid, user, 
                                   if (sharedCount > 0) {
                                     const sh = shared.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
                                     // console.log('RESPONSE SHARED INFO T ', sh)
-                                    const sharedData = {}
-                                    sharedData.name = sh.Name
+                                    const sharedData: SharedData = {
+                                      nombre: '',
+                                      creada: new Date(),
+                                      expira: new Date(),
+                                      estado: '',
+                                      paquete: ''
+                                    }
+                                    sharedData.nombre = sh.Name
                                     sharedData.paquete = sh.Paquete
                                     sharedData.creada = sh.CreationDate
                                     sharedData.expira = sh.Expira
                                     sharedData.estado = sh.BundleExpired
 
+                                    // ESTABLECIMIENTOS
                                     return globalThis.fetch(urlWsSoap, {
                                       method: 'post',
                                       headers: { 'Content-Type': 'text/xml' },
@@ -180,8 +187,20 @@ export const loginService = async ({ Username = '', Password = '', taxid, user, 
                                           const establecimientos = []
                                           establecimientos.push(estRows)
                                           // console.log('ESTABLECIMIENTOS RESPONSE', establecimientos)
-                                          const Establecimientos = establecimientos.flat().map(e => {
-                                            const obj = {}
+                                          const Establecimientos: Establecimiento[] = establecimientos.flat().map(e => {
+                                            const obj: Establecimiento = {
+                                              id: '',
+                                              numero: 0,
+                                              nombre: '',
+                                              direccion: '',
+                                              municipio: '',
+                                              departamento: '',
+                                              codPostal: '',
+                                              pais: '',
+                                              estado: '',
+                                              granted: true,
+                                              nit
+                                            }
                                             obj.id = e.idEstablecimiento || ''
                                             obj.numero = e.ne || ''
                                             obj.nombre = e.nombre || ''
@@ -222,19 +241,19 @@ export const loginService = async ({ Username = '', Password = '', taxid, user, 
                                               const configCount = configDATA.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
                                               if (configCount > 0) {
                                                 const configRows = configDATA.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-                                                const arrayConfig = []
+                                                const arrayConfig: ConfiguracionApp[] = []
                                                 arrayConfig.push(configRows)
                                                 return getPermissionsCatalog({ requestor, taxid, country, userName: Username })
                                                   .then(resCatalogoPermisos => {
-                                                    if (resCatalogoPermisos.code === appCodes.ok) {
+                                                    if (resCatalogoPermisos?.code === appCodes.ok) {
                                                       return getUserPermissions({ requestor, taxid, country, userName: Username, usuario: user })
                                                         .then(resUserPermissions => {
                                                           if (resUserPermissions.code === appCodes.ok) {
                                                             const permisos = {}
                                                             return getUserActions({ requestor, taxid, country, userName: Username, usuario: user })
                                                               .then(resA => {
-                                                                if (resA.code === appCodes.ok) {
-                                                                  resUserPermissions.data.forEach(e => {
+                                                                if (resA?.code === appCodes.ok) {
+                                                                  resUserPermissions?.data.forEach(e => {
                                                                     const permiso = {
                                                                       granted: e.granted
                                                                     }
@@ -1330,7 +1349,7 @@ export const cancelDTEService = async ({ Token, userName, taxid, authorizationNu
     </dte:SAT>
   </dte:GTAnulacionDocumento>`
   console.log('CANCEL XML', xml)
-  return global.fetch(`${urlWsRestV2}FELRequest?NIT=${taxid}&TIPO=ANULAR_FEL_TOSIGN&FORMAT=PDF`, {
+  return globalThis.fetch(`${urlWsRestV2}FELRequest?NIT=${taxid}&TIPO=ANULAR_FEL_TOSIGN&FORMAT=PDF`, {
     method: 'post',
     headers: {
       'Content-Type': 'application/xml',
@@ -1353,7 +1372,7 @@ export const cancelDTEService = async ({ Token, userName, taxid, authorizationNu
 }
 
 export const getAllProductsService = async ({ requestor, taxid, userName, country, signal = new globalThis.AbortController().signal }) => {
-  return global.fetch(urlWsSoap, {
+  return globalThis.fetch(urlWsSoap, {
     signal,
     method: 'post',
     headers: { 'Content-Type': 'text/xml' },
@@ -1950,15 +1969,26 @@ export const getAllEstablecimientos = async ({ requestor, taxid, country, userNa
           const dataArr = []
           dataArr.push(data)
 
-          const establecimientos = dataArr.flat().map(e => {
-            const obj = {}
+          const establecimientos: Establecimiento[] = dataArr.flat().map(e => {
+            const obj: Establecimiento = {
+              id: '',
+              codPostal: '1010',
+              departamento: '',
+              direccion: '',
+              estado: '',
+              municipio: '',
+              nombre: '',
+              numero: 0,
+              pais: '',
+              nit: ''
+            }
             obj.estado = e.Estado
             obj.codPostal = e.codPostal
             obj.departamento = e.departamento
             obj.municipio = e.municipio
             obj.direccion = e.direccion
             obj.id = e.dirEstablecimiento
-            obj.ne = e.ne
+            obj.numero = e.ne
             obj.nombre = e.nombre
             obj.nit = e.nit
             return obj
@@ -2021,8 +2051,12 @@ export const getUserPermissions = async ({ requestor, taxid, country, userName, 
           const fatherRows = []
           const dataFather = father.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
           fatherRows.push(dataFather)
-          const fatherAccess = fatherRows?.flat()?.map(e => {
-            const obj = {}
+          const fatherAccess: PermisosPadre[] = fatherRows?.flat()?.map(e => {
+            const obj: PermisosPadre = {
+              idRight: 0,
+              description: '',
+              granted: true
+            }
             obj.idRight = e.IDRight
             obj.description = e.Descripcion
             obj.granted = e.Granted
@@ -2083,8 +2117,14 @@ export const getUserActions = async ({ requestor, taxid, country, userName, usua
           const actionRows = []
           const dataActions = actions.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
           actionRows.push(dataActions)
-          const actionAccess = actionRows?.flat()?.map(a => {
-            const action = {}
+          const actionAccess: PermisoPorAccion[] = actionRows?.flat()?.map(a => {
+            const action: PermisoPorAccion = {
+              description: '',
+              granted: true,
+              idActionRight: '',
+              idRight: '',
+              page: ''
+            }
             action.idActionRight = a.idActionRight
             action.description = a.actionRight
             action.idRight = a.idRight
@@ -2395,8 +2435,7 @@ export const addContingencia = async ({ invoice, ne, serialTerminal, numAcceso, 
   return globalThis.fetch(urlWsSoap, {
     method: 'POST',
     headers: { 'Content-Type': 'text/xml', Accept: 'application/json' },
-    body: xml,
-    timeoutInterval: 10000// timeout after 10 seconds
+    body: xml
   }).then(res => res.text())
     .then(response => {
       const data = parser.parse(response)
@@ -2440,8 +2479,7 @@ export const agregarErrorContingencia = async ({ invoiceB64, numAcceso, user, er
   return globalThis.fetch(urlWsSoap, {
     method: 'POST',
     headers: { 'Content-Type': 'text/xml' },
-    body: request,
-    timeoutInterval: 10000// timeout after 10 seconds
+    body: request
   })
     .then(res => res.text())
     .then(response => {
@@ -2468,22 +2506,6 @@ export const agregarErrorContingencia = async ({ invoiceB64, numAcceso, user, er
 }
 
 export const getProductsResumen = async ({ user, filter }) => {
-  // const request = `<?xml version="1.0" encoding="utf-8"?>
-  // <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  //     <soap:Body>
-  //         <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-  //             <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
-  //             <Transaction>SHARED_INFO_EFACE</Transaction>
-  //             <Country>GT</Country>
-  //             <Entity>000000123456</Entity>
-  //             <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-  //             <UserName>GT.000000123456.admon</UserName>
-  //             <Data1>SHARED_NFRONT_GETPRODUCTOSBYDATE</Data1>
-  //             <Data2>STAXID|${taxid}|FECHAINICIAL|${fechaInicial}|FECHAFINAL|${fechaFinal}</Data2>
-  //             <Data3></Data3>
-  //         </RequestTransaction>
-  //     </soap:Body>
-  // </soap:Envelope>`
   const request = `<?xml version="1.0" encoding="utf-8"?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
       <soap:Body>
@@ -2504,8 +2526,7 @@ export const getProductsResumen = async ({ user, filter }) => {
   return globalThis.fetch(urlWsSoap, {
     method: 'POST',
     headers: { 'Content-Type': 'text/xml' },
-    body: request,
-    timeoutInterval: 10000// timeout after 10 seconds
+    body: request
   })
     .then(res => res.text())
     .then(response => {
@@ -2556,23 +2577,26 @@ export const getProductsResumen = async ({ user, filter }) => {
     })
 }
 
-export const getLogos = async ({ taxid = '', establecimientos = [] }) => {
-  const URL_BASE = `https://digifact-logo.s3.amazonaws.com/GT/logo/${taxid}.jpg`
-
+export const getLogos = async ({ taxid = '', establecimientos = [] }): Promise<Logos> => {
+  const URL_BASE: string = `https://digifact-logo.s3.amazonaws.com/GT/logo/${taxid}.jpg`
   return ReactNativeBlobUtil
     .fetch('GET', URL_BASE)
     .then(res => res.base64())
     .then(async response => {
       // console.log('RESPONSE IMAGE', response)
-      const obj = {}
+      const obj: Logos = {
+        logoGeneral: '',
+        logoPorEstablecimiento: [{ [-1]: '' }]
+      }
       obj.logoGeneral = response?.length > 1000 ? response : ''
-      obj.logoPorEstablecimiento = {}
-      for (const est of establecimientos) {
+      // obj.logoPorEstablecimiento = {}
+      let est: Establecimiento
+      for (est of establecimientos) {
         const URL_BASE_EST = `https://digifact-logo.s3.amazonaws.com/GT/logo/${taxid}_${est?.numero}_APP.jpg`
         await ReactNativeBlobUtil.fetch('GET', URL_BASE_EST)
           .then(res => res.base64())
           .then(responseEst => {
-            obj.logoPorEstablecimiento[est?.numero] = responseEst?.length > 1000 ? responseEst : ''
+            obj.logoPorEstablecimiento[est?.numero!] = responseEst?.length > 1000 ? responseEst : ''
           })
       }
       return obj
@@ -2639,7 +2663,7 @@ export const getDecimalsService = async ({ taxid = '' }) => {
     })
 }
 
-export const uploadLogoService = async ({ taxid, extension, codigoEstablecimiento = '', logobase64, APIMSTOKEN }) => {
+export const uploadLogoService = async ({ taxid = '', extension = 'jpg', codigoEstablecimiento = '', logobase64 = '', APIMSTOKEN = '' }) => {
   return globalThis.fetch(`${urlApiMs}/Logo/Upload`, {
     method: 'POST',
     headers: {

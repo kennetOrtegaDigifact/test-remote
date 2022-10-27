@@ -58,6 +58,12 @@ export const useFormSchema = () => {
       name: 'password',
       keyboardType: 'default',
       secureTextEntry: true,
+      switchIcon: {
+        name: 'eye',
+        color: theme.white,
+        size: 24,
+        type: 'i'
+      },
       icon: {
         name: 'lock',
         color: theme.white,

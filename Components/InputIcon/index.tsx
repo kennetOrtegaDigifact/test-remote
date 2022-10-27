@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { PixelRatio, StyleSheet, TextInput, TextInputProps, TouchableOpacity, View, ViewStyle } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
 import { IconType } from '../../types'
@@ -6,11 +6,12 @@ import Icon from '../Icon'
 interface inputProps extends TextInputProps {
     icon?: IconType,
     switchIcon?: IconType,
-    switchState?: React.Dispatch<React.SetStateAction<boolean>>,
+    isSecureTextInput?: boolean,
     containerStyle?: ViewStyle,
     disabled?: boolean
 }
-export const InputIcon: React.FC<inputProps> = React.memo(function InputIcon ({ containerStyle, icon, switchIcon, switchState, disabled = false, ...props }) {
+export const InputIcon: React.FC<inputProps> = React.memo(function InputIcon ({ containerStyle, icon, switchIcon, isSecureTextInput = false, disabled = false, ...props }) {
+  const [visible, setVisible] = useState(isSecureTextInput)
   return (
     <>
       <View style={[styles.container, containerStyle]}>
@@ -23,17 +24,18 @@ export const InputIcon: React.FC<inputProps> = React.memo(function InputIcon ({ 
         <TextInput
           {...props}
           returnKeyType='next'
+          secureTextEntry={visible}
           editable={!disabled}
         />
-        {switchState && (
+        {isSecureTextInput && (
           <TouchableOpacity
             onPress={() => {
-              switchState((prev: boolean) => !prev)
+              setVisible((prev: boolean) => !prev)
             }}
           >
             <Icon
-              name={switchIcon?.name || ''}
-              size={switchIcon?.size || 20}
+              name={visible ? (switchIcon?.name || 'eye') : 'eye-off'}
+              size={switchIcon?.size || 24}
               type={switchIcon?.type || 'i'}
               color={switchIcon?.color || theme.purple}
             />

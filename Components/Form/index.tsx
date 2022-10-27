@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { TextStyle, ViewStyle, View, PixelRatio, StyleSheet, Text, TextInputProps, StyleProp, TextInput } from 'react-native'
+import { TextStyle, ViewStyle, View, PixelRatio, StyleSheet, Text, TextInputProps, StyleProp, TextInput, ActivityIndicator } from 'react-native'
 import { useForm, Controller, UseFormProps } from 'react-hook-form'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
@@ -25,7 +25,7 @@ type formProps={
     containerInputStyle?: ViewStyle
 }
 export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onSubmit = () => {}, inputStyle, buttonTextStyle, buttonText, buttonStyles, containerInputStyle, inputProps }) => {
-  const { control, handleSubmit, formState: { errors }, setValue } = useForm(settings)
+  const { control, handleSubmit, formState: { errors, isSubmitting, isSubmitted }, setValue } = useForm(settings)
   const [date, setDate] = useState<boolean>(false)
   const handleChangeDate = useCallback((e: DateTimePickerEvent, fieldName: string) => {
     setValue(fieldName, moment(e.nativeEvent.timestamp).format('DD-MM-YYYY'))
@@ -55,6 +55,8 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
                     keyboardType={f?.keyboardType || 'default'}
                     placeholder={f?.placeholder || 'default placeholder'}
                     secureTextEntry={f?.secureTextEntry}
+                    isSecureTextInput={f?.secureTextEntry}
+                    switchIcon={f?.switchIcon}
                     icon={{
                       name: f?.icon?.name || 'reorder-three',
                       size: f?.icon?.size || 24,
@@ -115,14 +117,26 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
       <TouchableOpacity
         style={[styles.button, buttonStyles]}
         onPress={handleSubmit(onSubmit)}
+        disabled={isSubmitting}
       >
-        <Icon
-          name={buttonIcon?.name || ''}
-          size={buttonIcon?.size || 20}
-          color={buttonIcon?.color || theme.gray50}
-          type={buttonIcon?.type || 'i'}
-        />
-        <Text style={[styles.buttonText, buttonTextStyle]}>{buttonText}</Text>
+        {!isSubmitting
+          ? (
+            <>
+              <Icon
+                name={buttonIcon?.name || ''}
+                size={buttonIcon?.size || 20}
+                color={buttonIcon?.color || theme.gray50}
+                type={buttonIcon?.type || 'i'}
+              />
+              <Text style={[styles.buttonText, buttonTextStyle]}>{buttonText}</Text>
+            </>
+            )
+          : (
+            <ActivityIndicator
+              size='large'
+              color={theme.gray}
+            />
+            )}
       </TouchableOpacity>
     </>
   )

@@ -10,11 +10,16 @@ import deviceInfoModule from 'react-native-device-info'
 export const Login: React.FC = () => {
   const { loginFormSchema } = useFormSchema()
   const toast = useToast()
-  const onSubmit = (values: {taxid: string, country: string, password: string, username: string}) => {
+  const onSubmit = async (values: {taxid: string, country: string, password: string, username: string}): Promise<void> => {
     console.log('LOGIN VALUES', values)
     toast.show('Iniciando Sesion', {
       type: 'loading'
     })
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('testing'))
+      }, 1000)
+    }).catch(err => err)
   }
   return (
     <View style={[styles.container]}>
