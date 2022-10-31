@@ -8,7 +8,7 @@ export interface IconType {
     type: 'm' | 'a' | 'i' | 'v'
 }
 
-export type AppCodes={
+export type AppCodes = {
   dataVacio: number
   ok: number
   processError: number
@@ -101,11 +101,11 @@ export type Usuario = {
     taxid: string,
     country: string,
     userName: string,
-    firstName?: string,
-    lastName?: string,
+    firstNames?: string,
+    lastNames?: string,
     nombre: string,
     email?: string,
-    telephone?: string,
+    telefono?: string,
     GR?: string,
 }
 
@@ -209,7 +209,13 @@ export type Filter={
     establecimientos?: Establecimiento
     nitReceptor?: string
     porAnulados?: { value: number | string }
-    tipoDocumento?: { no?: number | string }
+    tipoDocumento?: {no?: number|string}
+    numeroSerie?: string
+    allDTESorUsername?: string
+    amountFrom?: number
+    amountTo?: number
+    paymentType?: string
+    limit?: number
 }
 
 export type Invoice = {
@@ -236,4 +242,39 @@ export type Product = {
     unit: string,
     quantity?: number,
     discount?: number
+}
+
+export type DocumentTypes = {
+    XML: string
+    PDF: string
+    HTML: string
+}
+
+export type ConsultaDTE = {
+    documentType: string
+    countryCode: string
+    clientTaxid: string
+    clientName: string
+    userCountryCode: string
+    userTaxId: string
+    razonSocial: string
+    numeroSerie: string
+    numeroDocumento: string
+    establecimiento: string
+    fechaEmision: string
+    monto: string
+    paidTime: string
+    cancelled: string
+    numeroAuth: string
+    internalID: string
+    userName: string
+}
+
+export type NIT={
+    country: string
+    taxid: string
+    nombre: string
+    direccion: string
+    departamento: string
+    municipio: string
 }

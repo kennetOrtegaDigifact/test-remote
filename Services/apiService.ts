@@ -6,7 +6,7 @@ import DeviceInfo from 'react-native-device-info'
 import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
-import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product } from '../types'
+import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product, DocumentTypes, Usuario, ConsultaDTE, NIT } from '../types'
 const parser = new XMLParser(options)
 
 type FetchProps={
@@ -524,7 +524,10 @@ export const getTokenMIPOSService = async ({ Username, Password, user, nit, taxi
     })
 }
 
-export const getDashboardService = async ({ taxid, signal }) => {
+export const getDashboardService = async ({
+  taxid,
+  signal
+}: FetchProps) => {
   return globalThis.fetch(urlWsSoap, {
     signal,
     method: 'POST',
@@ -554,7 +557,7 @@ export const getDashboardService = async ({ taxid, signal }) => {
         const dataRows = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
         console.log('DATA ROWS DASHBOARD', dataRows)
         if (dataRows > 0) {
-          const dataDashboard = []
+          const dataDashboard: any[] = []
           const rows = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
           dataDashboard.push(rows)
           const objD = {}
@@ -690,7 +693,10 @@ export const getDashboardService = async ({ taxid, signal }) => {
     })
 }
 
-export const getInfoByNITService = async ({ nit }) => {
+export const getInfoByNITService = async ({ nit }: {nit: string}): Promise<{
+  code: number
+  data: NIT
+}| undefined> => {
   return globalThis.fetch(urlWsSoap, {
     method: 'POST',
     headers: { 'Content-Type': 'text/xml' },
@@ -724,10 +730,21 @@ export const getInfoByNITService = async ({ nit }) => {
           dataNIT.push(rows)
           if (Array.isArray(dataNIT) && dataNIT.length) {
             // console.log('NIT RESPONSE', dataNIT)
-            const obj = {}
+            const obj: NIT = {
+              country: '',
+              departamento: '',
+              direccion: '',
+              municipio: '',
+              nombre: '',
+              taxid: ''
+            }
             dataNIT.forEach(e => {
+              obj.country = e.CC
+              obj.taxid = e.TID
               obj.nombre = e.N
-              obj.TID = e.TID
+              obj.direccion = e.Direccion
+              obj.departamento = e.Cd
+              obj.municipio = e.Cm
             })
             return {
               code: appCodes.ok,
@@ -736,14 +753,28 @@ export const getInfoByNITService = async ({ nit }) => {
           }
           return {
             code: 0,
-            data: {}
+            data: {
+              country: '',
+              departamento: '',
+              direccion: '',
+              municipio: '',
+              nombre: '',
+              taxid: ''
+            }
           }
         }
       } catch (ex) {
         console.error('EXCEPTION GET INFO BY NIT SERVICE', ex)
         return {
           code: appCodes.processError,
-          data: {}
+          data: {
+            country: '',
+            departamento: '',
+            direccion: '',
+            municipio: '',
+            nombre: '',
+            taxid: ''
+          }
         }
       }
     })
@@ -751,7 +782,14 @@ export const getInfoByNITService = async ({ nit }) => {
       console.error('ERROR CATCH GET INFO BY NIT SERVICE', err)
       return {
         code: appCodes.processError,
-        data: {}
+        data: {
+          country: '',
+          departamento: '',
+          direccion: '',
+          municipio: '',
+          nombre: '',
+          taxid: ''
+        }
       }
     })
 }
@@ -765,16 +803,19 @@ export const getDTESService = async ({
   numeroSerie,
   establecimientos,
   allDTESorUsername,
-  documentType,
-  dateFrom,
-  dateTo,
+  tipoDocumento,
+  fechaInicio,
+  fechaFin,
   amountFrom,
   amountTo,
   paymentType,
-  cancelled,
+  porAnulados,
   limit,
   signal
-}) => {
+}: FetchProps&Filter): Promise<{
+  code: number
+  data?: ConsultaDTE[]
+}> => {
   const xml = `<?xml version = "1.0" encoding = "utf-8" ?>
                 <soap:Envelope
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -801,8 +842,8 @@ export const getDTESService = async ({
                           <CurrencyCode>GTQ</CurrencyCode>
                           <RCountryCode>${country}</RCountryCode>
                           <RTaxIdOrName>${nitReceptor}</RTaxIdOrName>
-                          <SKind>${documentType}</SKind>
-                          <ReturnBatchAsLike>${Boolean(numeroSerie.length)}</ReturnBatchAsLike>
+                          <SKind>${tipoDocumento}</SKind>
+                          <ReturnBatchAsLike>${Boolean(numeroSerie?.length)}</ReturnBatchAsLike>
                           <Batch>${numeroSerie}</Batch>
                           <UseSerialFrom>false</UseSerialFrom>
                           <UseSerialTo>false</UseSerialTo>
@@ -812,16 +853,16 @@ export const getDTESService = async ({
                           <UseInternalIDTo>false</UseInternalIDTo>
                           <InternalIDFrom>0</InternalIDFrom>
                           <InternalIDTo>0</InternalIDTo>
-                          <UseDateFrom>${Boolean(dateFrom.length)}</UseDateFrom>
-                          <UseDateTo>${Boolean(dateTo.length)}</UseDateTo>
-                          <DateFrom>${dateFrom || '2000-01-01'}T00:00:00</DateFrom>
-                          <DateTo>${dateTo || new Date().toISOString().slice(0, 10)}T23:59:59.999</DateTo>
-                          <UseAmountFrom>${amountFrom >= 0}</UseAmountFrom>
-                          <UseAmountTo>${amountTo > 0}</UseAmountTo>
+                          <UseDateFrom>${Boolean(fechaInicio?.length)}</UseDateFrom>
+                          <UseDateTo>${Boolean(fechaFin?.length)}</UseDateTo>
+                          <DateFrom>${fechaInicio || '2000-01-01'}T00:00:00</DateFrom>
+                          <DateTo>${fechaFin || new Date().toISOString().slice(0, 10)}T23:59:59.999</DateTo>
+                          <UseAmountFrom>${(amountFrom || 0) >= 0}</UseAmountFrom>
+                          <UseAmountTo>${(amountTo || 0) > 0}</UseAmountTo>
                           <AmountFrom>${amountFrom}</AmountFrom>
                           <AmountTo>${amountTo}</AmountTo>
                           <Paid>${paymentType}</Paid>
-                          <Cancelled>${cancelled}</Cancelled>
+                          <Cancelled>${porAnulados}</Cancelled>
                           <Distributed>2</Distributed>
                           <QueryTop>${limit}</QueryTop>
                           <OrderBy>0</OrderBy>
@@ -834,7 +875,7 @@ export const getDTESService = async ({
                   </soap:Body>
                 </soap:Envelope>`
   // console.log(xml)
-  return global
+  return globalThis
     .fetch(urlWsSoap, {
       signal,
       method: 'POST',
@@ -857,25 +898,26 @@ export const getDTESService = async ({
           const arrayDTES = []
           arrayDTES.push(data)
           if (arrayDTES.length) {
-            const dataDTES = arrayDTES.flat().map((dte) => {
-              const obj = {}
-              obj.documentType = dte.A
-              obj.countryCode = dte.W
-              obj.clientTaxid = dte.B
-              obj.clientName = dte.C
-              obj.userCountryCode = dte.X
-              obj.userTaxId = dte.Y
-              obj.razonSocial = dte.Z
-              obj.numeroSerie = dte.D
-              obj.numeroDocumento = dte.E
-              obj.establecimiento = dte.S
-              obj.fechaEmision = dte.F
-              obj.monto = dte.G
-              obj.paidTime = dte.H
-              obj.cancelled = dte.I
-              obj.numeroAuth = dte.DG
-              obj.internalID = dte.IntID
-              obj.userName = dte.userName
+            const dataDTES: ConsultaDTE[] = arrayDTES.flat().map((dte) => {
+              const obj: ConsultaDTE = {
+                documentType: dte.A,
+                countryCode: dte.W,
+                clientTaxid: dte.B,
+                clientName: dte.C,
+                userCountryCode: dte.X,
+                userTaxId: dte.Y,
+                razonSocial: dte.Z,
+                numeroSerie: dte.D,
+                numeroDocumento: dte.E,
+                establecimiento: dte.S,
+                fechaEmision: dte.F,
+                monto: dte.G,
+                paidTime: dte.H,
+                cancelled: dte.I,
+                numeroAuth: dte.DG,
+                internalID: dte.IntID,
+                userName: dte.userName
+              }
               return obj
             })
             return {
@@ -911,8 +953,16 @@ export const getDTESService = async ({
     })
 }
 
-export const getUsersByTaxid = async ({ taxid, requestor, country, Username }) => {
-  const xml = `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" >
+export const getUsersByTaxid = async ({
+  taxid,
+  requestor,
+  country,
+  userName
+}: FetchProps): Promise<{
+  code: number
+  data?: Usuario[]
+}> => {
+  const xml: string = `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" >
   <soap:Body>
     <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
       <Requestor>${requestor}</Requestor>
@@ -920,7 +970,7 @@ export const getUsersByTaxid = async ({ taxid, requestor, country, Username }) =
       <Country>${country}</Country>
       <Entity>${taxid}</Entity>
       <User>${requestor}</User>
-      <UserName>${Username}</UserName>
+      <UserName>${userName}</UserName>
       <Data1>GetUsersByTaxID</Data1>
       <Data2>${country}|${taxid}</Data2>
       <Data3></Data3>
@@ -945,18 +995,18 @@ export const getUsersByTaxid = async ({ taxid, requestor, country, Username }) =
             dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
           const array = []
           array.push(data)
-          const arrData = array?.flat()?.map(e => {
-            const obj = {}
-            obj.taxid = e.TID
-            obj.country = e.CC
-            obj.userName = e.UN
-            obj.firstNames = e.FN
-            obj.lastNames = e.LN
-            obj.nombre = `${e.FN} ${e.LN} `
-            obj.email = e.EM
-            obj.telefono = e.PH
-            obj.GR = e.GR
-
+          const arrData: Usuario[] = array?.flat()?.map(e => {
+            const obj: Usuario = {
+              taxid: e.TID,
+              country: e.CC,
+              userName: e.UN,
+              firstNames: e.FN,
+              lastNames: e.LN,
+              nombre: `${e.FN} ${e.LN} `,
+              email: e.EM,
+              telefono: e.PH,
+              GR: e.GR
+            }
             return obj
           })
           return {
@@ -985,7 +1035,31 @@ export const getUsersByTaxid = async ({ taxid, requestor, country, Username }) =
     })
 }
 
-export const addUserService = async ({ requestor, taxid, userName, country, usuario, nombres, apellidos, email, telefono, permisos, acciones, establecimientos }) => {
+export const addUserService = async ({
+  requestor,
+  taxid,
+  userName,
+  country,
+  usuario,
+  nombres,
+  apellidos,
+  email,
+  telefono,
+  permisos,
+  acciones,
+  establecimientos
+}: FetchProps&{
+    nombres: string
+    apellidos: string
+    email: string
+    telefono: string
+    permisos: string
+    acciones: string;
+    establecimientos: string
+  }): Promise<{
+    code: number;
+    error?: string
+}> => {
   const bodyUsuario = `<?xml version = "1.0" encoding = "utf-8" ?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
@@ -1073,7 +1147,31 @@ export const addUserService = async ({ requestor, taxid, userName, country, usua
     })
 }
 
-export const editUserService = async ({ requestor, taxid, userName, country, usuario, nombres, apellidos, email, telefono, permisos, acciones, establecimientos }) => {
+export const editUserService = async ({
+  requestor,
+  taxid,
+  userName,
+  country,
+  usuario,
+  nombres,
+  apellidos,
+  email,
+  telefono,
+  permisos,
+  acciones,
+  establecimientos
+}: FetchProps&{
+    nombres: string
+    apellidos: string
+    email: string
+    telefono: string
+    permisos: string
+    acciones: string;
+    establecimientos: string
+  }): Promise<{
+    code: number;
+    error?: string
+}> => {
   const bodyUsuario = `<?xml version = "1.0" encoding = "utf-8" ?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
@@ -1161,7 +1259,15 @@ export const editUserService = async ({ requestor, taxid, userName, country, usu
     })
 }
 
-export const deleteUserService = async ({ requestor, taxid, userName, country, usuario }) => {
+export const deleteUserService = async ({
+  requestor,
+  taxid,
+  userName,
+  country,
+  usuario
+}: FetchProps): Promise<{
+  code: number
+}> => {
   const body = `<?xml version = "1.0" encoding = "utf-8" ?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
@@ -1207,8 +1313,7 @@ export const deleteUserService = async ({ requestor, taxid, userName, country, u
       console.log('ERROR CATCH DELETE USER SERVICE', err)
       if (err.message === 'Aborted') {
         return {
-          code: appCodes.ok,
-          data: []
+          code: appCodes.ok
         }
       }
       return {
@@ -1217,7 +1322,21 @@ export const deleteUserService = async ({ requestor, taxid, userName, country, u
     })
 }
 
-export const getDocumentService = async ({ requestor, taxid, userName, documentType, country, numeroAuth, signal }) => {
+export const getDocumentService = async ({
+  requestor,
+  taxid,
+  userName,
+  documentType,
+  country,
+  numeroAuth,
+  signal
+}: FetchProps & {
+    documentType: 'XML'|'PDF'|'HTML'
+    numeroAuth: string|number
+  }): Promise<{
+  code: number
+  data: DocumentTypes
+}> => {
   return globalThis.fetch(urlWsSoap, {
     signal,
     method: 'POST',
@@ -2429,7 +2548,7 @@ export const addEditUserBranchRights = async ({
   country,
   establecimientos,
   usuario
-}: FetchProps & { establecimientos: Establecimiento}) => {
+}: FetchProps & { establecimientos: string}) => {
   const bodyEstablecimientos = `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
 xmlns:xsd= "http://www.w3.org/2001/XMLSchema"
 xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
