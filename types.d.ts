@@ -8,6 +8,18 @@ export interface IconType {
     type: 'm' | 'a' | 'i' | 'v'
 }
 
+export type AppCodes={
+  dataVacio: number
+  ok: number
+  processError: number
+  invalidData: number
+  unauthorized: number
+}
+
+export type Branch = {
+    numero: number | string
+}
+
 export type Establecimiento={
     id: string,
     numero: number,
@@ -48,7 +60,8 @@ export type SharedData={
 export type PermisosPadre = {
     idRight: number,
     description: string,
-    granted: boolean
+    granted: boolean,
+    actions?: PermisoPorAccion[]
 }
 
 export type PermisoPorAccion = {
@@ -113,7 +126,18 @@ export type Cliente={
     observaciones: string,
     direccion: string,
     municipio: string,
-    departamento: string
+    departamento: string,
+    pais?: string,
+    nit?: string,
+    name?: string,
+}
+
+export type User={
+    taxid: string
+    country: string
+    userName: string
+    requestor: string
+    token: string
 }
 
 export interface userInterface {
@@ -164,4 +188,52 @@ export type countriesDictionaryType ={
     name_es: string,
     dial_code: string,
     code: string
+}
+
+export type ProductoResumen={
+    descripcion: string
+    cantidad: number | string
+    total: number | string
+    iva: number | string
+    idp: number | string
+    idt: number | string
+    tml: number | string
+    itp: number | string
+    ibv: number | string
+    tabaco: number | string
+}
+
+export type Filter={
+    fechaInicio?: string
+    fechaFin?: string
+    establecimientos?: Establecimiento
+    nitReceptor?: string
+    porAnulados?: { value: number | string }
+    tipoDocumento?: { no?: number | string }
+}
+
+export type Invoice = {
+    Autorizacion: string | number
+    Serie: string|number
+    NUMERO: number|string
+    Fecha_de_certificacion: string | Date
+}
+
+export type NitService = {
+    country: string
+    departamento: string
+    municipio: string
+    direccion: string
+    nombre: string
+    taxid: string
+}
+
+export type Product = {
+    name: string,
+    price: number,
+    eanprod: number | string,
+    type: string,
+    unit: string,
+    quantity?: number,
+    discount?: number
 }

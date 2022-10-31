@@ -6,8 +6,19 @@ import DeviceInfo from 'react-native-device-info'
 import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
-import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos } from '../types'
+import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product } from '../types'
 const parser = new XMLParser(options)
+
+type FetchProps={
+  requestor: string,
+  taxid: string,
+  country: string,
+  userName: string,
+  usuario: string,
+  signal?: AbortSignal
+  token?: string
+}
+
 export const loginService = async ({ Username = '', Password = '', taxid = '', user = '', country = '', nit = '' }) => {
   console.log('BODY LOGIN JSON', JSON.stringify({ Username, Password, nit }))
   return globalThis.fetch(urlWsToken, {
@@ -1273,7 +1284,17 @@ export const getDocumentService = async ({ requestor, taxid, userName, documentT
     })
 }
 
-export const sendDTEForEmailService = async ({ taxid, authorizationNumber, email }) => {
+export const sendDTEForEmailService = async ({
+  taxid,
+  authorizationNumber,
+  email
+}: {
+    taxid: string;
+    authorizationNumber: string|number;
+    email: string
+  }): Promise<{
+  code: number
+}> => {
   const stringdata1 =
     `
     <Dictionary name = "StoredXmlSelector" ><Entry k="Store" v="issued"/><Entry k="IssuerCountryCode" v="GT"/><Entry k="IssuerTaxId" v="${taxid}"/><Entry k="DocumentGUID" v="${authorizationNumber}"/></Dictionary >
@@ -1302,7 +1323,7 @@ export const sendDTEForEmailService = async ({ taxid, authorizationNumber, email
       </RequestTransaction>
     </soap:Body>
   </soap:Envelope>`
-  return global.fetch(urlWsSoap, {
+  return globalThis.fetch(urlWsSoap, {
     method: 'post',
     headers: { 'Content-Type': 'text/xml' },
     body: xml
@@ -1312,30 +1333,42 @@ export const sendDTEForEmailService = async ({ taxid, authorizationNumber, email
       console.log('EMAIL RESPONSE', dataResponse)
       try {
         return {
-          code: appCodes.ok,
-          data: dataResponse.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response.Result
+          code: appCodes.ok
         }
       } catch (err) {
         console.log('EXCEPTION SEND DTE EMAIL SERVICE', err)
         return {
-          code: appCodes.processError,
-          data: false
+          code: appCodes.processError
         }
       }
     })
     .catch(err => {
       console.log('ERROR SEND DTE EMAIL SERVICE', err)
       return {
-        code: appCodes.processError,
-        data: false
+        code: appCodes.processError
       }
     })
 }
 
-export const cancelDTEService = async ({ Token, userName, taxid, authorizationNumber, fechaEmision, nitReceptor, motivoAnulacion }) => {
+export const cancelDTEService = async ({
+  token = '',
+  userName,
+  taxid,
+  authorizationNumber,
+  fechaEmision,
+  nitReceptor,
+  motivoAnulacion
+}: FetchProps&{
+    authorizationNumber: string|number;
+    fechaEmision: string;
+    nitReceptor: string|number;
+    motivoAnulacion: string
+  }): Promise<{
+  code: number
+}> => {
   const tzoffset = (new globalThis.Date()).getTimezoneOffset() * 60000
   const localISOTime = (new globalThis.Date(globalThis.Date.now() - tzoffset)).toISOString()
-  console.log('Token', Token)
+  console.log('Token', token)
   const xml = `<?xml version = '1.0' encoding = 'utf-8' ?>
   <dte:GTAnulacionDocumento xmlns:dte="http://www.sat.gob.gt/dte/fel/0.1.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -1353,7 +1386,7 @@ export const cancelDTEService = async ({ Token, userName, taxid, authorizationNu
     method: 'post',
     headers: {
       'Content-Type': 'application/xml',
-      Authorization: Token
+      Authorization: token
     },
     body: xml
   })
@@ -1371,7 +1404,16 @@ export const cancelDTEService = async ({ Token, userName, taxid, authorizationNu
     })
 }
 
-export const getAllProductsService = async ({ requestor, taxid, userName, country, signal = new globalThis.AbortController().signal }) => {
+export const getAllProductsService = async ({
+  requestor,
+  taxid,
+  userName,
+  country,
+  signal = new AbortController().signal
+}: FetchProps): Promise<{
+  code: number;
+  data: Product[]
+}> => {
   return globalThis.fetch(urlWsSoap, {
     signal,
     method: 'post',
@@ -1401,15 +1443,16 @@ export const getAllProductsService = async ({ requestor, taxid, userName, countr
           const data = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
           const dataArr = []
           dataArr.push(data)
-          const products = dataArr.flat().map(e => {
-            const obj = {}
-            obj.name = e.D
-            obj.price = e.LP
-            obj.type = e.CTG
-            obj.unit = e.U
-            obj.eanprod = e.EAN
-            obj.quantity = 1
-            obj.discount = 0
+          const products: Product[] = dataArr.flat().map(e => {
+            const obj: Product = {
+              name: e.D,
+              price: e.LP,
+              type: e.CTG,
+              unit: e.U,
+              eanprod: e.EAN,
+              quantity: 1,
+              discount: 0
+            }
             return obj
           })
           return {
@@ -1445,7 +1488,19 @@ export const getAllProductsService = async ({ requestor, taxid, userName, countr
     })
 }
 
-export const addEditProductService = async ({ requestor, taxid, userName, country, name, price, eanprod, type, unit }) => {
+export const addEditProductService = async ({
+  requestor,
+  taxid,
+  userName,
+  country,
+  name,
+  price,
+  eanprod,
+  type,
+  unit
+}: FetchProps & Product): Promise<{
+  code: number
+}> => {
   return globalThis.fetch(urlWsSoap, {
     method: 'post',
     headers: { 'Content-Type': 'text/xml; charset=UTF-8' },
@@ -1498,7 +1553,15 @@ export const addEditProductService = async ({ requestor, taxid, userName, countr
     })
 }
 
-export const deleteProductService = async ({ taxid, country, eanprod }) => {
+export const deleteProductService = async ({
+  taxid,
+  country,
+  eanprod
+}: {
+    taxid: string,
+    country: string,
+    eanprod: string
+}): Promise<{code: number}> => {
   return globalThis.fetch(urlWsSoap, {
     method: 'post',
     headers: { 'Content-Type': 'text/xml' },
@@ -1551,7 +1614,16 @@ export const deleteProductService = async ({ taxid, country, eanprod }) => {
     })
 }
 
-export const getAllClientsService = async ({ requestor, taxid, country, userName, signal = new globalThis.AbortController().signal }) => {
+export const getAllClientsService = async ({
+  requestor,
+  taxid,
+  country,
+  userName,
+  signal = new AbortController().signal
+}: FetchProps): Promise<{
+  code: number;
+  data: Cliente[]
+}> => {
   return globalThis.fetch(urlWsSoap, {
     signal,
     method: 'POST',
@@ -1585,25 +1657,27 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
           const rowData = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
           const array = []
           array.push(rowData)
-          const data = array.flat().map(e => {
-            const obj = {}
-            obj.id = e.IDCustomer || ''
-            obj.country = e.SCountryCode || ''
-            obj.sTaxId = e.STaxID || ''
-            obj.tipoCliente = e.TipoCliente || ''
-            obj.NIT = e.NIT || ''
-            obj.nombreOrganizacion = e.NombreOrganizacion || ''
-            obj.nombreContacto = e.NombreContacto || ''
-            obj.cargo = e.Cargo || ''
-            obj.telefono = e.Telefono || ''
-            obj.correo = e.Correo || ''
-            obj.IDBitacoraCustomer = e.IDBitacoraCustomer || ''
-            obj.estado = e.status || ''
-            obj.fechaCreacion = e.fecha || ''
-            obj.observaciones = e.observaciones || ''
-            obj.direccion = e.Direccion1 || ''
-            obj.municipio = e.Municipio || ''
-            obj.departamento = e.Departamento || ''
+          const data: Cliente[] = array.flat().map(e => {
+            const obj: Cliente = {
+              id: e.IDCustomer || '',
+              country: e.SCountryCode || '',
+              sTaxId: e.STaxID || '',
+              tipoCliente: e.TipoCliente || '',
+              NIT: e.NIT || '',
+              nombreOrganizacion: e.NombreOrganizacion || '',
+              nombreContacto: e.NombreContacto || '',
+              cargo: e.Cargo || '',
+              telefono: e.Telefono || '',
+              correo: e.Correo || '',
+              IDBitacoraCustomer: e.IDBitacoraCustomer || '',
+              estado: e.status || '',
+              fechaCreacion: e.fecha || '',
+              observaciones: e.observaciones || '',
+              direccion: e.Direccion1 || '',
+              municipio: e.Municipio || '',
+              departamento: e.Departamento || ''
+            }
+
             return obj
           })
           return {
@@ -1638,7 +1712,14 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     })
 }
 
-export const validateNITService = async ({ nit }) => {
+export const validateNITService = async ({
+  nit
+}: {
+  nit: string
+  }): Promise<{
+  code: number;
+  data: NitService
+}> => {
   return globalThis.fetch(urlWsSoap, {
     method: 'POST',
     headers: { 'Content-Type': 'text/xml' },
@@ -1734,7 +1815,22 @@ export const validateNITService = async ({ nit }) => {
     })
 }
 
-export const addEditClientService = async ({ requestor, taxid, userName, country, pais, nit, name, telefono, correo, direccion, municipio, departamento }) => {
+export const addEditClientService = async ({
+  requestor,
+  taxid,
+  userName,
+  country,
+  pais,
+  nit,
+  name,
+  telefono,
+  correo,
+  direccion,
+  municipio,
+  departamento
+}: FetchProps&Cliente): Promise<{
+  code: number
+}> => {
   return globalThis.fetch(urlWsSoap, {
     method: 'POST',
     headers: { 'Content-Type': 'text/xml; charset=UTF-8' },
@@ -1781,7 +1877,15 @@ export const addEditClientService = async ({ requestor, taxid, userName, country
     })
 }
 
-export const deleteClientService = async ({ requestor, country, taxid, userName, clientNit }) => {
+export const deleteClientService = async ({
+  requestor,
+  country,
+  taxid,
+  userName,
+  clientNit
+}: FetchProps&{clientNit: string}): Promise<{
+  code: number
+}> => {
   return globalThis.fetch(urlWsSoap, {
     method: 'POST',
     headers: { 'Content-Type': 'text/xml' },
@@ -1828,7 +1932,16 @@ export const deleteClientService = async ({ requestor, country, taxid, userName,
     })
 }
 
-export const getPermissionsCatalog = async ({ requestor, taxid, country, userName, signal = new globalThis.AbortController().signal }) => {
+export const getPermissionsCatalog = async ({
+  requestor,
+  taxid,
+  country,
+  userName,
+  signal = new AbortController().signal
+}: FetchProps): Promise<{
+  code: number;
+  data?: PermisosPadre[] | never[]
+} | undefined> => {
   const bodyPermisos = `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
   <soap:Body>
     <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
@@ -1871,10 +1984,10 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     .then(response => {
       try {
         const dataParser = parser.parse(response)
-        const rows = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        const rows = dataParser?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
         if (rows > 0) {
-          const data = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-          const dataArr = []
+          const data = dataParser?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T
+          const dataArr: any[] = []
           dataArr.push(data)
           return globalThis.fetch(urlWsSoap, {
             method: 'POST',
@@ -1883,28 +1996,30 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
           }).then(res => res.text())
             .then(responseActions => {
               const dataParserActions = parser.parse(responseActions)
-              const rowsActions = dataParserActions.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+              const rowsActions = dataParserActions?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1
               if (rowsActions > 0) {
-                const dataActions = dataParserActions.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-                const dataArrActions = []
+                const dataActions = dataParserActions?.Envelope.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T
+                const dataArrActions: any[] = []
                 dataArrActions.push(dataActions)
-                const acciones = dataArrActions.flat().map(a => {
-                  const action = {}
-                  action.idActionRight = a.idActionRight
-                  action.description = a.actionRight
-                  action.idRight = a.idRight
-                  action.page = a.page
-                  action.granted = false
+                const acciones: PermisoPorAccion[] = dataArrActions?.flat()?.map(a => {
+                  const action: PermisoPorAccion = {
+                    idActionRight: a?.idActionRight,
+                    description: a?.actionRight,
+                    idRight: a?.idRight,
+                    page: a?.page,
+                    granted: false
+                  }
                   return action
-                })
-                const permisos = dataArr.flat().map(e => {
-                  const obj = {}
-                  obj.idRight = e.IDRight
-                  obj.description = e.Descripcion
-                  obj.granted = false
-                  obj.actions = [acciones.filter(a => a.idRight === obj.idRight)].flat()
+                }) || []
+                const permisos: PermisosPadre[] = dataArr?.flat()?.map(e => {
+                  const obj: PermisosPadre = {
+                    idRight: e?.IDRight,
+                    description: e?.Descripcion,
+                    granted: false,
+                    actions: [acciones?.filter(a => a?.idRight === obj?.idRight)]?.flat()
+                  }
                   return obj
-                })
+                }) || []
                 return {
                   code: appCodes.ok,
                   data: permisos
@@ -1913,7 +2028,8 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
             }).catch(err => {
               console.log('ERROR CATCH GET PERMISOS POR ACCION', err)
               return {
-                code: appCodes.processError
+                code: appCodes.processError,
+                data: []
               }
             })
         }
@@ -1933,12 +2049,16 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     .catch(err => {
       console.log('ERROR CATCH GET PERMISOS', err)
       return {
-        code: appCodes.processError
+        code: appCodes.processError,
+        data: []
       }
     })
 }
 
-export const getAllEstablecimientos = async ({ requestor, taxid, country, userName, usuario, signal }) => {
+export const getAllEstablecimientos = async ({ requestor, taxid, country, userName, usuario, signal }: FetchProps): Promise<{
+    code: number,
+    data?: Establecimiento[]
+}> => {
   const bd = `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
   <soap:Body>
     <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
@@ -2019,7 +2139,10 @@ export const getAllEstablecimientos = async ({ requestor, taxid, country, userNa
     })
 }
 
-export const getUserPermissions = async ({ requestor, taxid, country, userName, usuario }) => {
+export const getUserPermissions = async ({ requestor, taxid, country, userName, usuario }: FetchProps): Promise<{
+  code: number,
+  data?: PermisosPadre[]
+}> => {
   const query = `<?xml version="1.0" encoding="utf-8"?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
@@ -2086,7 +2209,16 @@ export const getUserPermissions = async ({ requestor, taxid, country, userName, 
     })
 }
 
-export const getUserActions = async ({ requestor, taxid, country, userName, usuario }) => {
+export const getUserActions = async ({
+  requestor,
+  taxid,
+  country,
+  userName,
+  usuario
+}: FetchProps): Promise<{
+  code: number;
+  data?: PermisoPorAccion[]
+}> => {
   const query = `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
@@ -2142,6 +2274,9 @@ export const getUserActions = async ({ requestor, taxid, country, userName, usua
         }
       } catch (ex) {
         console.log('ERROR TRY CATCH USER ACTIONS', ex)
+        return {
+          code: appCodes.processError
+        }
       }
     })
     .catch(err => {
@@ -2152,7 +2287,18 @@ export const getUserActions = async ({ requestor, taxid, country, userName, usua
     })
 }
 
-export const addEditUserActionsRights = async ({ requestor, taxid, userName, country, acciones, usuario }) => {
+export const addEditUserActionsRights = async ({
+  requestor,
+  taxid,
+  userName,
+  country,
+  acciones,
+  usuario
+}: FetchProps&{acciones: string}): Promise<{
+  code: number;
+  error?: string | number;
+  error2?: string|number
+}> => {
   const bodyAcciones = `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
 xmlns:xsd= "http://www.w3.org/2001/XMLSchema"
 xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
@@ -2201,8 +2347,7 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
       console.log('ERROR CATCH ADD EDIT USER ACCIONES SERVICE', err)
       if (err.message === 'Aborted') {
         return {
-          code: appCodes.ok,
-          data: []
+          code: appCodes.ok
         }
       }
       return {
@@ -2211,7 +2356,18 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     })
 }
 
-export const addEditUserRights = async ({ requestor, taxid, userName, country, permisos, usuario }) => {
+export const addEditUserRights = async ({
+  requestor,
+  taxid,
+  userName,
+  country,
+  permisos,
+  usuario
+}: FetchProps&{permisos: string}): Promise<{
+  code: number;
+  error?: string | number;
+  error2?: string|number
+}> => {
   const bodyPermisos = `<?xml version = "1.0" encoding = "utf-8" ?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
       <soap:Body>
@@ -2257,8 +2413,7 @@ export const addEditUserRights = async ({ requestor, taxid, userName, country, p
       console.log('ERROR CATCH ADD EDIT USER PERMISOS SERVICE', err)
       if (err.message === 'Aborted') {
         return {
-          code: appCodes.ok,
-          data: []
+          code: appCodes.ok
         }
       }
       return {
@@ -2267,7 +2422,14 @@ export const addEditUserRights = async ({ requestor, taxid, userName, country, p
     })
 }
 
-export const addEditUserBranchRights = async ({ requestor, taxid, userName, country, establecimientos, usuario }) => {
+export const addEditUserBranchRights = async ({
+  requestor,
+  taxid,
+  userName,
+  country,
+  establecimientos,
+  usuario
+}: FetchProps & { establecimientos: Establecimiento}) => {
   const bodyEstablecimientos = `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
 xmlns:xsd= "http://www.w3.org/2001/XMLSchema"
 xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
@@ -2324,8 +2486,18 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     })
 }
 
-export const getTalonarioContingencia = async ({ batchId, taxid, branches, qtyRequested }) => {
-  let serial = DeviceInfo.getSerialNumberSync()
+export const getTalonarioContingencia = async ({
+  batchId,
+  taxid,
+  branches,
+  qtyRequested
+}: {
+    batchId: string | number;
+    taxid: string;
+    branches: Branch[];
+    qtyRequested: string|number
+}): Promise<any[]> => {
+  let serial: string = DeviceInfo.getSerialNumberSync()
   if (serial.toUpperCase() === 'UNKNOWN') {
     serial = DeviceInfo.getUniqueIdSync()
   }
@@ -2356,7 +2528,10 @@ export const getTalonarioContingencia = async ({ batchId, taxid, branches, qtyRe
   return Promise.all(promises)
 }
 
-export const getXMLTransformation = async ({ json }) => {
+export const getXMLTransformation = async ({ json }: {json: any}): Promise<{
+  code: number;
+  data?: string
+}> => {
   return globalThis.fetch(urlXMLTransformation, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -2382,10 +2557,18 @@ export const getXMLTransformation = async ({ json }) => {
     })
 }
 
-export const certContingencia = async ({ xmlFactura, user }) => {
+export const certContingencia = async ({
+  xmlFactura,
+  user
+}: {
+  xmlFactura: string,
+  user: User
+  }): Promise<{
+  code: number
+}> => {
   return globalThis.fetch(`${urlWsRest}FelRequestV2?NIT=${user.taxid}&TIPO=CERTIFICATE_DTE_XML_TOSIGN&FORMAT=XML&USERNAME=${user.userName}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/xml;charset=UTF-8', Authorization: user.Token, Accept: 'application/json' },
+    headers: { 'Content-Type': 'application/xml;charset=UTF-8', Authorization: user.token, Accept: 'application/json' },
     body: xmlFactura
   }).then(res => res.json())
     .then(response => {
@@ -2413,7 +2596,22 @@ export const certContingencia = async ({ xmlFactura, user }) => {
     })
 }
 
-export const addContingencia = async ({ invoice, ne, serialTerminal, numAcceso, user }) => {
+export const addContingencia = async ({
+  invoice,
+  ne,
+  serialTerminal,
+  numAcceso,
+  user
+}: {
+  invoice: Invoice
+  ne: string | number;
+  serialTerminal: string | number;
+  numAcceso: number | string;
+  user: User;
+  }): Promise<{
+  code: number,
+  data?: boolean
+}> => {
   const xml = `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
@@ -2458,7 +2656,21 @@ export const addContingencia = async ({ invoice, ne, serialTerminal, numAcceso, 
     })
 }
 
-export const agregarErrorContingencia = async ({ invoiceB64, numAcceso, user, error }) => {
+export const agregarErrorContingencia = async ({
+  invoiceB64,
+  numAcceso,
+  user,
+  error
+}: {
+    invoiceB64: string;
+    numAcceso: string | number;
+    user: User;
+    error?: number | string;
+}): Promise<{
+    code: number;
+    data?: boolean;
+    error?: number | undefined;
+}> => {
   const request = `<?xml version="1.0" encoding="utf-8"?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
@@ -2505,7 +2717,11 @@ export const agregarErrorContingencia = async ({ invoiceB64, numAcceso, user, er
     })
 }
 
-export const getProductsResumen = async ({ user, filter }) => {
+export const getProductsResumen = async ({ user, filter }: {user: FetchProps, filter: Filter}): Promise<{
+    code?: number;
+    data?: ProductoResumen[];
+    error?: number | undefined;
+}> => {
   const request = `<?xml version="1.0" encoding="utf-8"?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
       <soap:Body>
@@ -2536,8 +2752,19 @@ export const getProductsResumen = async ({ user, filter }) => {
         if (data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1 > 0) {
           const array = []
           array.push(rowData)
-          const data = array.flat().map(e => {
-            const obj = {}
+          const data: ProductoResumen[] = array.flat().map(e => {
+            const obj: ProductoResumen = {
+              descripcion: '',
+              cantidad: '',
+              total: '',
+              iva: '',
+              idp: '',
+              idt: '',
+              tml: '',
+              itp: '',
+              ibv: '',
+              tabaco: ''
+            }
             obj.descripcion = e.ItemDescription || ''
             obj.cantidad = e.CANTIDAD || ''
             obj.total = e.Total || ''
@@ -2696,8 +2923,7 @@ export const uploadLogoService = async ({ taxid = '', extension = 'jpg', codigoE
       }
     })
 }
-
-export const recoverPasswordService = async ({ recoverPassUser }) => {
+export const recoverPasswordService = async ({ recoverPassUser }: {recoverPassUser: string}): Promise<{code: number}> => {
   return globalThis.fetch(urlWsSoap, {
     method: 'post',
     headers: { 'Content-Type': 'text/xml' },
