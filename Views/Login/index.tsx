@@ -15,11 +15,11 @@ export const Login: React.FC = () => {
     toast.show('Iniciando Sesion', {
       type: 'loading'
     })
-    return new Promise((resolve, reject) => {
+    return new Promise((_resolve, reject) => {
       setTimeout(() => {
         reject(new Error('testing'))
       }, 1000)
-    }).catch(err => err)
+    })
   }
   return (
     <View style={[styles.container]}>
