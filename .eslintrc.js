@@ -33,6 +33,6 @@ module.exports = {
     'react/react-in-jsx-scope': RULES.ERROR,
     'react-hooks/rules-of-hooks': RULES.ERROR, // Checks rules of Hooks
     'react-hooks/exhaustive-deps': RULES.WARN, // Checks effect dependencies
-    'no-use-before-define': RULES.OFF
+    'no-use-before-define': RULES.WARN
   }
 }
