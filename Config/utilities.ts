@@ -5,16 +5,27 @@ import { Establecimiento } from '../types'
  * objects
  * @returns An array of objects.
  */
-export const establecimientosSpliter = ({ establecimientos = '' }): Establecimiento[] => {
+export const establecimientosSpliter = ({ establecimientos = '' }: {establecimientos: string}): Establecimiento[] => {
   const est = typeof establecimientos === 'string'
     ? establecimientos?.split('|')?.map(e => {
       if (typeof e === 'string') {
         if (e.length > 0) {
-          const obj = {}
+          const obj: Establecimiento = {
+            id: '',
+            codPostal: '1010',
+            departamento: '',
+            direccion: '',
+            estado: '',
+            municipio: '',
+            nombre: '',
+            numero: 0,
+            pais: '',
+            nit: ''
+          }
           const et = e.trim()
           const index = et.indexOf('<') + 1
           const secondIndex = et.indexOf('<', index) + 1
-          obj.numero = e.slice(0, index).replace(/</gi, '').trim()
+          obj.numero = Number(e.slice(0, index).replace(/</gi, '').trim())
           obj.nombre = e.slice(index, secondIndex).replace(/</gi, '').trim()
           obj.granted = false
           return obj
@@ -24,4 +35,12 @@ export const establecimientosSpliter = ({ establecimientos = '' }): Establecimie
     })
     : []
   return est.flat()
+}
+
+export const deletePadLeft = (nit:string): string => {
+  let regexNit = nit.toString().replace(/[^0-9Kk]/g, '').replace('k', 'K').replace('-', '').replace('/', '').trim()
+  while (regexNit.charAt(0) === '0') {
+    regexNit = regexNit.substring(1)
+  }
+  return regexNit
 }

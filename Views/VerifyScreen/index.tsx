@@ -10,7 +10,7 @@ export const VerifyScreen: React.FC = () => {
   useEffect(() => {
     if (user?.token?.length) {
       setTimeout(() => {
-        navigate(`/${user.country}/Dashboard`, { replace: false })
+        navigate(`/${user.country}/Dashboard`, { replace: true })
       }, 1000)
     } else {
       setTimeout(() => {

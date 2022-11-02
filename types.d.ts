@@ -132,6 +132,16 @@ export type Cliente={
     name?: string,
 }
 
+export type Product = {
+    name: string,
+    price: number,
+    eanprod: number | string,
+    type: string,
+    unit: string,
+    quantity?: number,
+    discount?: number
+}
+
 export type User={
     taxid: string
     country: string
@@ -141,6 +151,7 @@ export type User={
 }
 
 export interface userInterface {
+    code: number
     taxid: string,
     country: string,
     token: string,
@@ -156,7 +167,11 @@ export interface userInterface {
     permisos?: any,
     usuarios?: Usuario[],
     clientes?: Cliente[],
+    productos?: Product[],
     MIPOS?: MIPOS
+    talonarioContingencia: {[key: string]: string|number}
+    decimales: number
+    logos: Logos
 }
 
 export type formulario = {
@@ -232,16 +247,6 @@ export type NitService = {
     direccion: string
     nombre: string
     taxid: string
-}
-
-export type Product = {
-    name: string,
-    price: number,
-    eanprod: number | string,
-    type: string,
-    unit: string,
-    quantity?: number,
-    discount?: number
 }
 
 export type DocumentTypes = {

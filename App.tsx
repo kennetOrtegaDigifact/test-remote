@@ -127,6 +127,62 @@ const App = () => {
                     >{toast.message}
                     </Text>
                   </View>
+                ),
+                error: (toast: ToastProps) => (
+                  <View style={{
+                    padding: 15,
+                    margin: 5,
+                    backgroundColor: theme.red,
+                    width: '90%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderRadius: 7
+                  }}
+                  >
+                    <Icon
+                      name='close-circle'
+                      type='i'
+                      color={theme.white} size={20}
+                    />
+                    <Text
+                      style={{
+                        flex: 1,
+                        flexWrap: 'wrap',
+                        marginHorizontal: 5,
+                        fontSize: fonts.normal,
+                        color: theme.white
+                      }}
+                    >{toast.message}
+                    </Text>
+                  </View>
+                ),
+                ok: (toast: ToastProps) => (
+                  <View style={{
+                    padding: 15,
+                    margin: 5,
+                    backgroundColor: theme.green,
+                    width: '90%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderRadius: 7
+                  }}
+                  >
+                    <Icon
+                      name='checkmark-circle'
+                      type='i'
+                      color={theme.white} size={20}
+                    />
+                    <Text
+                      style={{
+                        flex: 1,
+                        flexWrap: 'wrap',
+                        marginHorizontal: 5,
+                        fontSize: fonts.normal,
+                        color: theme.white
+                      }}
+                    >{toast.message}
+                    </Text>
+                  </View>
                 )
               }}
             >

@@ -6,7 +6,7 @@ import DeviceInfo from 'react-native-device-info'
 import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
-import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product, DocumentTypes, Usuario, ConsultaDTE, NIT, Dashboard } from '../types'
+import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product, DocumentTypes, Usuario, ConsultaDTE, NIT, Dashboard, userInterface } from '../types'
 const parser = new XMLParser(options)
 
 type FetchProps={
@@ -19,7 +19,7 @@ type FetchProps={
   token?: string
 }
 
-export const loginService = async ({ Username = '', Password = '', taxid = '', user = '', country = '', nit = '' }) => {
+export const loginService = async ({ Username = '', Password = '', taxid = '', user = '', country = '', nit = '' }): Promise<userInterface> => {
   console.log('BODY LOGIN JSON', JSON.stringify({ Username, Password, nit }))
   return globalThis.fetch(urlWsToken, {
     method: 'POST',
@@ -43,7 +43,7 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                 const MIPOS = responseMIPOSTOKEN
                 console.log('MIPOS TOKENS', MIPOS)
                 if (responseMS?.Token) {
-                  const Token = response.Token
+                  const token = response.Token
                   const APIMSTOKEN = responseMS.Token
                   return globalThis.fetch(urlWsSoap, {
                     method: 'POST',
@@ -328,17 +328,38 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                                                       .then(responseEstLogos => {
                                                                                         return getDecimalsService({ taxid })
                                                                                           .then(({ data }) => {
+                                                                                            // code: number
+                                                                                            // taxid: string,
+                                                                                            // country: string,
+                                                                                            // token: string,
+                                                                                            // userName: string,
+                                                                                            // APIMSTOKEN: string,
+                                                                                            // requestor: string,
+                                                                                            // tipoPersoneria?: string,
+                                                                                            // establecimientos?: Establecimiento[],
+                                                                                            // sharedData: SharedData,
+                                                                                            // infoFiscalUser: InfoFiscalUser,
+                                                                                            // configuracionApp?: ConfiguracionApp[],
+                                                                                            // configuracionGeneral?: ConfiguracionGeneral,
+                                                                                            // permisos?: any,
+                                                                                            // usuarios?: Usuario[],
+                                                                                            // clientes?: Cliente[],
+                                                                                            // productos?: Product[],
+                                                                                            // MIPOS?: MIPOS
+                                                                                            // talonarioContingencia: {[key: string]: string|number}
+                                                                                            // decimales: number
+                                                                                            // logos: Logos
                                                                                             return {
                                                                                               code: appCodes.ok,
                                                                                               country,
                                                                                               taxid,
                                                                                               requestor,
                                                                                               userName: user,
-                                                                                              Token,
+                                                                                              token,
                                                                                               infoFiscalUser,
                                                                                               sharedData,
-                                                                                              Establecimientos,
-                                                                                              ConfiguracionApp: arrayConfig.flat(),
+                                                                                              establecimientos: Establecimientos,
+                                                                                              configuracionApp: arrayConfig.flat(),
                                                                                               permisos,
                                                                                               usuarios: res.data,
                                                                                               clientes: resClients.data,
@@ -363,17 +384,38 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                                                   .then(async responseEstLogos => {
                                                                                     return getDecimalsService({ taxid })
                                                                                       .then(({ data }) => {
+                                                                                        // code: number
+                                                                                        // taxid: string,
+                                                                                        // country: string,
+                                                                                        // token: string,
+                                                                                        // userName: string,
+                                                                                        // APIMSTOKEN: string,
+                                                                                        // requestor: string,
+                                                                                        // tipoPersoneria?: string,
+                                                                                        // establecimientos?: Establecimiento[],
+                                                                                        // sharedData: SharedData,
+                                                                                        // infoFiscalUser: InfoFiscalUser,
+                                                                                        // configuracionApp?: ConfiguracionApp[],
+                                                                                        // configuracionGeneral?: ConfiguracionGeneral,
+                                                                                        // permisos?: any,
+                                                                                        // usuarios?: Usuario[],
+                                                                                        // clientes?: Cliente[],
+                                                                                        // productos?: Product[],
+                                                                                        // MIPOS?: MIPOS
+                                                                                        // talonarioContingencia: {[key: string]: string|number}
+                                                                                        // decimales: number
+                                                                                        // logos: Logos
                                                                                         return {
                                                                                           code: appCodes.ok,
                                                                                           country,
                                                                                           taxid,
                                                                                           requestor,
                                                                                           userName: user,
-                                                                                          Token,
+                                                                                          token,
                                                                                           infoFiscalUser,
                                                                                           sharedData,
-                                                                                          Establecimientos,
-                                                                                          ConfiguracionApp: arrayConfig.flat(),
+                                                                                          establecimientos: Establecimientos,
+                                                                                          configuracionApp: arrayConfig.flat(),
                                                                                           permisos,
                                                                                           usuarios: res.data,
                                                                                           clientes: resClients.data,

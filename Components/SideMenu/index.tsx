@@ -4,12 +4,22 @@ import { Dimensions, ScrollView, Text, View, PixelRatio, Image } from 'react-nat
 import DrawerLayout from 'react-native-gesture-handler/DrawerLayout'
 import MenuItem from '../../Components/MenuItem'
 import deviceInfoModule from 'react-native-device-info'
+import { useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-native'
+import { deleteUser } from '../../Redux/userReducer'
 
 export const SideMenu: React.FC<PropsWithChildren<{drawerRef: React.RefObject<React.Component | null>}>> = ({ children, drawerRef }) => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
   const closeMenu = useCallback(() => {
     if (drawerRef?.current) {
       drawerRef?.current?.closeDrawer()
     }
+  }, [])
+
+  const logout = useCallback(() => {
+    dispatch(deleteUser())
+    navigate('/')
   }, [])
 
   function renderDrawer () {
@@ -147,6 +157,7 @@ export const SideMenu: React.FC<PropsWithChildren<{drawerRef: React.RefObject<Re
         </ScrollView>
         <View>
           <MenuItem
+            onPress={logout}
             title='Cerrar Sesión'
             backgroundColor={theme.orange}
             titleStyles={{

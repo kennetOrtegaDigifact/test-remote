@@ -7,19 +7,46 @@ import { useToast } from 'react-native-toast-notifications'
 import { useFormSchema } from '../../Hooks/useFormSchema'
 import { loginSchema } from '../../Validators/loginSchema'
 import deviceInfoModule from 'react-native-device-info'
+import { loginService } from '../../Services/apiService'
+import { deletePadLeft } from '../../Config/utilities'
+import { appCodes } from '../../Config/appCodes'
+import { useDispatch } from 'react-redux'
+import { addUser } from '../../Redux/userReducer'
+import { useNavigate } from 'react-router-native'
 export const Login: React.FC = () => {
   const { loginFormSchema } = useFormSchema()
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
   const toast = useToast()
   const onSubmit = async (values: {taxid: string, country: string, password: string, username: string}): Promise<void> => {
     console.log('LOGIN VALUES', values)
-    toast.show('Iniciando Sesion', {
-      type: 'loading'
-    })
-    return new Promise((_resolve, reject) => {
-      setTimeout(() => {
-        reject(new Error('testing'))
-      }, 1000)
-    })
+    const { country, password, taxid, username } = values
+    let TAXID: string = ''
+    if (country === 'GT') {
+      const nit = deletePadLeft(taxid)
+      TAXID = taxid.padStart(12, '0').replace(/[^0-9Kk]/g, '').replace('k', 'K').replace('-', '').replace('/', '').trim()
+      return loginService({
+        country,
+        nit,
+        taxid: TAXID,
+        Password: password,
+        Username: `${country}.${TAXID.trim()}.${username.trim()}`,
+        user: username.trim()
+      })
+        .then(res => {
+          console.log('COMO', res)
+          if (res.code === appCodes.ok) {
+            toast.show('Verifcacion exitosa', { type: 'ok' })
+            dispatch(addUser(res))
+            navigate('/')
+            console.log('USUARIO FINAL', res)
+          } else if (res.code === appCodes.invalidData) {
+            toast.show('Credenciales Incorrectas', { type: 'error' })
+          } else if (res.code === appCodes.processError) {
+            toast.show('Algo salio mal al iniciar sesion, porfavor verifique sus credenciales, conexion a internet o intentelo mas tarde', { type: 'error' })
+          }
+        })
+    }
   }
   return (
     <View style={[styles.container]}>
