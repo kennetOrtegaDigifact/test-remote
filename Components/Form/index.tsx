@@ -25,8 +25,8 @@ type formProps={
     containerInputStyle?: ViewStyle
 }
 export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onSubmit = () => {}, inputStyle, buttonTextStyle, buttonText, buttonStyles, containerInputStyle, inputProps }) => {
-  const { control, handleSubmit, formState: { errors, isSubmitting, isSubmitted }, setValue } = useForm(settings)
-  const [date, setDate] = useState<boolean>(false)
+  const { control, handleSubmit, formState: { errors, isSubmitting }, setValue, getValues } = useForm(settings)
+  const [, setDate] = useState<boolean>(false)
   const handleChangeDate = useCallback((e: DateTimePickerEvent, fieldName: string) => {
     setValue(fieldName, moment(e.nativeEvent.timestamp).format('DD-MM-YYYY'))
     setDate(false)

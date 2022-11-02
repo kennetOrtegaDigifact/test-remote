@@ -183,6 +183,30 @@ const App = () => {
                     >{toast.message}
                     </Text>
                   </View>
+                ),
+                warning: (toast: ToastProps) => (
+                  <View style={{
+                    padding: 15,
+                    margin: 5,
+                    backgroundColor: theme.orange,
+                    width: '90%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderRadius: 7
+                  }}
+                  >
+                    <Icon name='alert-circle' type='i' color={theme.black} size={20} />
+                    <Text
+                      style={{
+                        flex: 1,
+                        flexWrap: 'wrap',
+                        marginHorizontal: 5,
+                        fontSize: fonts.normal,
+                        color: theme.black
+                      }}
+                    >{toast.message}
+                    </Text>
+                  </View>
                 )
               }}
             >
