@@ -2,21 +2,17 @@
 import React, { memo } from 'react'
 import { StyleSheet, Text, TextStyle, TouchableHighlight, View } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
+import { IconType } from '../../types'
 import Icon from '../Icon'
-type iconProps={
-       name: string,
-    size: number,
-    color: string,
-    type: string
-}
+
 type menuItemProps = {
-    title: string,
-    icon: iconProps,
-    onPress: () => void,
-    withCounter: boolean,
-    counter: number,
-    backgroundColor: string,
-    titleStyles: TextStyle,
+    title?: string,
+    icon?: IconType,
+    onPress?: () => void,
+    withCounter?: boolean,
+    counter?: number,
+    backgroundColor?: string,
+    titleStyles?: TextStyle,
 }
 
 const MenuItemC: React.FC<menuItemProps> = ({ title = '', icon = { color: '', type: '', name: '', size: 24 }, backgroundColor, counter = 0, titleStyles, withCounter = false, onPress = () => {} }) => {

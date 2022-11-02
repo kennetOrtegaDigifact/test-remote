@@ -2,10 +2,10 @@ import { KeyboardType, TextStyle, ViewStyle } from 'react-native'
 import { RegisterOptions, FieldValues, FieldPath } from 'react-hook-form'
 
 export interface IconType {
-    name: string,
-    size: number,
-    color: string,
-    type: 'm' | 'a' | 'i' | 'v'
+    name?: string,
+    size?: number,
+    color?: string,
+    type?: 'm' | 'a' | 'i' | 'v'
 }
 
 export type AppCodes = {
