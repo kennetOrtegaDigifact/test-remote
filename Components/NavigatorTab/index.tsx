@@ -1,24 +1,36 @@
-import React, { memo } from 'react'
+import React, { memo, useEffect } from 'react'
 import { View, StyleSheet, Text } from 'react-native'
 import { Link, To, useLocation } from 'react-router-native'
-import { palette7, theme } from '../../Config/theme'
+import { fonts, palette7, theme } from '../../Config/theme'
 import { useSelector } from 'react-redux'
-
 import Icon from '../Icon'
 import { ReduxState } from '../../Redux/store'
+import { IconType } from '../../types'
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
 type tabProps={
     to: To,
-    icon: {
-        name: string,
-        size: number,
-        type: string,
-        color: string
-    },
+    icon: IconType,
     pathname: string,
     label: string
 }
 const Tab: React.FC<tabProps> = React.memo(function Tab ({ to, icon, pathname, label }) {
+  const offset = useSharedValue(0)
   const active = pathname === to
+  useEffect(() => {
+    active ? offset.value = -20 : offset.value = 25
+  }, [active])
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: withSpring(offset.value, {
+            damping: 9,
+            stiffness: 115
+          })
+        }
+      ]
+    }
+  })
   return (
     <>
       <Link
@@ -30,25 +42,33 @@ const Tab: React.FC<tabProps> = React.memo(function Tab ({ to, icon, pathname, l
           alignItems: 'center',
           minHeight: 35,
           maxHeight: 35,
-          padding: 5
+          overflow: 'hidden',
+          flex: 1
         }}
       >
-        <View style={{
+        <Animated.View style={[{
           borderRadius: 5,
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}
+          justifyContent: 'space-evenly',
+          alignItems: 'center',
+          height: 95
+        }, animatedStyles]}
         >
-          <Icon {...icon} />
-          {!active && (
-            <Text
-              style={{
-                color: theme.gray25
-              }}
-            >{label}
-            </Text>
-          )}
-        </View>
+          <Icon
+            name={icon.name}
+            color={icon.color}
+            size={icon.size}
+            type={icon.type}
+          />
+          <Text
+            style={{
+              color: active ? theme.purple : theme.gray25,
+              fontWeight: active ? '800' : '400',
+              fontSize: active ? fonts.normal : fonts.small
+            }}
+          >{label}
+          </Text>
+          <Icon name='circle' size={6} color={active ? theme.purple : theme.gray50} type='m' />
+        </Animated.View>
       </Link>
     </>
   )
@@ -67,7 +87,7 @@ const NavigatorTabC: React.FC = () => {
               name: 'home',
               type: 'i',
               color: theme.gray25,
-              size: 20
+              size: 22
             }}
             to={`/${user.country}/Dashboard`}
             label='Inicio'
@@ -78,7 +98,7 @@ const NavigatorTabC: React.FC = () => {
               name: 'search',
               type: 'i',
               color: theme.gray25,
-              size: 20
+              size: 22
             }}
             to={`/${user.country}/Consultas`}
             label='Consultas'
@@ -89,7 +109,7 @@ const NavigatorTabC: React.FC = () => {
               name: 'add-circle',
               type: 'i',
               color: theme.gray25,
-              size: 20
+              size: 22
             }}
             to={`/${user.country}/DTE`}
             label='Facturar'
@@ -100,7 +120,7 @@ const NavigatorTabC: React.FC = () => {
               name: 'cart',
               type: 'i',
               color: theme.gray25,
-              size: 20
+              size: 22
             }}
             to={`/${user.country}/Productos`}
             label='Productos'
@@ -111,7 +131,7 @@ const NavigatorTabC: React.FC = () => {
               name: 'people',
               type: 'i',
               color: theme.gray25,
-              size: 20
+              size: 22
             }}
             to={`/${user.country}/Clientes`}
             label='Clientes'
@@ -128,8 +148,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     backgroundColor: theme.white,
-    flexDirection: 'row',
-    justifyContent: 'space-between'
+    flexDirection: 'row'
+    // justifyContent: 'space-between'
   }
 })
 

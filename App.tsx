@@ -14,7 +14,8 @@ import {
   StatusBar,
   View,
   Text,
-  ActivityIndicator
+  ActivityIndicator,
+  LogBox
 } from 'react-native'
 import RNBootSplash from 'react-native-bootsplash'
 
@@ -38,6 +39,7 @@ import Icon from './Components/Icon'
 import { ToastProps } from 'react-native-toast-notifications/lib/typescript/toast'
 
 const App = () => {
+  LogBox.ignoreAllLogs()
   const drawerRef = useRef(null)
   RNBootSplash.hide({ fade: true })
   useEffect(() => {

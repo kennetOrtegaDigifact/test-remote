@@ -1,16 +1,30 @@
 import { fonts, theme } from '../../Config/theme'
-import React, { PropsWithChildren, useCallback } from 'react'
-import { Dimensions, ScrollView, Text, View, PixelRatio, Image } from 'react-native'
+import React, { LegacyRef, PropsWithChildren, useCallback, useEffect, useState } from 'react'
+import { Dimensions, ScrollView, Text, View, PixelRatio, Image, Platform } from 'react-native'
 import DrawerLayout from 'react-native-gesture-handler/DrawerLayout'
 import MenuItem from '../../Components/MenuItem'
 import deviceInfoModule from 'react-native-device-info'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-native'
 import { deleteUser } from '../../Redux/userReducer'
+import { ReduxState } from '../../Redux/store'
 
-export const SideMenu: React.FC<PropsWithChildren<{drawerRef: React.RefObject<React.Component | null>}>> = ({ children, drawerRef }) => {
+export const SideMenu: React.FC<PropsWithChildren<{drawerRef: LegacyRef<DrawerLayout | null>}>> = ({ children, drawerRef }) => {
+  const user = useSelector((state: ReduxState) => state.userDB)
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const [manufacturer, setManufacturer] = useState('')
+  const model = deviceInfoModule.getModel().split(' ')[0]
+  const accesos = user?.configuracionApp?.flat().filter(e => e.idTipoConfiguracion === 5 || e.tipoConfiguracion === 'Contingencia').map((e) => { return e.valor }).filter(e => e)?.length || 0
+
+  useEffect(() => {
+    console.log('ASHDASHDJ', model)
+    if (!manufacturer) {
+      console.log('MENU RENDER')
+      deviceInfoModule.getManufacturer().then(setManufacturer)
+    }
+  }, [])
+
   const closeMenu = useCallback(() => {
     if (drawerRef?.current) {
       drawerRef?.current?.closeDrawer()
@@ -64,21 +78,23 @@ export const SideMenu: React.FC<PropsWithChildren<{drawerRef: React.RefObject<Re
               type: 'i'
             }}
           />
-          <MenuItem
-            title='Contingencia'
-            titleStyles={{
-              color: theme.white,
-              fontSize: fonts.normal
-            }}
-            onPress={closeMenu}
-            withCounter={false}
-            icon={{
-              color: theme.white,
-              name: 'archive-clock-outline',
-              size: 24,
-              type: 'm'
-            }}
-          />
+          {accesos && (
+            <MenuItem
+              title='Contingencia'
+              titleStyles={{
+                color: theme.white,
+                fontSize: fonts.normal
+              }}
+              onPress={closeMenu}
+              withCounter
+              icon={{
+                color: theme.white,
+                name: 'archive-clock-outline',
+                size: 24,
+                type: 'm'
+              }}
+            />
+          )}
           <MenuItem
             title='Reportes'
             titleStyles={{
@@ -109,36 +125,40 @@ export const SideMenu: React.FC<PropsWithChildren<{drawerRef: React.RefObject<Re
               type: 'a'
             }}
           />
-          <MenuItem
-            title='MiPOS'
-            titleStyles={{
-              color: theme.white,
-              fontSize: fonts.normal
-            }}
-            onPress={closeMenu}
-            withCounter={false}
-            icon={{
-              color: theme.white,
-              name: 'credit-card-wireless',
-              size: 24,
-              type: 'm'
-            }}
-          />
-          <MenuItem
-            title='VISA'
-            titleStyles={{
-              color: theme.white,
-              fontSize: fonts.normal
-            }}
-            onPress={closeMenu}
-            withCounter={false}
-            icon={{
-              color: theme.white,
-              name: 'credit-card-wireless',
-              size: 24,
-              type: 'm'
-            }}
-          />
+          {(user?.MIPOS?.token && user?.MIPOS?.userToken && Platform.OS === 'android') && (
+            <MenuItem
+              title='MiPOS'
+              titleStyles={{
+                color: theme.white,
+                fontSize: fonts.normal
+              }}
+              onPress={closeMenu}
+              withCounter={false}
+              icon={{
+                color: theme.white,
+                name: 'credit-card-wireless',
+                size: 24,
+                type: 'm'
+              }}
+            />
+          )}
+          {(manufacturer.toLowerCase() === 'topwise' || model === 'P2') && (
+            <MenuItem
+              title='VISA'
+              titleStyles={{
+                color: theme.white,
+                fontSize: fonts.normal
+              }}
+              onPress={closeMenu}
+              withCounter={false}
+              icon={{
+                color: theme.white,
+                name: 'credit-card-wireless',
+                size: 24,
+                type: 'm'
+              }}
+            />
+          )}
           <MenuItem
             title='Configuraciones'
             titleStyles={{
