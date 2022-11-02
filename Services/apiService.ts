@@ -6,7 +6,7 @@ import DeviceInfo from 'react-native-device-info'
 import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
-import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product, DocumentTypes, Usuario, ConsultaDTE, NIT } from '../types'
+import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product, DocumentTypes, Usuario, ConsultaDTE, NIT, Dashboard } from '../types'
 const parser = new XMLParser(options)
 
 type FetchProps={
@@ -14,7 +14,7 @@ type FetchProps={
   taxid: string,
   country: string,
   userName: string,
-  usuario: string,
+  usuario?: string,
   signal?: AbortSignal
   token?: string
 }
@@ -38,7 +38,7 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
           .then(responseMS => {
             // console.log('RESPONSE API MS', responseMS)
 
-            return getTokenMIPOSService({ nit, Password, taxid, Username, user })
+            return getTokenMIPOSService({ nit, Password, Username, user })
               .then(responseMIPOSTOKEN => {
                 const MIPOS = responseMIPOSTOKEN
                 console.log('MIPOS TOKENS', MIPOS)
@@ -260,15 +260,13 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                       return getUserPermissions({ requestor, taxid, country, userName: Username, usuario: user })
                                                         .then(resUserPermissions => {
                                                           if (resUserPermissions.code === appCodes.ok) {
-                                                            const permisos = {}
+                                                            const permisos: {[key:string]: {[key: string]: {granted: boolean}}} = {}
                                                             return getUserActions({ requestor, taxid, country, userName: Username, usuario: user })
                                                               .then(resA => {
                                                                 if (resA?.code === appCodes.ok) {
-                                                                  resUserPermissions?.data.forEach(e => {
-                                                                    const permiso = {
-                                                                      granted: e.granted
-                                                                    }
-                                                                    resA.data.flat().forEach(a => {
+                                                                  resUserPermissions?.data?.forEach(e => {
+                                                                    const permiso: {[key: string]: {granted: boolean}} = {}
+                                                                    resA?.data?.flat()?.forEach(a => {
                                                                       if (a.idRight === e.idRight) {
                                                                         permiso[a?.description] = {
                                                                           granted: a?.granted
@@ -278,11 +276,9 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                                     permisos[e.description] = permiso
                                                                   })
                                                                 } if (resA.code === appCodes.dataVacio) {
-                                                                  resUserPermissions.data.forEach(e => {
-                                                                    const permiso = {
-                                                                      granted: e.granted
-                                                                    }
-                                                                    resCatalogoPermisos.data.find(p => p.idRight === e.idRight)?.actions.forEach(
+                                                                  resUserPermissions?.data?.forEach(e => {
+                                                                    const permiso: {[key: string]: {granted: boolean}} = {}
+                                                                    resCatalogoPermisos?.data?.find(p => p?.idRight === e?.idRight)?.actions?.forEach(
                                                                       a => {
                                                                         permiso[a.description] = {
                                                                           granted: true
@@ -304,7 +300,7 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                                 const globalAccesoContingencia = arrayConfig.flat().find(e => e.idTipoConfiguracion === 5 && e.tipoOperacion === 'TODOS')?.valor || 0
                                                                 // Obtener si tiene acceso global a contingencia
                                                                 const personalAccesoContingencia = arrayConfig.flat().find(e => e.idTipoConfiguracion === 5 && e.tipoOperacion === 'INDIVIDUAL')?.valor || 0
-                                                                return getUsersByTaxid({ country, requestor, taxid, Username: user })
+                                                                return getUsersByTaxid({ country, requestor, taxid, userName: user })
                                                                   .then(res => {
                                                                     if (res.code === appCodes.ok) {
                                                                       return getAllClientsService({ country, requestor, taxid, userName: user })
@@ -315,16 +311,16 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                                                 let contingenciaDocsRequest = 0
                                                                                 if (globalRequestAccesos) {
                                                                                   console.log('CANTIDAD ACCCESOS GLOBAL', globalRequestAccesos)
-                                                                                  contingenciaDocsRequest = globalRequestAccesos
+                                                                                  contingenciaDocsRequest = Number(globalRequestAccesos)
                                                                                 }
                                                                                 if (personalRequestAccesos) {
                                                                                   console.log('CANTIDAD ACCESSOS PERSONAL', personalRequestAccesos)
-                                                                                  contingenciaDocsRequest = personalRequestAccesos
+                                                                                  contingenciaDocsRequest = Number(personalRequestAccesos)
                                                                                 }
                                                                                 console.log('AL FINAL TIENE QUE PEDIR LA CANTIDAD DE: ', contingenciaDocsRequest)
                                                                                 return getTalonarioContingencia({ batchId: 1, taxid, branches: infoFiscalUser.establecimientos, qtyRequested: contingenciaDocsRequest })
                                                                                   .then(resTC => {
-                                                                                    const talonarioContingencia = {}
+                                                                                    const talonarioContingencia: {[key: string]: string|number} = {}
                                                                                     infoFiscalUser.establecimientos.forEach((item, index) => {
                                                                                       talonarioContingencia[item.numero] = resTC[index]
                                                                                     })
@@ -468,7 +464,21 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
     })
 }
 
-export const getTokenMIPOSService = async ({ Username, Password, user, nit, taxid }) => {
+export const getTokenMIPOSService = async ({
+  Username,
+  Password,
+  user,
+  nit
+}: {
+    Username: string
+    Password: string
+    user: string|number
+    nit: string|number
+  }): Promise<{
+  apiToken: string
+  token: string
+  userToken: string
+}> => {
   return globalThis.fetch('https://felgtaws.digifact.com.gt/gt.com.bac.mipos/api/Authentication/get_token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -527,7 +537,10 @@ export const getTokenMIPOSService = async ({ Username, Password, user, nit, taxi
 export const getDashboardService = async ({
   taxid,
   signal
-}: FetchProps) => {
+}: FetchProps): Promise<{
+  code: number
+  data?: Dashboard
+}> => {
   return globalThis.fetch(urlWsSoap, {
     signal,
     method: 'POST',
@@ -560,7 +573,21 @@ export const getDashboardService = async ({
           const dataDashboard: any[] = []
           const rows = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
           dataDashboard.push(rows)
-          const objD = {}
+          const objD: Dashboard = {
+            resumenMensual: [],
+            ingresoAnual: 0,
+            nuevosClientes: 0,
+            ingresoMensual: 0,
+            numeroVentas: 0,
+            ventasAnteriores: 0,
+            totalCs: 0,
+            csAnteriores: 0,
+            totalClientes: 0,
+            promedioVentaPorFactura: 0,
+            resumenSemanal: [],
+            resumenAnual: { '': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+            topClientes: []
+          }
           // const today = new Date().getMonth()
           const actualYear = new Date().getFullYear()
           const actualMonth = new Date().getMonth() + 1
@@ -569,10 +596,10 @@ export const getDashboardService = async ({
             ?.flat()
             ?.filter(e => e.tipoInfo === 'MENSUAL')
             ?.sort((a, b) => {
-              const at = `${a.anio}  -${a.mes}  -01`.split(/[- :]/)
-              const bt = `${b.anio}  -${b.mes}  -01`.split(/[- :]/)
-              const aF = new Date(at[0], at[1] - 1, at[2], at[3] || 0, at[4] || 0, at[5] || 0).getTime()
-              const bF = new Date(bt[0], bt[1] - 1, bt[2], bt[3] || 0, bt[4] || 0, bt[5] || 0).getTime()
+              const at:string[] = `${a.anio}  -${a.mes}  -01`.split(/[- :]/)
+              const bt:string[] = `${b.anio}  -${b.mes}  -01`.split(/[- :]/)
+              const aF:number = new Date(Number(at[0]), Number(at[1]) - 1, Number(at[2]), Number(at[3] || 0), Number(at[4] || 0), Number(at[5] || 0)).getTime()
+              const bF:number = new Date(Number(bt[0]), Number(bt[1]) - 1, Number(bt[2]), Number(bt[3] || 0), Number(bt[4] || 0), Number(bt[5] || 0)).getTime()
 
               if (aF < bF) return -1
               if (aF > bF) return 1
@@ -587,7 +614,7 @@ export const getDashboardService = async ({
               objD.nuevosClientes = e.numCliente
             }
             if (e.tipoInfo === 'MENSUAL') {
-              objD.ingresoMensual = objD.resumenMensual.find(e => (e.anio === actualYear && e.mes === actualMonth)).total || 0
+              objD.ingresoMensual = objD?.resumenMensual.find(e => (e?.anio === actualYear && e?.mes === actualMonth))?.total || 0
             }
             if (e.tipoInfo === 'VENTAS') {
               objD.numeroVentas = e.numVentas
@@ -667,14 +694,12 @@ export const getDashboardService = async ({
           }
         }
         return {
-          code: appCodes.dataVacio,
-          data: []
+          code: appCodes.dataVacio
         }
       } catch (ex) {
         console.error('EXCEPTION GET RESUME DASHBOARD SERVICE', ex)
         return {
-          code: appCodes.processError,
-          data: []
+          code: appCodes.processError
         }
       }
     })
@@ -682,13 +707,11 @@ export const getDashboardService = async ({
       console.log('ERROR GET DASHBOARD SERVICE', err)
       if (err.message === 'Aborted') {
         return {
-          code: appCodes.ok,
-          data: []
+          code: appCodes.ok
         }
       }
       return {
-        code: appCodes.processError,
-        data: []
+        code: appCodes.processError
       }
     })
 }
@@ -2923,7 +2946,13 @@ export const getProductsResumen = async ({ user, filter }: {user: FetchProps, fi
     })
 }
 
-export const getLogos = async ({ taxid = '', establecimientos = [] }): Promise<Logos> => {
+export const getLogos = async ({
+  taxid = '',
+  establecimientos
+}: {
+    taxid: string
+    establecimientos: Establecimiento[]
+}): Promise<Logos> => {
   const URL_BASE: string = `https://digifact-logo.s3.amazonaws.com/GT/logo/${taxid}.jpg`
   return ReactNativeBlobUtil
     .fetch('GET', URL_BASE)

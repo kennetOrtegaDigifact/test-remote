@@ -278,3 +278,19 @@ export type NIT={
     departamento: string
     municipio: string
 }
+
+export type Dashboard={
+    resumenMensual: any[]
+    ingresoAnual: number
+    nuevosClientes: number
+    ingresoMensual: number
+    numeroVentas: number
+    ventasAnteriores: number
+    totalCs: number
+    csAnteriores: number
+    totalClientes: number
+    promedioVentaPorFactura: number
+    resumenSemanal: number[]
+    resumenAnual: {[key: string|number]: number[]}
+    topClientes: any[]
+}
