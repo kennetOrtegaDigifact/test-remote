@@ -684,7 +684,7 @@ export const getDashboardService = async ({
 
           const week = dataDashboard
             ?.flat()
-            ?.filter(e => (e.tipoInfo === 'SEMANAL' && (new Date(e.fechaFin).getMonth() + 1) === actualMonth))
+            ?.filter(e => (e.tipoInfo === 'SEMANAL'))
             ?.sort((a, b) => {
               const aF = new Date(a.fechaFin).getTime()
               const bF = new Date(b.fechaFin).getTime()

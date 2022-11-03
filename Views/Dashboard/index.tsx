@@ -42,7 +42,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
         .then(res => {
           if (res.code === appCodes.ok) {
             if (res?.data) {
-              console.log('DATA DASHBOARD', res.data)
+              console.log('DATA DASHBOARD', res.data.resumenSemanal)
               setDashboard(res.data)
             } else {
               toast.show('Algo salio mal al tratar de obtener tu informacion', {
@@ -366,7 +366,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
             }}
           />
           <VictoryBar
-            data={[100, 200, 50, 45]}
+            data={dashboard.resumenSemanal}
             barRatio={0.8}
             alignment='start'
             categories={{ x: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'] }}
