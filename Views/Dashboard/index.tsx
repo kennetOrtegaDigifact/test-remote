@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, PixelRatio, StyleSheet, Dimensions, ScrollView } from 'react-native'
+import { View, Text, PixelRatio, Dimensions, ScrollView } from 'react-native'
 import { useToast } from 'react-native-toast-notifications'
 import { useSelector } from 'react-redux'
 import { VictoryBar, VictoryChart, VictoryTheme, VictoryArea, VictoryZoomContainer, VictoryAxis } from 'victory-native'
@@ -12,10 +12,11 @@ import { DashboardType } from '../../types'
 import { ClientTop } from './ClientTop'
 import { numberFormater } from '../../Config/utilities'
 import { months } from '../../Config/dictionary'
-
+/* A React component that is using the VictoryChart library to render a dashboard. */
 export const Dashboard: React.FC = React.memo(function Dashboard () {
   const toast = useToast()
   const [dimensions, setDimensions] = useState(Dimensions.get('window').width)
+  /* Setting the state of dashboard to an object with the properties of DashboardType. */
   const [dashboard, setDashboard] = useState<DashboardType>({
     resumenMensual: [],
     ingresoAnual: 0,
@@ -32,12 +33,14 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
     topClientes: []
   })
   const user = useSelector((state: ReduxState) => state.userDB)
+  /* A React Hook that is called when the component is mounted. */
   useEffect(() => {
     const controller = new AbortController()
     globalThis.console.log('DASHBOARD RENDER')
     if (user?.taxid?.length) {
       const { taxid, requestor, country, userName, token } = user
       const { signal } = controller
+      /* Making a request to an API and setting the response to a state. */
       getDashboardService({ country, requestor, taxid, userName, token, signal })
         .then(res => {
           if (res.code === appCodes.ok) {
@@ -60,6 +63,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
     }
     return () => { controller.abort() }
   }, [])
+  /* Adding an event listener to the Dimensions object. */
   useEffect(() => {
     const subscription = Dimensions.addEventListener(
       'change',
@@ -80,6 +84,8 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
         }}
       >Bienvenido{user?.userName?.length ? `, ${user.infoFiscalUser.nombre}` : ''}
       </Text>
+
+      {/** ------------- CARROUSELL ------------- */}
       <ScrollView
         horizontal
         style={{
@@ -297,6 +303,8 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
           </View>
         </View>
       </ScrollView>
+
+      {/** ------------- TOP CLIENTS CHART ------------- */}
       <View style={{
         borderRadius: 13,
         justifyContent: 'center',
@@ -315,6 +323,8 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
         </Text>
         <ClientTop clients={dashboard.topClientes} />
       </View>
+
+      {/* -------------- SEMANAL CHART ------------- */}
       <View style={{
         borderRadius: 13,
         justifyContent: 'center',
@@ -379,6 +389,8 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
           />
         </VictoryChart>
       </View>
+
+      {/* ------ YEAR CHART ------------- */}
       <View style={{
         borderRadius: 13,
         justifyContent: 'center',
@@ -492,14 +504,3 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
 
   )
 }, (prev, next) => JSON.stringify(prev) === JSON.stringify(next))
-
-const styles = StyleSheet.create({
-  clientItem: {
-    backgroundColor: 'red',
-    borderRadius: 7,
-    padding: 5,
-    margin: 5,
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  }
-})

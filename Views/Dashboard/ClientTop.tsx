@@ -8,6 +8,7 @@ import { getInfoByNITService } from '../../Services/apiService'
 type props={
     clients?: [{nit: string|number, total:number}] | any[]
 }
+/* An object that has a key of type number and a value of type string. */
 const topColors: { [key: number]: string } = {
   1: theme.purple,
   2: theme.purple75,
@@ -15,14 +16,20 @@ const topColors: { [key: number]: string } = {
   4: theme.orange75,
   5: theme.gray75
 }
+/* A React component that receives an array of objects as a prop and returns a list of the top 5
+clients. */
 export const ClientTop: React.FC<props> = ({ clients }) => {
   const [top, setTop] = useState<{nit?: number|string, total?: number, nombre?: string}[]>([{ nit: -1, total: 0, nombre: '' }])
   useEffect(() => {
     if (clients?.length && clients.some(e => e.nit !== -1)) {
       const promises: Promise<{nit?: number|string, total?: number, nombre?: string}>[] = []
+      /* Creating an array of promises. */
       clients.forEach(e => {
         promises.push(getInfoByNITService({ nit: String(e.nit || '') })
           .then(res => {
+            /* Checking if the response has a code property and if it is equal to appCodes.ok, then it
+           is returning an object with the properties nit, total and nombre. If it is not equal to
+           appCodes.ok, then it is returning an object with the properties nit, total and nombre, but empty. */
             if (res?.code === appCodes.ok) {
               const { data: { nombre, taxid } } = res
               return {
@@ -47,6 +54,7 @@ export const ClientTop: React.FC<props> = ({ clients }) => {
             }
           }))
       })
+      /* Waiting for all the promises to be resolved and then it is setting the state. */
       Promise.all(promises).then((res) => {
         setTop(res)
       })
