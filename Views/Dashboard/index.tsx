@@ -345,6 +345,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
               ticks: { stroke: theme.gray25, size: 1 },
               tickLabels: { fontSize: fonts.verySmall, padding: 5 }
             }}
+            categories={{ x: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'] }}
           />
           <VictoryAxis
             dependentAxis
@@ -369,7 +370,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
             data={dashboard.resumenSemanal}
             barRatio={0.8}
             alignment='start'
-            categories={{ x: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'] }}
+            // categories={{ x: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'] }}
             style={{
               data: {
                 fill: '#2E317E59'
