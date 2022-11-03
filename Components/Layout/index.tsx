@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from 'react'
-import { View, StyleSheet, PixelRatio, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, PixelRatio, TouchableOpacity, ScrollView } from 'react-native'
 import { palette7, theme } from '../../Config/theme'
 import Icon from '../Icon'
 import NavigatorTab from '../NavigatorTab'
@@ -22,9 +22,12 @@ export const Layout: React.FC<PropsWithChildren<{drawerRef: React.RefObject<Reac
           />
         </TouchableOpacity>
       </View>
-      <View style={[styles.container]}>
+      <ScrollView
+        style={[styles.container]}
+      >
         {children}
-      </View>
+        <View style={{ height: 20 }} />
+      </ScrollView>
       <NavigatorTab />
     </View>
   )
@@ -32,7 +35,6 @@ export const Layout: React.FC<PropsWithChildren<{drawerRef: React.RefObject<Reac
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: palette7.cream,
     borderTopLeftRadius: 20 / PixelRatio.getFontScale(),
     borderTopRightRadius: 20 / PixelRatio.getFontScale(),
