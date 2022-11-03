@@ -1,5 +1,5 @@
 import { fonts, theme } from '../../Config/theme'
-import React, { LegacyRef, PropsWithChildren, useCallback, useEffect, useState } from 'react'
+import React, { PropsWithChildren, useCallback, useEffect, useState } from 'react'
 import { Dimensions, ScrollView, Text, View, PixelRatio, Image, Platform } from 'react-native'
 import DrawerLayout from 'react-native-gesture-handler/DrawerLayout'
 import MenuItem from '../../Components/MenuItem'
@@ -9,16 +9,14 @@ import { useNavigate } from 'react-router-native'
 import { deleteUser } from '../../Redux/userReducer'
 import { ReduxState } from '../../Redux/store'
 
-export const SideMenu: React.FC<PropsWithChildren<{drawerRef: LegacyRef<DrawerLayout | null>}>> = ({ children, drawerRef }) => {
+export const SideMenu: React.FC<PropsWithChildren<{drawerRef: React.RefObject<DrawerLayout | null>}>> = ({ children, drawerRef }) => {
   const user = useSelector((state: ReduxState) => state.userDB)
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [manufacturer, setManufacturer] = useState('')
   const model = deviceInfoModule.getModel().split(' ')[0]
   const accesos = user?.configuracionApp?.flat().filter(e => e.idTipoConfiguracion === 5 || e.tipoConfiguracion === 'Contingencia').map((e) => { return e.valor }).filter(e => e)?.length || 0
-
   useEffect(() => {
-    console.log('ASHDASHDJ', model)
     if (!manufacturer) {
       console.log('MENU RENDER')
       deviceInfoModule.getManufacturer().then(setManufacturer)
@@ -78,7 +76,7 @@ export const SideMenu: React.FC<PropsWithChildren<{drawerRef: LegacyRef<DrawerLa
               type: 'i'
             }}
           />
-          {accesos && (
+          {accesos !== 0 && (
             <MenuItem
               title='Contingencia'
               titleStyles={{

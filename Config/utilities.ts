@@ -44,3 +44,25 @@ export const deletePadLeft = (nit:string): string => {
   }
   return regexNit
 }
+
+export const numberFormater = ({
+  number = 0,
+  toFixed = false,
+  fixedDecimal = 2
+}: {
+  number: number
+  toFixed?: boolean
+  fixedDecimal?: number
+}): string => {
+  try {
+    if (!isNaN(number)) {
+      return number.toFixed(toFixed ? fixedDecimal : 0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+    } else {
+      console.log('ERROR NUMBER GIVEN IN NUMBER FORMATER IS NAN')
+      return '0'
+    }
+  } catch (ex) {
+    console.log('EXCEPTION IN NUMBER FORMATER UTILITIE', ex)
+    return '0'
+  }
+}

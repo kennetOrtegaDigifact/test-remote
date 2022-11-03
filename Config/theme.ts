@@ -5,6 +5,7 @@ export const theme = {
   purple75: '#2E317EBF',
   purple50: '#2E317E80',
   white: '#FFFFFF',
+  white25: '#FFFFFF33',
   white75: '#FFFFFFBF',
   white50: '#FFFFFF80',
   black: '#000000',

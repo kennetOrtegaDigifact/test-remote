@@ -284,7 +284,7 @@ export type NIT={
     municipio: string
 }
 
-export type Dashboard={
+export type DashboardType={
     resumenMensual: any[]
     ingresoAnual: number
     nuevosClientes: number
@@ -297,5 +297,5 @@ export type Dashboard={
     promedioVentaPorFactura: number
     resumenSemanal: number[]
     resumenAnual: {[key: string|number]: number[]}
-    topClientes: any[]
+    topClientes: [{[key:string]: string|number, [key:string]:number}] | any[]
 }

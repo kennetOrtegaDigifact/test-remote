@@ -6,7 +6,7 @@ import DeviceInfo from 'react-native-device-info'
 import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
-import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product, DocumentTypes, Usuario, ConsultaDTE, NIT, Dashboard, userInterface } from '../types'
+import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product, DocumentTypes, Usuario, ConsultaDTE, NIT, DashboardType, userInterface } from '../types'
 const parser = new XMLParser(options)
 
 type FetchProps={
@@ -581,7 +581,7 @@ export const getDashboardService = async ({
   signal
 }: FetchProps): Promise<{
   code: number
-  data?: Dashboard
+  data?: DashboardType
 }> => {
   return globalThis.fetch(urlWsSoap, {
     signal,
@@ -615,7 +615,7 @@ export const getDashboardService = async ({
           const dataDashboard: any[] = []
           const rows = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
           dataDashboard.push(rows)
-          const objD: Dashboard = {
+          const objD: DashboardType = {
             resumenMensual: [],
             ingresoAnual: 0,
             nuevosClientes: 0,
@@ -628,7 +628,7 @@ export const getDashboardService = async ({
             promedioVentaPorFactura: 0,
             resumenSemanal: [],
             resumenAnual: { '': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-            topClientes: []
+            topClientes: [{ nit: 0, total: 0 }]
           }
           // const today = new Date().getMonth()
           const actualYear = new Date().getFullYear()
@@ -720,7 +720,7 @@ export const getDashboardService = async ({
           objD.topClientes = dataDashboard
             ?.flat()
             ?.filter(e => e.tipoInfo === 'TOP_CLIENTES')
-            ?.sort((a, b) => {
+            ?.sort((a: {nit: string, total: number}, b: {nit: string, total: number}) => {
               const aT = a.total || 0
               const bT = b.total || 0
 
