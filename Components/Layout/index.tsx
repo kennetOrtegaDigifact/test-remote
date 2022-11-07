@@ -24,10 +24,11 @@ export const Layout: React.FC<PropsWithChildren<{drawerRef: React.RefObject<Draw
         </TouchableOpacity>
       </View>
       <View style={[styles.container]}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        {/* <ScrollView nestedScrollEnabled style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           {children}
           <View style={{ height: 10 }} />
-        </ScrollView>
+        </ScrollView> */}
+        {children}
       </View>
       <NavigatorTab />
     </View>

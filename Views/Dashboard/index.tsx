@@ -74,7 +74,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
     return () => subscription?.remove()
   }, [])
   return (
-    <>
+    <ScrollView nestedScrollEnabled style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
       <Text
         style={{
           fontSize: fonts.big,
@@ -500,7 +500,6 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
         </VictoryChart>
 
       </View>
-    </>
-
+    </ScrollView>
   )
 }, (prev, next) => JSON.stringify(prev) === JSON.stringify(next))

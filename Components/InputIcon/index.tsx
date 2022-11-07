@@ -23,6 +23,7 @@ export const InputIcon: React.FC<inputProps> = React.memo(function InputIcon ({ 
         />
         <TextInput
           {...props}
+          style={[styles.input]}
           returnKeyType='next'
           secureTextEntry={visible}
           editable={!disabled}

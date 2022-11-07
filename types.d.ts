@@ -1,6 +1,6 @@
 import { KeyboardType, TextStyle, ViewStyle } from 'react-native'
-import { RegisterOptions, FieldValues, FieldPath } from 'react-hook-form'
-
+import { RegisterOptions, FieldValues, FieldPath, UseFormProps } from 'react-hook-form'
+type Countrys = 'GT' | 'PA'
 export interface IconType {
     name?: string,
     size?: number,
@@ -57,19 +57,19 @@ export type SharedData={
     estado: string
 }
 
-export type PermisosPadre = {
-    idRight: number,
-    description: string,
-    granted: boolean,
-    actions?: PermisoPorAccion[]
-}
-
 export type PermisoPorAccion = {
     idActionRight: string|number,
     description: string,
     idRight: string|number,
     page: string,
     granted: boolean
+}
+
+export type PermisosPadre = {
+    idRight: number,
+    description: string,
+    granted: boolean,
+    actions?: PermisoPorAccion[]
 }
 
 export type LogoPorEstablecimiento = Array<{[key: number|string]: string}>
@@ -183,7 +183,7 @@ export type formulario = {
     secureTextEntry?: boolean,
     switchIcon?: IconType,
     picker?: {
-        data: Array<any>,
+        data?: Array<any>,
         labelKey: string,
         valueKey: string,
         defaultValue: string,
@@ -196,6 +196,13 @@ export type formulario = {
     icon?: IconType,
     rules?: Omit<RegisterOptions<FieldValues, FieldPath<FieldValues>>, 'valueAsNumber'|'valueAsDate'|'setValueAs'|'disabled'>,
     style?: ViewStyle
+}
+
+export type FormularioPerCountry = {
+    [key: string]: {
+        schema: Array<formulario>,
+        settings: UseFormProps
+    }
 }
 
 export type countriesDictionaryType ={
@@ -298,4 +305,23 @@ export type DashboardType={
     resumenSemanal: number[]
     resumenAnual: {[key: string|number]: number[]}
     topClientes: [{[key:string]: string|number, [key:string]:number}] | any[]
+}
+
+export type DinamycConsultasServiceHook={
+    buscarPlaceHolder?: string
+    anular?: {
+        [key: string]: (values: any) => void
+    }
+    reimprimir?: {
+        [key: string]: void
+    }
+    visualizarPdf?: {
+        [key: string]: void
+    }
+    compartir?: {
+        [key: string]: void
+    }
+    visualizarHtml?: {
+        [key: string]: void
+    }
 }

@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { View, Text, StyleSheet, ScrollView, Image, PixelRatio, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, Image, PixelRatio, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useToast } from 'react-native-toast-notifications'
@@ -109,211 +109,212 @@ export const Login: React.FC = () => {
     }
   }, [])
   return (
-    <View style={[styles.container]}>
-      <ScrollView
-        centerContent
-        automaticallyAdjustKeyboardInsets
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          padding: 10
-        }}
-      >
-        <View
-          style={{
-            alignItems: 'center',
-            margin: 5
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <View style={[styles.container]}>
+        <ScrollView
+          centerContent
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            padding: 10
           }}
         >
-          <Image
-            source={require('../../Public/img/Logo1.webp')}
+          <View
             style={{
-              width: 120 / PixelRatio.getFontScale(),
-              height: 100 / PixelRatio.getFontScale(),
+              alignItems: 'center',
               margin: 5
             }}
-          />
-          <Text
-            style={{
-              fontSize: fonts.small,
-              textAlign: 'center',
-              flexWrap: 'wrap',
-              color: theme.white,
-              paddingHorizontal: 10
-            }}
-          >Ya eres cliente de Digifact, ingresa con tu Identificador Tributario, usuario y contraseña. Si no recuerdas tu contraseña haz click en recuperar contraseña
-          </Text>
-        </View>
-        <Controller
-          control={control}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Picker
-              items={LoginCountries}
-              defaultValue='-- Seleccione un pais --'
-              labelKey='name_es'
-              valueKey='code'
-              inputIcon={{
-                name: 'map-marker',
-                color: theme.white,
-                size: 20,
-                type: 'm'
-              }}
-              withSearch
-              searchlabel='Buscar Pais...'
-              labelStyle={{
-                color: theme.white,
-                fontSize: fonts.normal
-              }}
+          >
+            <Image
+              source={require('../../Public/img/Logo1.webp')}
               style={{
-                borderColor: theme.orange
-              }}
-              onValueChange={(e) => {
-                handleChangePicker('country', e, 'code')
+                width: 120 / PixelRatio.getFontScale(),
+                height: 100 / PixelRatio.getFontScale(),
+                margin: 5
               }}
             />
-          )}
-          name='country'
-        />
-        {(errors?.country?.message) && (<ErrorLabel message={errors?.country?.message} />)}
-        <Controller
-          control={control}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <InputIcon
-              onBlur={onBlur}
-              onChangeText={onChange}
-              keyboardType='default'
-              placeholderTextColor={theme.white}
-              placeholder='Identificador Tributario'
-              icon={{
-                name: 'card-account-details',
+            <Text
+              style={{
+                fontSize: fonts.small,
+                textAlign: 'center',
+                flexWrap: 'wrap',
                 color: theme.white,
-                size: 20,
-                type: 'm'
+                paddingHorizontal: 10
               }}
-              style={[
-                {
+            >Ya eres cliente de Digifact, ingresa con tu Identificador Tributario, usuario y contraseña. Si no recuerdas tu contraseña haz click en recuperar contraseña
+            </Text>
+          </View>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Picker
+                items={LoginCountries}
+                defaultValue='-- Seleccione un pais --'
+                labelKey='name_es'
+                valueKey='code'
+                inputIcon={{
+                  name: 'map-marker',
                   color: theme.white,
-                  flex: 1
-                }
-              ]}
-              containerStyle={{
-                borderColor: theme.orange
-              }}
-            />
-          )}
-          name='taxid'
-        />
-        {(errors?.taxid?.message) && (<ErrorLabel message={errors?.taxid?.message} />)}
-        <Controller
-          control={control}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <InputIcon
-              onBlur={onBlur}
-              onChangeText={onChange}
-              keyboardType='default'
-              placeholderTextColor={theme.white}
-              placeholder='Nombre de Usuario'
-              icon={{
-                name: 'person',
-                color: theme.white,
-                size: 20,
-                type: 'i'
-              }}
-              style={[
-                {
+                  size: 20,
+                  type: 'm'
+                }}
+                withSearch
+                searchlabel='Buscar Pais...'
+                labelStyle={{
                   color: theme.white,
-                  flex: 1
-                }
-              ]}
-              containerStyle={{
-                borderColor: theme.orange
-              }}
-            />
-          )}
-          name='username'
-        />
-        {(errors?.username?.message) && (<ErrorLabel message={errors?.username?.message} />)}
-        <Controller
-          control={control}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <InputIcon
-              onBlur={onBlur}
-              onChangeText={onChange}
-              keyboardType='default'
-              placeholderTextColor={theme.white}
-              isSecureTextInput
-              placeholder='Contraseña'
-              icon={{
-                name: 'lock',
-                color: theme.white,
-                size: 20,
-                type: 'm'
-              }}
-              switchIcon={{
-                name: 'eye',
-                color: theme.white,
-                size: 24,
-                type: 'i'
-              }}
-              style={[
-                {
-                  color: theme.white,
-                  flex: 1
-                }
-              ]}
-              containerStyle={{
-                borderColor: theme.orange
-              }}
-            />
-          )}
-          name='password'
-        />
-        {(errors?.password?.message) && (<ErrorLabel message={errors?.password?.message} />)}
-        <TouchableOpacity
-          style={[styles.button]}
-          onPress={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
-        >
-          {!isSubmitting
-            ? (
-              <>
-                <Icon
-                  name='log-in'
-                  size={20}
-                  color={theme.gray}
-                  type='i'
-                />
-                <Text style={[styles.buttonText]}>Iniciar Sesion</Text>
-              </>
-              )
-            : (
-              <ActivityIndicator
-                size='large'
-                color={theme.gray}
+                  fontSize: fonts.normal
+                }}
+                style={{
+                  borderColor: theme.orange
+                }}
+                onValueChange={(e) => {
+                  handleChangePicker('country', e, 'code')
+                }}
               />
-              )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleRecoverPassword}
-        >
-          <Text
-            style={{
-              color: theme.white,
-              textAlign: 'center',
-              fontSize: fonts.normal,
-              textDecorationLine: 'underline'
-            }}
-          >Recuperar Contraseña
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-      <Text style={{
-        color: theme.white,
-        textAlign: 'center',
-        fontSize: fonts.small
-      }}
-      >Version {deviceInfoModule.getVersion()}
-      </Text>
-    </View>
+            )}
+            name='country'
+          />
+          {(errors?.country?.message) && (<ErrorLabel message={errors?.country?.message} />)}
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <InputIcon
+                onBlur={onBlur}
+                onChangeText={onChange}
+                keyboardType='default'
+                placeholderTextColor={theme.white}
+                placeholder='Identificador Tributario'
+                icon={{
+                  name: 'card-account-details',
+                  color: theme.white,
+                  size: 20,
+                  type: 'm'
+                }}
+                style={[
+                  {
+                    color: theme.white,
+                    flex: 1
+                  }
+                ]}
+                containerStyle={{
+                  borderColor: theme.orange
+                }}
+              />
+            )}
+            name='taxid'
+          />
+          {(errors?.taxid?.message) && (<ErrorLabel message={errors?.taxid?.message} />)}
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <InputIcon
+                onBlur={onBlur}
+                onChangeText={onChange}
+                keyboardType='default'
+                placeholderTextColor={theme.white}
+                placeholder='Nombre de Usuario'
+                icon={{
+                  name: 'person',
+                  color: theme.white,
+                  size: 20,
+                  type: 'i'
+                }}
+                style={[
+                  {
+                    color: theme.white,
+                    flex: 1
+                  }
+                ]}
+                containerStyle={{
+                  borderColor: theme.orange
+                }}
+              />
+            )}
+            name='username'
+          />
+          {(errors?.username?.message) && (<ErrorLabel message={errors?.username?.message} />)}
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <InputIcon
+                onBlur={onBlur}
+                onChangeText={onChange}
+                keyboardType='default'
+                placeholderTextColor={theme.white}
+                isSecureTextInput
+                placeholder='Contraseña'
+                icon={{
+                  name: 'lock',
+                  color: theme.white,
+                  size: 20,
+                  type: 'm'
+                }}
+                switchIcon={{
+                  name: 'eye',
+                  color: theme.white,
+                  size: 24,
+                  type: 'i'
+                }}
+                style={[
+                  {
+                    color: theme.white,
+                    flex: 1
+                  }
+                ]}
+                containerStyle={{
+                  borderColor: theme.orange
+                }}
+              />
+            )}
+            name='password'
+          />
+          {(errors?.password?.message) && (<ErrorLabel message={errors?.password?.message} />)}
+          <TouchableOpacity
+            style={[styles.button]}
+            onPress={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
+          >
+            {!isSubmitting
+              ? (
+                <>
+                  <Icon
+                    name='log-in'
+                    size={20}
+                    color={theme.gray}
+                    type='i'
+                  />
+                  <Text style={[styles.buttonText]}>Iniciar Sesion</Text>
+                </>
+                )
+              : (
+                <ActivityIndicator
+                  size='large'
+                  color={theme.gray}
+                />
+                )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleRecoverPassword}
+          >
+            <Text
+              style={{
+                color: theme.white,
+                textAlign: 'center',
+                fontSize: fonts.normal,
+                textDecorationLine: 'underline'
+              }}
+            >Recuperar Contraseña
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+        <Text style={{
+          color: theme.white,
+          textAlign: 'center',
+          fontSize: fonts.small
+        }}
+        >Version {deviceInfoModule.getVersion()}
+        </Text>
+      </View>
+    </KeyboardAvoidingView>
   )
 }
 

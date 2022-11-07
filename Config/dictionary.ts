@@ -1484,3 +1484,118 @@ export const months: string[] = [
   'Noviembre',
   'Diciembre'
 ]
+
+export const tiposDocumentoGlobal: {
+  [key: string]: {
+    [key: string]: {
+      no: number
+      code: string
+      name: string
+    }[]
+  }
+} = {
+  GT: {
+    GEN: [
+      {
+        no: 1,
+        code: 'FACT',
+        name: 'Factura'
+      },
+      {
+        no: 2,
+        code: 'FCAM',
+        name: 'Factura Cambiaria'
+      },
+      {
+        no: 9,
+        code: 'NCRE',
+        name: 'Nota de Credito'
+      },
+      {
+        no: 10,
+        code: 'NDEB',
+        name: 'Nota de Debito'
+      },
+      {
+        no: 6,
+        code: 'RECI',
+        name: 'Recibo'
+      },
+      {
+        no: 5,
+        code: 'RDON',
+        name: 'Recibo de Donacion'
+      }
+    ],
+    PEQ: [
+      {
+        no: 3,
+        code: 'FPEQ',
+        name: 'Factura Pequeño Contribuyente'
+      },
+      {
+        no: 4,
+        code: 'FCAP',
+        name: 'Factura Cambiaria Pequeño Contribuyente'
+      },
+      {
+        no: 6,
+        code: 'RECI',
+        name: 'Recibo'
+      }
+    ],
+    PEE: [
+      {
+        no: 13,
+        code: 'FAPE',
+        name: 'Factura Pequeño Contribuyente Regimen Electronico'
+      },
+      {
+        no: 14,
+        code: 'FCPE',
+        name: 'Factura Cambiaria Pequeño Contribuyente Regimen Electronico'
+      },
+      {
+        no: 6,
+        code: 'RECI',
+        name: 'Recibo'
+      }
+    ],
+    AGR: [
+      {
+        no: 11,
+        code: 'FACA',
+        name: 'Factura Contribuyente Agropecuario'
+      },
+      {
+        no: 12,
+        code: 'FCCA',
+        name: 'Factura Cambiaria Contribuyente Agropecuario'
+      }
+    ],
+    AGE: [
+      {
+        no: 15,
+        code: 'FAAE',
+        name: 'Factura Contribuyente Agropecuario Regimen Electronico Especial'
+      },
+      {
+        no: 16,
+        code: 'FCAE',
+        name: 'Factura Cambiaria Contribuyente Agropecuario Regimen Electronico Especial'
+      }
+    ],
+    EXE: [
+      {
+        no: 6,
+        code: 'RECI',
+        name: 'Recibo'
+      },
+      {
+        no: 5,
+        code: 'RDON',
+        name: 'Recibo de Donacion'
+      }
+    ]
+  }
+}

@@ -11,7 +11,6 @@ import { ErrorLabel } from '../ErrorLabel'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import Icon from '../Icon'
 import { Picker } from '../Picker'
-
 type formProps={
     form: Array<formulario>,
     settings: UseFormProps,
@@ -25,8 +24,8 @@ type formProps={
     containerInputStyle?: ViewStyle
 }
 export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onSubmit = () => {}, inputStyle, buttonTextStyle, buttonText, buttonStyles, containerInputStyle, inputProps }) => {
-  const { control, handleSubmit, formState: { errors, isSubmitting }, setValue, getValues } = useForm(settings)
-  const [, setDate] = useState<boolean>(false)
+  const { control, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm(settings)
+  const [date, setDate] = useState<boolean>(false)
   const handleChangeDate = useCallback((e: DateTimePickerEvent, fieldName: string) => {
     setValue(fieldName, moment(e.nativeEvent.timestamp).format('DD-MM-YYYY'))
     setDate(false)
@@ -48,7 +47,7 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
             <View key={JSON.stringify(f)}>
               <Controller
                 control={control}
-                render={({ field: { onChange, onBlur, value } }) => (
+                render={({ field: { onChange, onBlur } }) => (
                   <InputIcon
                     onBlur={onBlur}
                     onChangeText={onChange}
@@ -84,7 +83,7 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
             <View key={JSON.stringify(f)}>
               <Controller
                 control={control}
-                render={({ field: { onChange, onBlur, value } }) => (
+                render={({ field: { value } }) => (
                   <Picker
                     items={f?.picker?.data || []}
                     defaultValue={handleDefaultValuePicker(f?.picker?.data!, f?.picker?.labelKey!, f?.picker?.valueKey!, f?.picker?.defaultValue!, value)}
@@ -109,6 +108,55 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
                 name={f?.name}
               />
               {(errors?.[f?.name]?.message) && (<ErrorLabel message={errors?.[f?.name!]?.message} />)}
+            </View>
+          )
+        }
+        if (f?.type === 'dateTime') {
+          return (
+            <View key={JSON.stringify(f)}>
+              <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <>
+                    <TouchableOpacity onPress={() => setDate(true)}>
+                      <InputIcon
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        keyboardType={f?.keyboardType || 'default'}
+                        placeholder={f?.placeholder || 'default placeholder'}
+                        secureTextEntry={f?.secureTextEntry}
+                        isSecureTextInput={f?.secureTextEntry}
+                        switchIcon={f?.switchIcon}
+                        icon={{
+                          name: f?.icon?.name || 'reorder-three',
+                          size: f?.icon?.size || 24,
+                          color: f?.icon?.color || theme.gray75,
+                          type: f?.icon?.type || 'i'
+                        }}
+                        style={[
+                          {
+                            color: theme.gray
+                          }, inputStyle
+                        ]}
+                        containerStyle={containerInputStyle}
+                        {...inputProps}
+                      />
+                    </TouchableOpacity>
+                    {date && (
+                      <DateTimePicker
+                        testID={f?.name || 'dateTimeForm'}
+                        value={moment().toDate()}
+                        mode='date'
+                        is24Hour
+                        onChange={(e) => handleChangeDate(e, f?.name)}
+                      />
+                    )}
+                  </>
+                )}
+                rules={f?.rules}
+                name={f?.name}
+              />
+              {(errors[f?.name]) && (<ErrorLabel message={errors?.[f?.name]?.message} />)}
             </View>
           )
         }

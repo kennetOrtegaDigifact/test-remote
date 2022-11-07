@@ -1,8 +1,11 @@
-import { LoginCountries } from '../Config/dictionary'
+import { useSelector } from 'react-redux'
+import { LoginCountries, tiposDocumentoGlobal } from '../Config/dictionary'
 import { fonts, theme } from '../Config/theme'
-import { formulario } from '../types'
+import { ReduxState } from '../Redux/store'
+import { formulario, FormularioPerCountry } from '../types'
 
 export const useFormSchema = () => {
+  const { country, establecimientos, infoFiscalUser } = useSelector((state: ReduxState) => state.userDB)
   const loginFormSchema: Array<formulario> = [
     {
       type: 'picker',
@@ -73,7 +76,104 @@ export const useFormSchema = () => {
       placeholder: 'Contraseña'
     }
   ]
+
+  const consultasFiltroFormSchema: FormularioPerCountry = {
+    GT: {
+      schema: [
+        {
+          type: 'inputText',
+          name: 'nit',
+          icon: {
+            name: 'idcard',
+            size: 20,
+            type: 'a'
+          },
+          placeholder: 'Filtrar por NIT'
+        },
+        {
+          type: 'inputText',
+          name: 'numeroSerie',
+          icon: {
+            name: 'barcode',
+            size: 20,
+            type: 'm'
+          },
+          placeholder: 'Filtrar por Numero de Serie'
+        },
+        {
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          name: 'montoInicial',
+          icon: {
+            name: 'cash',
+            size: 20,
+            type: 'm'
+          },
+          placeholder: 'Filtrar por Monto Inicial'
+        },
+        {
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          name: 'montoFinal',
+          icon: {
+            name: 'cash',
+            size: 20,
+            type: 'm'
+          },
+          placeholder: 'Filtrar por Monto Final'
+        },
+        {
+          type: 'picker',
+          name: 'establecimiento',
+          icon: {
+            name: 'office-building-marker',
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: establecimientos,
+            defaultValue: '-- Filtrar por Establecimiento  --',
+            labelKey: 'nombre',
+            valueKey: 'numero',
+            withSearch: true,
+            searchlabel: 'Buscar Establecimiento'
+          }
+        },
+        {
+          type: 'picker',
+          name: 'tipoDocumento',
+          icon: {
+            name: 'receipt',
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: tiposDocumentoGlobal?.[country]?.[infoFiscalUser.afiliacion],
+            defaultValue: '-- Filtrar por Tipo de Documento  --',
+            labelKey: 'name',
+            valueKey: 'no',
+            withSearch: true,
+            searchlabel: 'Buscar Tipo de Documento'
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          nit: '',
+          numeroSerie: '',
+          montoInicial: '',
+          montoFinal: '',
+          establecimiento: '',
+          tipoDocumento: ''
+        },
+        reValidateMode: 'onChange',
+        mode: 'onSubmit',
+        shouldFocusError: true
+      }
+    }
+  }
   return {
-    loginFormSchema
+    loginFormSchema,
+    consultasFiltroFormSchema: consultasFiltroFormSchema[country]
   }
 }
