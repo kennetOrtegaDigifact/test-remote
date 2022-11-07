@@ -1,9 +1,10 @@
 import { XMLParser } from 'fast-xml-parser'
 import { useCallback } from 'react'
+import { useSelector } from 'react-redux'
 import { appCodes } from '../Config/appCodes'
 import { options } from '../Config/xmlparser'
+import { ReduxState } from '../Redux/store'
 import { ConsultaDTE, Filter } from '../types'
-import { useURLS } from './useUrls'
 type FetchProps={
   requestor: string,
   taxid: string,
@@ -15,7 +16,7 @@ type FetchProps={
 }
 const parser = new XMLParser(options)
 export const useApiService = () => {
-  const { urls } = useURLS()
+  const { urls } = useSelector((state: ReduxState) => state.userDB)
   const getDTESServiceGT = useCallback(({
     country = '',
     taxid = '',
@@ -32,7 +33,7 @@ export const useApiService = () => {
     amountTo,
     paymentType,
     porAnulados,
-    limit,
+    limit = 30,
     signal
   }: FetchProps & Filter): Promise<{
   code: number
@@ -60,11 +61,11 @@ export const useApiService = () => {
                           <ApplySearchCriteria>true</ApplySearchCriteria>
                           <SCountryCode>${country}</SCountryCode>
                           <STaxIdOrName>${taxid}</STaxIdOrName>
-                          <Branch>${establecimientos}|${allDTESorUsername}|</Branch>
+                          <Branch>${establecimientos || '1'}|${allDTESorUsername || 'n'}|</Branch>
                           <CurrencyCode>GTQ</CurrencyCode>
                           <RCountryCode>${country}</RCountryCode>
                           <RTaxIdOrName>${nitReceptor}</RTaxIdOrName>
-                          <SKind>${tipoDocumento}</SKind>
+                          <SKind>${tipoDocumento || '0'}</SKind>
                           <ReturnBatchAsLike>${Boolean(numeroSerie?.length)}</ReturnBatchAsLike>
                           <Batch>${numeroSerie}</Batch>
                           <UseSerialFrom>false</UseSerialFrom>
@@ -81,12 +82,12 @@ export const useApiService = () => {
                           <DateTo>${fechaFin || new Date().toISOString().slice(0, 10)}T23:59:59.999</DateTo>
                           <UseAmountFrom>${(amountFrom || 0) >= 0}</UseAmountFrom>
                           <UseAmountTo>${(amountTo || 0) > 0}</UseAmountTo>
-                          <AmountFrom>${amountFrom}</AmountFrom>
-                          <AmountTo>${amountTo}</AmountTo>
-                          <Paid>${paymentType}</Paid>
-                          <Cancelled>${porAnulados}</Cancelled>
+                          <AmountFrom>${amountFrom || '0'}</AmountFrom>
+                          <AmountTo>${amountTo || '0'}</AmountTo>
+                          <Paid>${paymentType || '2'}</Paid>
+                          <Cancelled>${porAnulados || '0'}</Cancelled>
                           <Distributed>2</Distributed>
-                          <QueryTop>${limit}</QueryTop>
+                          <QueryTop>${limit || '30'}</QueryTop>
                           <OrderBy>0</OrderBy>
                           <Descending>true</Descending>
                         </SearchCriteria>]]>
@@ -170,7 +171,11 @@ export const useApiService = () => {
       })
   }, [urls?.urlWsSoap])
 
-  const schema = {
+  const schema: {
+        getDTESService: {
+          [key: string]: any
+      }
+  } = {
     getDTESService: {
       GT: getDTESServiceGT
     }

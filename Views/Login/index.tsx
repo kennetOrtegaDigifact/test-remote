@@ -54,12 +54,12 @@ export const Login: React.FC = () => {
         user: username.trim()
       })
         .then(res => {
-          console.log('COMO', res)
+          // console.log('COMO', res)
           if (res.code === appCodes.ok) {
             toast.show('Verifcacion exitosa', { type: 'ok' })
             dispatch(addUser(res))
             navigate('/')
-            console.log('USUARIO FINAL', res)
+            // console.log('USUARIO FINAL', res)
           } else if (res.code === appCodes.invalidData) {
             toast.show('Credenciales Incorrectas', { type: 'error' })
           } else if (res.code === appCodes.processError) {

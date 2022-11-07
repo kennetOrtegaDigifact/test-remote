@@ -1,6 +1,5 @@
 import { KeyboardType, TextStyle, ViewStyle } from 'react-native'
 import { RegisterOptions, FieldValues, FieldPath, UseFormProps } from 'react-hook-form'
-type Countrys = 'GT' | 'PA'
 export interface IconType {
     name?: string,
     size?: number,
@@ -171,11 +170,14 @@ export interface userInterface {
     MIPOS?: MIPOS
     talonarioContingencia: {[key: string]: string|number}
     decimales: number
-    logos: Logos
+    logos: Logos,
+    urls: {[key: string]: string}
 }
 
 export type formulario = {
-    type: 'inputText' | 'picker' | 'dateTime',
+    type: 'inputText'|'picker'|'dateTime',
+    label?: string,
+    labelStyle?: TextStyle,
     name: string,
     placeholder?: string,
     keyboardType?: KeyboardType,
@@ -184,8 +186,8 @@ export type formulario = {
     switchIcon?: IconType,
     picker?: {
         data?: Array<any>,
-        labelKey: string,
-        valueKey: string,
+        labelKey?: string,
+        valueKey?: string,
         defaultValue: string,
         withSearch?: boolean,
         searchlabel?: string,

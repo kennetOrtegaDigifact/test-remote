@@ -254,6 +254,14 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                 const configRows = configDATA.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
                                                 const arrayConfig: ConfiguracionApp[] = []
                                                 arrayConfig.push(configRows)
+                                                // console.log('COMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO --------------------', arrayConfig)
+                                                const urlsConfig = arrayConfig?.flat()?.filter(e => e.idTipoConfiguracion === 8)
+                                                const urls: {[key: string]: string } = {}
+                                                urlsConfig?.flat()?.forEach((e: ConfiguracionApp) => {
+                                                  urls[`url${e?.tipoOperacion || ''}`] = e?.valor?.toString() || ''
+                                                })
+                                                console.log('URLS OBJECT', urls)
+
                                                 return getPermissionsCatalog({ requestor, taxid, country, userName: Username })
                                                   .then(resCatalogoPermisos => {
                                                     if (resCatalogoPermisos?.code === appCodes.ok) {
@@ -368,7 +376,8 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                                                               logos: responseEstLogos,
                                                                                               decimales: data,
                                                                                               APIMSTOKEN,
-                                                                                              MIPOS
+                                                                                              MIPOS,
+                                                                                              urls
                                                                                             }
                                                                                           })
                                                                                       })
@@ -423,7 +432,8 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                                                           logos: responseEstLogos,
                                                                                           decimales: data,
                                                                                           APIMSTOKEN,
-                                                                                          MIPOS
+                                                                                          MIPOS,
+                                                                                          urls
                                                                                         }
                                                                                       })
                                                                                   })

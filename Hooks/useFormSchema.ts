@@ -5,7 +5,7 @@ import { ReduxState } from '../Redux/store'
 import { formulario, FormularioPerCountry } from '../types'
 
 export const useFormSchema = () => {
-  const { country, establecimientos, infoFiscalUser } = useSelector((state: ReduxState) => state.userDB)
+  const { country, establecimientos, infoFiscalUser, usuarios } = useSelector((state: ReduxState) => state.userDB)
   const loginFormSchema: Array<formulario> = [
     {
       type: 'picker',
@@ -82,6 +82,7 @@ export const useFormSchema = () => {
       schema: [
         {
           type: 'inputText',
+          label: 'NIT:',
           name: 'nit',
           icon: {
             name: 'idcard',
@@ -93,6 +94,7 @@ export const useFormSchema = () => {
         },
         {
           type: 'inputText',
+          label: 'Numero de Serie:',
           name: 'numeroSerie',
           icon: {
             name: 'barcode',
@@ -105,6 +107,7 @@ export const useFormSchema = () => {
         {
           type: 'inputText',
           keyboardType: 'decimal-pad',
+          label: 'Monto Inicial:',
           name: 'montoInicial',
           icon: {
             name: 'cash',
@@ -117,6 +120,7 @@ export const useFormSchema = () => {
         {
           type: 'inputText',
           keyboardType: 'decimal-pad',
+          label: 'Monto Final:',
           name: 'montoFinal',
           icon: {
             name: 'cash',
@@ -129,6 +133,7 @@ export const useFormSchema = () => {
         {
           type: 'picker',
           name: 'establecimiento',
+          label: 'Establecimiento: ',
           icon: {
             name: 'office-building-marker',
             color: theme.gray,
@@ -149,6 +154,7 @@ export const useFormSchema = () => {
         },
         {
           type: 'picker',
+          label: 'Tipo de Documento: ',
           name: 'tipoDocumento',
           icon: {
             name: 'receipt',
@@ -167,6 +173,70 @@ export const useFormSchema = () => {
               color: theme.gray
             }
           }
+        },
+        {
+          type: 'picker',
+          label: 'Usuario: ',
+          name: 'allDTESorUsername',
+          icon: {
+            name: 'person',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: usuarios,
+            defaultValue: '-- Filtrar por Usuario  --',
+            labelKey: 'userName',
+            valueKey: 'userName',
+            withSearch: true,
+            searchlabel: 'Buscar Usuario',
+            arrowIcon: {
+              color: theme.gray
+            }
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Cantidad de Documentos: ',
+          name: 'cantidadDocumentos',
+          icon: {
+            name: 'receipt',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [10, 20, 30, 50, 100, 150],
+            defaultValue: '-- Filtrar por Cantidad de Documentos  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          }
+        },
+        {
+          type: 'dateTime',
+          label: 'Fecha Inicial: ',
+          name: 'fechaInicio',
+          icon: {
+            name: 'calendar',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          placeholder: 'Fecha inicial'
+        },
+        {
+          type: 'dateTime',
+          label: 'Fecha Final: ',
+          name: 'fechaFin',
+          icon: {
+            name: 'calendar',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          placeholder: 'Fecha Final'
         }
       ],
       settings: {
@@ -176,7 +246,11 @@ export const useFormSchema = () => {
           montoInicial: '',
           montoFinal: '',
           establecimiento: '',
-          tipoDocumento: ''
+          tipoDocumento: '',
+          allDTESorUsername: '',
+          cantidadDocumentos: 30,
+          fechaInicio: '',
+          fechaFin: ''
         },
         reValidateMode: 'onChange',
         mode: 'onSubmit',

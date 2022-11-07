@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { TextStyle, ViewStyle, View, PixelRatio, StyleSheet, Text, TextInputProps, ActivityIndicator } from 'react-native'
+import { TextStyle, ViewStyle, View, PixelRatio, StyleSheet, Text, TextInputProps, ActivityIndicator, TouchableOpacity } from 'react-native'
 import { useForm, Controller, UseFormProps } from 'react-hook-form'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
@@ -8,7 +8,6 @@ import moment from 'moment'
 import { fonts, theme } from '../../Config/theme'
 import { InputIcon } from '../InputIcon'
 import { ErrorLabel } from '../ErrorLabel'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import Icon from '../Icon'
 import { Picker } from '../Picker'
 type formProps={
@@ -45,6 +44,17 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
         if (f.type === 'inputText') {
           return (
             <View key={JSON.stringify(f)}>
+              {f?.label
+                ? (
+                  <Text style={[{
+                    color: theme.gray,
+                    marginHorizontal: 10,
+                    fontSize: fonts.small
+                  }, f?.labelStyle]}
+                  >{f?.label}
+                  </Text>
+                  )
+                : null}
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur } }) => (
@@ -81,6 +91,17 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
         if (f?.type === 'picker') {
           return (
             <View key={JSON.stringify(f)}>
+              {f?.label
+                ? (
+                  <Text style={[{
+                    color: theme.gray,
+                    marginHorizontal: 10,
+                    fontSize: fonts.small
+                  }, f?.labelStyle]}
+                  >{f?.label}
+                  </Text>
+                  )
+                : null}
               <Controller
                 control={control}
                 render={({ field: { value } }) => (
@@ -120,6 +141,17 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
         if (f?.type === 'dateTime') {
           return (
             <View key={JSON.stringify(f)}>
+              {f?.label
+                ? (
+                  <Text style={[{
+                    color: theme.gray,
+                    marginHorizontal: 10,
+                    fontSize: fonts.small
+                  }, f?.labelStyle]}
+                  >{f?.label}
+                  </Text>
+                  )
+                : null}
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -130,6 +162,7 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
                         onChangeText={onChange}
                         keyboardType={f?.keyboardType || 'default'}
                         placeholder={f?.placeholder || 'default placeholder'}
+                        value={value}
                         secureTextEntry={f?.secureTextEntry}
                         isSecureTextInput={f?.secureTextEntry}
                         switchIcon={f?.switchIcon}

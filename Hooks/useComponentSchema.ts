@@ -26,7 +26,7 @@ export const useComponentSchema = () => {
         documentType: 'Tipo de documento: ',
         razonSocial: 'Razon Social: ',
         userName: 'Usuario que la emitio: ',
-        monto: 'Monto: '
+        monto: 'Monto: Q'
       }
     },
     PA: {

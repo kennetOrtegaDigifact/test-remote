@@ -172,40 +172,6 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
                   onChangeText={setSearch}
                 />
               )}
-              {/* <Animated.FlatList
-                style={{
-                  minHeight,
-                  maxHeight: dropDownMaxHeight
-                }}
-                onScroll={Animated.event([
-                  {
-                    nativeEvent: {
-                      contentOffset: {
-                        y: scrollY
-                      }
-                    }
-                  }
-                ], { useNativeDriver: true })}
-                initialNumToRender={7}
-                maxToRenderPerBatch={2}
-                windowSize={14}
-                removeClippedSubviews
-                updateCellsBatchingPeriod={10}
-                legacyImplementation
-                getItemLayout={getItemLayout}
-                data={items?.filter(e => {
-                  if (typeof e === 'string' || typeof e === 'number') {
-                    return e.toString().toLowerCase().includes(search.toLowerCase())
-                  }
-                  if (typeof e === 'object') {
-                    return e?.[labelKey!]?.toString().toLowerCase().includes(search.toLowerCase()) || e?.[valueKey!]?.toString()?.toLowerCase()?.includes(search.toLowerCase())
-                  }
-                  return false
-                }) || []}
-                renderItem={renderItem}
-                ListEmptyComponent={() => <EmptyList />}
-                keyExtractor={keyExtractor}
-              /> */}
               <FlashList
                 data={items?.filter(e => {
                   if (typeof e === 'string' || typeof e === 'number') {

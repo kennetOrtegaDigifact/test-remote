@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, PixelRatio } from 'react-native'
 import {
   BottomSheetModal,
@@ -14,10 +14,19 @@ import { useSelector } from 'react-redux'
 import { ReduxState } from '../../Redux/store'
 import { useFormSchema } from '../../Hooks/useFormSchema'
 import { Form } from '../../Components/Form'
+import { FlashList } from '@shopify/flash-list'
+import { useApiService } from '../../Hooks/useApiService'
+import { useComponentSchema } from '../../Hooks/useComponentSchema'
+import { ConsultasItem } from '../../Components/ConsultasItem'
+import { appCodes } from '../../Config/appCodes'
+const renderItem = ({ item }) => <ConsultasItem item={item} />
 export const Consultas: React.FC = () => {
+  const { Services } = useApiService()
   const toast = useToast()
-  const user = useSelector((state: ReduxState) => state.userDB)
+  const { country, taxid, requestor, userName } = useSelector((state: ReduxState) => state.userDB)
   const { consultasFiltroFormSchema } = useFormSchema()
+  const { consultasComponentSchema } = useComponentSchema()
+  const [dtes, setDtes] = useState<Array<any>>([])
   // ref
   const bottomSheetModalRef = useRef<BottomSheetModal>(null)
   // variables
@@ -35,6 +44,38 @@ export const Consultas: React.FC = () => {
     console.log(values)
   }, [])
 
+  useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
+    Services.getDTESService?.[country]({ userName, taxid, country, requestor, signal })
+      .then((res: {code: number, data?: Array<any>}) => {
+        Object.keys(res?.data?.[0])?.forEach(e => {
+          if (consultasComponentSchema?.labels?.[e]) {
+            console.log(`${consultasComponentSchema?.labels?.[e]}${res?.data?.[0]?.[e]}`)
+          }
+        })
+        if (res.code === appCodes.ok) {
+          if (res?.data) {
+            console.log('CONSULTAS RESPONSE', res.data)
+
+            setDtes(res?.data)
+          }
+        } else {
+          toast.show('Parece que no posees ningun documento, de ser esto incorrecto porfavor revisa tu conexion a internet', {
+            type: 'warning'
+          })
+        }
+      })
+      .catch((err: Error) => {
+        console.log('ERROR GET CONSULTAS', err)
+        toast.show('Algo salio mal al tratar de obtener tus documentos, porfavor revisa tu conexion a internet o intentalo mas tarde, si el error persite porfavor reportalo.', {
+          type: 'error'
+        })
+      })
+
+    return () => controller.abort()
+  }, [])
+
   return (
 
     <>
@@ -43,7 +84,7 @@ export const Consultas: React.FC = () => {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <InputIcon
               keyboardType='default'
-              placeholder='Buscar por No.Autorizacion/Serie'
+              placeholder={consultasComponentSchema?.labels?.searchLabel || 'Buscar...'}
               icon={{
                 name: 'search1',
                 color: theme.graygreen,
@@ -67,6 +108,16 @@ export const Consultas: React.FC = () => {
               />
             </TouchableOpacity>
           </View>
+          <View style={{
+            flex: 1
+          }}
+          >
+            <FlashList
+              renderItem={renderItem}
+              data={dtes}
+              estimatedItemSize={100}
+            />
+          </View>
           <BottomSheetModal
             ref={bottomSheetModalRef}
             index={2}
@@ -74,7 +125,6 @@ export const Consultas: React.FC = () => {
             onChange={handleSheetChanges}
             backdropComponent={BottomSheetBackdrop}
           >
-            {/* <View style={styles.contentContainer}> */}
             <BottomSheetScrollView style={styles.contentContainer}>
               <Text
                 style={{
@@ -98,7 +148,6 @@ export const Consultas: React.FC = () => {
                 }}
               />
             </BottomSheetScrollView>
-            {/* </View> */}
           </BottomSheetModal>
         </View>
       </BottomSheetModalProvider>
