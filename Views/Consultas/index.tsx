@@ -46,12 +46,13 @@ export const Consultas: React.FC = () => {
               placeholder='Buscar por No.Autorizacion/Serie'
               icon={{
                 name: 'search1',
-                color: theme.purple,
+                color: theme.graygreen,
                 size: 20,
                 type: 'a'
               }}
               containerStyle={{
-                flex: 1
+                flex: 1,
+                borderColor: theme.graygreen
               }}
             />
             <TouchableOpacity

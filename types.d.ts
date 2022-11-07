@@ -191,7 +191,8 @@ export type formulario = {
         searchlabel?: string,
         onChange?: (value: any) => void,
         labelStyle?: TextStyle,
-        style?: ViewStyle
+        style?: ViewStyle,
+        arrowIcon?: IconType
     },
     icon?: IconType,
     rules?: Omit<RegisterOptions<FieldValues, FieldPath<FieldValues>>, 'valueAsNumber'|'valueAsDate'|'setValueAs'|'disabled'>,

@@ -85,6 +85,7 @@ export const useFormSchema = () => {
           name: 'nit',
           icon: {
             name: 'idcard',
+            color: theme.gray,
             size: 20,
             type: 'a'
           },
@@ -95,6 +96,7 @@ export const useFormSchema = () => {
           name: 'numeroSerie',
           icon: {
             name: 'barcode',
+            color: theme.gray,
             size: 20,
             type: 'm'
           },
@@ -106,6 +108,7 @@ export const useFormSchema = () => {
           name: 'montoInicial',
           icon: {
             name: 'cash',
+            color: theme.gray,
             size: 20,
             type: 'm'
           },
@@ -117,6 +120,7 @@ export const useFormSchema = () => {
           name: 'montoFinal',
           icon: {
             name: 'cash',
+            color: theme.gray,
             size: 20,
             type: 'm'
           },
@@ -127,6 +131,7 @@ export const useFormSchema = () => {
           name: 'establecimiento',
           icon: {
             name: 'office-building-marker',
+            color: theme.gray,
             size: 20,
             type: 'm'
           },
@@ -136,7 +141,10 @@ export const useFormSchema = () => {
             labelKey: 'nombre',
             valueKey: 'numero',
             withSearch: true,
-            searchlabel: 'Buscar Establecimiento'
+            searchlabel: 'Buscar Establecimiento',
+            arrowIcon: {
+              color: theme.gray
+            }
           }
         },
         {
@@ -144,6 +152,7 @@ export const useFormSchema = () => {
           name: 'tipoDocumento',
           icon: {
             name: 'receipt',
+            color: theme.gray,
             size: 20,
             type: 'i'
           },
@@ -153,7 +162,10 @@ export const useFormSchema = () => {
             labelKey: 'name',
             valueKey: 'no',
             withSearch: true,
-            searchlabel: 'Buscar Tipo de Documento'
+            searchlabel: 'Buscar Tipo de Documento',
+            arrowIcon: {
+              color: theme.gray
+            }
           }
         }
       ],

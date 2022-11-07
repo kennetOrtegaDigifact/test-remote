@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { TextStyle, ViewStyle, View, PixelRatio, StyleSheet, Text, TextInputProps, StyleProp, TextInput, ActivityIndicator } from 'react-native'
+import { TextStyle, ViewStyle, View, PixelRatio, StyleSheet, Text, TextInputProps, ActivityIndicator } from 'react-native'
 import { useForm, Controller, UseFormProps } from 'react-hook-form'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
@@ -94,6 +94,12 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
                       size: f?.icon?.size || 20,
                       type: f?.icon?.type || 'i',
                       color: f?.icon?.color || theme.gray50
+                    }}
+                    arrowIcon={{
+                      name: f?.picker?.arrowIcon?.name || 'chevron-down-outline',
+                      color: f?.picker?.arrowIcon?.color || theme.white,
+                      size: f?.picker?.arrowIcon?.size || 20,
+                      type: f?.picker?.arrowIcon?.type || 'i'
                     }}
                     withSearch={f?.picker?.withSearch}
                     searchlabel={f?.picker?.searchlabel}

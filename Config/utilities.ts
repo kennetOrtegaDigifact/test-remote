@@ -66,3 +66,8 @@ export const numberFormater = ({
     return '0'
   }
 }
+
+export const cleanUserName = ({ usuario = '' }: {usuario: string}): string => {
+  const userRegex = usuario.trim().replace('_', '').replace('API', '').replace('INDIVIDUAL', '').replace('BATCH', '').split('.')
+  return userRegex[userRegex.length - 1]
+}

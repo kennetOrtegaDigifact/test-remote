@@ -4,6 +4,7 @@ import { fonts, theme } from '../../Config/theme'
 import { IconType } from '../../types'
 import Icon from '../Icon'
 import { InputIcon } from '../InputIcon'
+import { FlashList } from '@shopify/flash-list'
 interface itemProps extends TouchableHighlightProps {
     item: string,
     originalValue: string | object,
@@ -17,7 +18,10 @@ const Item: React.FC<itemProps> = React.memo(function Item ({ originalValue, ite
         paddingVertical: 8,
         paddingHorizontal: 5,
         backgroundColor: theme.white,
-        borderRadius: 5
+        borderRadius: 5,
+        maxHeight: 32,
+        minHeight: 32,
+        justifyContent: 'center'
       }}
       {...buttonProps}
     >
@@ -35,7 +39,7 @@ const Item: React.FC<itemProps> = React.memo(function Item ({ originalValue, ite
 
 const EmptyList: React.FC = React.memo(function EmptyList () {
   return (
-    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+    <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
       <Icon name='text-search' type='m' size={40} color={theme.gray50} />
       <Text style={{ textAlign: 'center', fontSize: fonts.verySmall }}>Parece que no hay elementos en la lista</Text>
     </View>
@@ -79,8 +83,6 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
   const [visible, setVisible] = useState<boolean>(false)
   const [search, setSearch] = useState<string>('')
   const [select, setSelect] = useState<any>(null)
-  const getItemLayout = useCallback((_: any, index: number) => ({ length: 22, offset: 22 * index, index }), [])
-  const keyExtractor = useCallback((item: any) => (item[valueKey!] || item), [valueKey])
   const renderItem = ({ item }: any) => (
     <Item
       item={item[labelKey!]?.toString() ||
@@ -101,16 +103,6 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
       onValueChange(select)
     }
   }, [select])
-  // useEffect(() => {
-  //   if (typeof items[0] === 'object') {
-  //     items.push({
-  //       [labelKey!]: defaultValue,
-  //       [valueKey!]: defaultValue
-  //     })
-  //   } else if (typeof items[0] === 'string') {
-  //     items.push(defaultValue)
-  //   }
-  // }, [])
 
   return (
     <>
@@ -165,19 +157,22 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
                 <InputIcon
                   icon={{
                     name: 'search',
-                    color: theme.gray50,
+                    color: theme.gray,
                     size: 20,
                     type: 'i'
                   }}
                   style={{
                     flex: 1,
-                    borderColor: theme.gray
+                    color: theme.gray
+                  }}
+                  containerStyle={{
+                    borderColor: theme.graygreen
                   }}
                   placeholder={searchlabel}
                   onChangeText={setSearch}
                 />
               )}
-              <Animated.FlatList
+              {/* <Animated.FlatList
                 style={{
                   minHeight,
                   maxHeight: dropDownMaxHeight
@@ -210,6 +205,21 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
                 renderItem={renderItem}
                 ListEmptyComponent={() => <EmptyList />}
                 keyExtractor={keyExtractor}
+              /> */}
+              <FlashList
+                data={items?.filter(e => {
+                  if (typeof e === 'string' || typeof e === 'number') {
+                    return e.toString().toLowerCase().includes(search.toLowerCase())
+                  }
+                  if (typeof e === 'object') {
+                    return e?.[labelKey!]?.toString().toLowerCase().includes(search.toLowerCase()) || e?.[valueKey!]?.toString()?.toLowerCase()?.includes(search.toLowerCase())
+                  }
+                  return false
+                }) || []}
+                renderItem={renderItem}
+                estimatedItemSize={35}
+                ListEmptyComponent={() => <EmptyList />}
+                extraData={items}
               />
             </View>
 
@@ -259,6 +269,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5
+    elevation: 5,
+    flex: 0.45
   }
 })

@@ -22,8 +22,8 @@ export const InputIcon: React.FC<inputProps> = React.memo(function InputIcon ({ 
           color={icon?.color || theme.purple}
         />
         <TextInput
-          {...props}
           style={[styles.input]}
+          {...props}
           returnKeyType='next'
           secureTextEntry={visible}
           editable={!disabled}
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: fonts.normal,
-    color: theme.white,
+    color: theme.gray,
     minHeight: 35 / PixelRatio.getFontScale(),
     marginHorizontal: 10 / PixelRatio.getFontScale()
   }
