@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, PixelRatio } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native'
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
@@ -19,7 +19,63 @@ import { useApiService } from '../../Hooks/useApiService'
 import { useComponentSchema } from '../../Hooks/useComponentSchema'
 import { ConsultasItem } from '../../Components/ConsultasItem'
 import { appCodes } from '../../Config/appCodes'
-const renderItem = ({ item }) => <ConsultasItem item={item} />
+const renderItem = ({ item }: {item: any}) => <ConsultasItem item={item} />
+
+const ListLimit = ({ isEmpty = false }: {isEmpty: boolean}) => {
+  return (
+    <>
+      {
+      isEmpty
+        ? (
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 10
+            }}
+          >
+            <Icon
+              name='receipt'
+              color={theme.gray50}
+              size={24}
+              type='i'
+            />
+            <Text style={{
+              color: theme.gray50,
+              fontSize: fonts.verySmall
+            }}
+            >Si desea ver mas documentos modifique el filtro de cantidad de documentos
+            </Text>
+          </View>
+          )
+        : null
+}
+    </>
+  )
+}
+
+const ListEmpty = () => (
+  <View
+    style={{
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginVertical: 10
+    }}
+  >
+    <Icon
+      name='receipt'
+      color={theme.gray50}
+      size={48}
+      type='i'
+    />
+    <Text style={{
+      color: theme.gray50,
+      fontSize: fonts.small
+    }}
+    >Parece que no hemos encontrado ningun documento
+    </Text>
+  </View>
+)
 export const Consultas: React.FC = () => {
   const { Services } = useApiService()
   const toast = useToast()
@@ -27,6 +83,7 @@ export const Consultas: React.FC = () => {
   const { consultasFiltroFormSchema } = useFormSchema()
   const { consultasComponentSchema } = useComponentSchema()
   const [dtes, setDtes] = useState<Array<any>>([])
+  const [loading, setLoading] = useState<boolean>(false)
   // ref
   const bottomSheetModalRef = useRef<BottomSheetModal>(null)
   // variables
@@ -47,17 +104,13 @@ export const Consultas: React.FC = () => {
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
+    setLoading(true)
     Services.getDTESService?.[country]({ userName, taxid, country, requestor, signal })
       .then((res: {code: number, data?: Array<any>}) => {
-        Object.keys(res?.data?.[0])?.forEach(e => {
-          if (consultasComponentSchema?.labels?.[e]) {
-            console.log(`${consultasComponentSchema?.labels?.[e]}${res?.data?.[0]?.[e]}`)
-          }
-        })
+        setLoading(false)
         if (res.code === appCodes.ok) {
           if (res?.data) {
             console.log('CONSULTAS RESPONSE', res.data)
-
             setDtes(res?.data)
           }
         } else {
@@ -67,6 +120,7 @@ export const Consultas: React.FC = () => {
         }
       })
       .catch((err: Error) => {
+        setLoading(false)
         console.log('ERROR GET CONSULTAS', err)
         toast.show('Algo salio mal al tratar de obtener tus documentos, porfavor revisa tu conexion a internet o intentalo mas tarde, si el error persite porfavor reportalo.', {
           type: 'error'
@@ -74,7 +128,7 @@ export const Consultas: React.FC = () => {
       })
 
     return () => controller.abort()
-  }, [])
+  }, [country, taxid, requestor, userName])
 
   return (
 
@@ -116,6 +170,16 @@ export const Consultas: React.FC = () => {
               renderItem={renderItem}
               data={dtes}
               estimatedItemSize={100}
+              refreshControl={
+                <RefreshControl
+                  refreshing={loading}
+                  colors={[theme.orange, theme.purple, theme.graygreen]}
+                  tintColor={theme.graygreen}
+                  // progressBackgroundColor={theme.purple}
+                />
+              }
+              ListEmptyComponent={() => <ListEmpty />}
+              ListFooterComponent={() => <ListLimit isEmpty={Boolean(dtes.length)} />}
             />
           </View>
           <BottomSheetModal

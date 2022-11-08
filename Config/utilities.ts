@@ -67,7 +67,19 @@ export const numberFormater = ({
   }
 }
 
+/**
+ * It takes a string, trims it, removes underscores, removes the word "API", removes the word
+ * "INDIVIDUAL", removes the word "BATCH", splits the string into an array, and returns the first
+ * element of the array.
+ * @param  - {usuario: string}
+ * @returns The first element of the array.
+ */
 export const cleanUserName = ({ usuario = '' }: {usuario: string}): string => {
   const userRegex = usuario.trim().replace('_', '').replace('API', '').replace('INDIVIDUAL', '').replace('BATCH', '').split('.')
-  return userRegex[userRegex.length - 1]
+  const length: {[key: number]: number} = {
+    1: 0,
+    2: 0,
+    3: 2
+  }
+  return userRegex[length[userRegex.length]]
 }

@@ -72,14 +72,18 @@ const Tab: React.FC<tabProps> = React.memo(function Tab ({ to, icon, pathname, l
       </Link>
     </>
   )
-}, (prev: object, next: object) => prev === next)
+}, (prev: object, next: object) => JSON.stringify(prev) === JSON.stringify(next))
 
 const NavigatorTabC: React.FC = () => {
   const user = useSelector((state: ReduxState) => state.userDB)
   const { pathname } = useLocation()
   return (
     <>
-      <View style={{ backgroundColor: palette7.cream }}>
+      <View style={{
+        backgroundColor: palette7.cream
+
+      }}
+      >
         <View style={[styles.container]}>
           <Tab
             pathname={pathname}
@@ -148,8 +152,14 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     backgroundColor: theme.white,
-    flexDirection: 'row'
-    // justifyContent: 'space-between'
+    flexDirection: 'row',
+    shadowRadius: 13,
+    shadowOffset: {
+      width: 0,
+      height: -10
+    },
+    shadowColor: theme.gray,
+    elevation: 5
   }
 })
 

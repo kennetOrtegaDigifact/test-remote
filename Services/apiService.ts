@@ -1906,6 +1906,19 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     })
 }
 
+/**
+ * It makes a POST request to a SOAP endpoint, parses the response, and returns an object with a code
+ * and data property.
+ * @param  - {
+ * @returns DATAAA {
+ *   CC: 'GT',
+ *   Cd: '01',
+ *   Cm: '01',
+ *   Direccion: '',
+ *   N: '',
+ *   TID: '123456789'
+ * }</code>
+ */
 export const validateNITService = async ({
   nit
 }: {

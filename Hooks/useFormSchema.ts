@@ -216,7 +216,7 @@ export const useFormSchema = () => {
         },
         {
           type: 'dateTime',
-          label: 'Fecha Inicial: ',
+          label: 'Filtrar por fecha desde: ',
           name: 'fechaInicio',
           icon: {
             name: 'calendar',
@@ -228,7 +228,7 @@ export const useFormSchema = () => {
         },
         {
           type: 'dateTime',
-          label: 'Fecha Final: ',
+          label: 'Filtrar por fecha hasta: ',
           name: 'fechaFin',
           icon: {
             name: 'calendar',
