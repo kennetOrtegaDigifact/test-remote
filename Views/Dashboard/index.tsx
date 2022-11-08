@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useLayoutEffect, useState } from 'react'
 import { View, Text, PixelRatio, Dimensions, ScrollView } from 'react-native'
 import { useToast } from 'react-native-toast-notifications'
 import { useSelector } from 'react-redux'
@@ -34,7 +34,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
   })
   const user = useSelector((state: ReduxState) => state.userDB)
   /* A React Hook that is called when the component is mounted. */
-  useEffect(() => {
+  useLayoutEffect(() => {
     const controller = new AbortController()
     globalThis.console.log('DASHBOARD RENDER')
     if (user?.taxid?.length) {
@@ -64,7 +64,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
     return () => { controller.abort() }
   }, [])
   /* Adding an event listener to the Dimensions object. */
-  useEffect(() => {
+  useLayoutEffect(() => {
     const subscription = Dimensions.addEventListener(
       'change',
       (e) => {
@@ -391,6 +391,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
       </View>
 
       {/* ------ YEAR CHART ------------- */}
+
       <View style={{
         borderRadius: 13,
         justifyContent: 'center',

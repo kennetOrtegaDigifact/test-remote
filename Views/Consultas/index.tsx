@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native'
 import {
   BottomSheetModal,
@@ -101,7 +101,8 @@ export const Consultas: React.FC = () => {
     console.log(values)
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    console.log('CONSULTAS RENDER')
     const controller = new AbortController()
     const { signal } = controller
     setLoading(true)
@@ -128,7 +129,7 @@ export const Consultas: React.FC = () => {
       })
 
     return () => controller.abort()
-  }, [country, taxid, requestor, userName])
+  }, [])
 
   return (
 
@@ -169,7 +170,7 @@ export const Consultas: React.FC = () => {
             <FlashList
               renderItem={renderItem}
               data={dtes}
-              estimatedItemSize={100}
+              estimatedItemSize={231}
               refreshControl={
                 <RefreshControl
                   refreshing={loading}
@@ -180,6 +181,7 @@ export const Consultas: React.FC = () => {
               }
               ListEmptyComponent={() => <ListEmpty />}
               ListFooterComponent={() => <ListLimit isEmpty={Boolean(dtes.length)} />}
+              showsVerticalScrollIndicator={false}
             />
           </View>
           <BottomSheetModal
