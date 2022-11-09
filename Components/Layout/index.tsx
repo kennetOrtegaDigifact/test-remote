@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from 'react'
-import { View, StyleSheet, PixelRatio, TouchableOpacity, ScrollView } from 'react-native'
+import { View, StyleSheet, PixelRatio, TouchableOpacity } from 'react-native'
 import { DrawerLayout } from 'react-native-gesture-handler'
 import { palette7, theme } from '../../Config/theme'
 import Icon from '../Icon'

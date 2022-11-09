@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Modal, StyleSheet, Text, TextStyle, TouchableHighlight, TouchableHighlightProps, View, ViewStyle, TouchableOpacity, TouchableWithoutFeedback, Animated } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
 import { IconType } from '../../types'
@@ -79,7 +79,6 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
   validateFunction = () => true,
   onValueChange = () => {}
 }) {
-  const scrollY = useRef(new Animated.Value(0)).current
   const [visible, setVisible] = useState<boolean>(false)
   const [search, setSearch] = useState<string>('')
   const [select, setSelect] = useState<any>(null)

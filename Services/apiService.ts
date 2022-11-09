@@ -6,7 +6,7 @@ import DeviceInfo from 'react-native-device-info'
 import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
-import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Product, DocumentTypes, Usuario, ConsultaDTE, NIT, DashboardType, userInterface } from '../types'
+import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, ConsultaDTE, NIT, DashboardType, userInterface } from '../types'
 const parser = new XMLParser(options)
 
 type FetchProps={
@@ -1606,7 +1606,7 @@ export const getAllProductsService = async ({
   signal = new AbortController().signal
 }: FetchProps): Promise<{
   code: number;
-  data: Product[]
+  data: Producto[]
 }> => {
   return globalThis.fetch(urlWsSoap, {
     signal,
@@ -1637,15 +1637,15 @@ export const getAllProductsService = async ({
           const data = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
           const dataArr = []
           dataArr.push(data)
-          const products: Product[] = dataArr.flat().map(e => {
-            const obj: Product = {
-              name: e.D,
-              price: e.LP,
-              type: e.CTG,
-              unit: e.U,
-              eanprod: e.EAN,
-              quantity: 1,
-              discount: 0
+          const products: Producto[] = dataArr.flat().map(e => {
+            const obj: Producto = {
+              descripcion: e.D,
+              precio: e.LP,
+              tipo: e.CTG,
+              unidad: e.U,
+              codigo: e.EAN,
+              cantidad: 1,
+              descuento: 0
             }
             return obj
           })
@@ -1687,12 +1687,12 @@ export const addEditProductService = async ({
   taxid,
   userName,
   country,
-  name,
-  price,
-  eanprod,
-  type,
-  unit
-}: FetchProps & Product): Promise<{
+  descripcion,
+  precio,
+  codigo,
+  tipo,
+  unidad
+}: FetchProps & Producto): Promise<{
   code: number
 }> => {
   return globalThis.fetch(urlWsSoap, {
@@ -1708,7 +1708,7 @@ export const addEditProductService = async ({
       <User>${requestor}</User>
       <UserName>${userName}</UserName>
       <Data1>UpsertProductsAndServices</Data1>
-      <Data2>GT|${taxid}|${name}|${price}|0|${unit}|0|${eanprod}|0|${userName}|0|0|${type}</Data2>
+      <Data2>GT|${taxid}|${descripcion}|${precio}|0|${unidad}|0|${codigo}|0|${userName}|0|0|${tipo}</Data2>
       <Data3></Data3>
     </RequestTransaction>
   </soap:Body>

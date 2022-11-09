@@ -131,14 +131,31 @@ export type Cliente={
     name?: string,
 }
 
-export type Product = {
-    name: string,
-    price: number,
-    eanprod: number | string,
-    type: string,
-    unit: string,
-    quantity?: number,
-    discount?: number
+type OTI={
+    Codigo: string
+    Tasa: number
+    Valor: number
+}
+export interface Producto {
+    country?: string
+    taxid?: string|number
+    descripcion?: string
+    precio: number
+    unidad?: string
+    impuestos?: {
+        ISC?: {
+            Tasa?: number
+            Valor?: number
+        },
+        IBMS?: string|number
+        OTI?: OTI[]
+    }
+    codigo?: string
+    segmento?: number
+    familia?: number
+    cantidad?: number
+    descuento?: number
+    tipo?: string
 }
 
 export type User={
@@ -166,7 +183,7 @@ export interface userInterface {
     permisos?: any,
     usuarios?: Usuario[],
     clientes?: Cliente[],
-    productos?: Product[],
+    productos?: Producto[],
     MIPOS?: MIPOS
     talonarioContingencia: {[key: string]: string|number}
     decimales: number
@@ -185,13 +202,13 @@ export type formulario = {
     secureTextEntry?: boolean,
     switchIcon?: IconType,
     picker?: {
-        data?: Array<any>,
+        data?: Array<unknown>,
         labelKey?: string,
         valueKey?: string,
         defaultValue: string,
         withSearch?: boolean,
         searchlabel?: string,
-        onChange?: (value: any) => void,
+        onChange?: (value: unknown) => void,
         labelStyle?: TextStyle,
         style?: ViewStyle,
         arrowIcon?: IconType
