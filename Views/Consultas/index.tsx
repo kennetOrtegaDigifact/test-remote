@@ -134,89 +134,86 @@ export const Consultas: React.FC = () => {
   return (
 
     <>
-      <BottomSheetModalProvider>
-        <View style={styles.container}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <InputIcon
-              keyboardType='default'
-              placeholder={consultasComponentSchema?.labels?.searchLabel || 'Buscar...'}
-              icon={{
-                name: 'search1',
-                color: theme.graygreen,
-                size: 20,
-                type: 'a'
-              }}
-              containerStyle={{
-                flex: 1,
-                borderColor: theme.graygreen
-              }}
-            />
-            <TouchableOpacity
-              onPress={handlePresentModalPress}
-              style={[styles.button]}
-            >
-              <Icon
-                name='filter-menu'
-                size={24}
-                color={theme.gray}
-                type='m'
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={{
-            flex: 1
-          }}
+      <View style={styles.container}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <InputIcon
+            keyboardType='default'
+            placeholder={consultasComponentSchema?.labels?.searchLabel || 'Buscar...'}
+            icon={{
+              name: 'search1',
+              color: theme.graygreen,
+              size: 20,
+              type: 'a'
+            }}
+            containerStyle={{
+              flex: 1,
+              borderColor: theme.graygreen
+            }}
+          />
+          <TouchableOpacity
+            onPress={handlePresentModalPress}
+            style={[styles.button]}
           >
-            <FlashList
-              renderItem={renderItem}
-              data={dtes}
-              estimatedItemSize={231}
-              refreshControl={
-                <RefreshControl
-                  refreshing={loading}
-                  colors={[theme.orange, theme.purple, theme.graygreen]}
-                  tintColor={theme.graygreen}
-                  // progressBackgroundColor={theme.purple}
-                />
-              }
-              ListEmptyComponent={() => <ListEmpty />}
-              ListFooterComponent={() => <ListLimit isEmpty={Boolean(dtes.length)} />}
-              showsVerticalScrollIndicator={false}
+            <Icon
+              name='filter-menu'
+              size={24}
+              color={theme.gray}
+              type='m'
             />
-          </View>
-          <BottomSheetModal
-            ref={bottomSheetModalRef}
-            index={2}
-            snapPoints={snapPoints}
-            onChange={handleSheetChanges}
-            backdropComponent={BottomSheetBackdrop}
-          >
-            <BottomSheetScrollView style={styles.contentContainer}>
-              <Text
-                style={{
-                  fontSize: fonts.header,
-                  fontWeight: '700',
-                  textAlign: 'center',
-                  color: theme.gray75
-                }}
-              >Filtros
-              </Text>
-              <Form
-                form={consultasFiltroFormSchema.schema}
-                settings={consultasFiltroFormSchema.settings}
-                onSubmit={onSubmit}
-                buttonText='Filtrar'
-                buttonIcon={{
-                  name: 'filter-check',
-                  color: theme.gray,
-                  type: 'm',
-                  size: 24
-                }}
-              />
-            </BottomSheetScrollView>
-          </BottomSheetModal>
+          </TouchableOpacity>
         </View>
-      </BottomSheetModalProvider>
+        <View style={{
+          flex: 1
+        }}
+        >
+          <FlashList
+            renderItem={renderItem}
+            data={dtes}
+            estimatedItemSize={231}
+            refreshControl={
+              <RefreshControl
+                refreshing={loading}
+                colors={[theme.orange, theme.purple, theme.graygreen]}
+                tintColor={theme.graygreen}
+              />
+              }
+            ListEmptyComponent={() => <ListEmpty />}
+            ListFooterComponent={() => <ListLimit isEmpty={Boolean(dtes.length)} />}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+        <BottomSheetModal
+          ref={bottomSheetModalRef}
+          index={2}
+          snapPoints={snapPoints}
+          onChange={handleSheetChanges}
+          backdropComponent={BottomSheetBackdrop}
+        >
+          <BottomSheetScrollView style={styles.contentContainer}>
+            <Text
+              style={{
+                fontSize: fonts.header,
+                fontWeight: '700',
+                textAlign: 'center',
+                color: theme.gray75
+              }}
+            >Filtros
+            </Text>
+            <Form
+              form={consultasFiltroFormSchema.schema}
+              settings={consultasFiltroFormSchema.settings}
+              onSubmit={onSubmit}
+              buttonText='Filtrar'
+              buttonIcon={{
+                name: 'filter-check',
+                color: theme.gray,
+                type: 'm',
+                size: 24
+              }}
+            />
+          </BottomSheetScrollView>
+        </BottomSheetModal>
+      </View>
     </>
   )
 }

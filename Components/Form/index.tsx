@@ -74,7 +74,8 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
                     }}
                     style={[
                       {
-                        color: theme.gray
+                        color: theme.gray,
+                        flex: 1
                       }, inputStyle
                     ]}
                     containerStyle={containerInputStyle}
