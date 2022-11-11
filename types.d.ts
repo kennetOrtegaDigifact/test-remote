@@ -345,3 +345,15 @@ export type DinamycConsultasServiceHook={
         [key: string]: void
     }
 }
+
+export type ComponentSchema = {
+    [key: string]: {
+        labels: {
+            searchLabel: string,
+            [key: string]: string
+        },
+        functions: {
+            [key: string]: (props: any) => Promise<any>
+        }
+    }
+}
