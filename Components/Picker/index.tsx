@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react'
-import { Modal, StyleSheet, Text, TextStyle, TouchableHighlight, TouchableHighlightProps, View, ViewStyle, TouchableOpacity, TouchableWithoutFeedback, Animated } from 'react-native'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { StyleSheet, Text, TextStyle, TouchableHighlight, TouchableHighlightProps, View, ViewStyle, TouchableOpacity } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
 import { IconType } from '../../types'
-import Icon from '../Icon'
 import { InputIcon } from '../InputIcon'
-import { FlashList } from '@shopify/flash-list'
+import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet'
+import Icon from '../Icon'
 interface itemProps extends TouchableHighlightProps {
-    item: string,
-    originalValue: string | object,
+  item: string,
+  selected?: string
 }
-const Item: React.FC<itemProps> = React.memo(function Item ({ originalValue, item, ...buttonProps }) {
+const Item: React.FC<itemProps> = React.memo(function Item ({ item, selected = '', ...buttonProps }) {
   return (
     <TouchableHighlight
       underlayColor={theme.gray10}
@@ -19,20 +19,36 @@ const Item: React.FC<itemProps> = React.memo(function Item ({ originalValue, ite
         paddingHorizontal: 5,
         backgroundColor: theme.white,
         borderRadius: 5,
-        maxHeight: 32,
-        minHeight: 32,
-        justifyContent: 'center'
+        minHeight: 40,
+        justifyContent: 'center',
+        borderTopColor: theme.gray10,
+        borderTopWidth: 1
       }}
       {...buttonProps}
     >
-      <Text
-        style={{
-          fontSize: fonts.small,
-          color: theme.gray
-        }}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}
       >
-        {item}
-      </Text>
+        <Text
+          style={{
+            fontSize: fonts.subHeader,
+            color: theme.gray,
+            marginHorizontal: 4,
+            flex: 0.9
+          }}
+        >
+          {item}
+        </Text>
+        <Icon
+          name={item === selected ? 'record-circle' : 'checkbox-blank-circle-outline'}
+          type='m'
+          size={20}
+          color={item === selected ? theme.purple : theme.gray50}
+        />
+      </View>
     </TouchableHighlight>
   )
 })
@@ -72,24 +88,25 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
   labelKey,
   valueKey,
   defaultValue = '',
-  dropDownMaxHeight = 190,
-  minHeight = 20,
   searchlabel = 'Buscar...',
   withSearch = false,
   validateFunction = () => true,
   onValueChange = () => {}
 }) {
-  const [visible, setVisible] = useState<boolean>(false)
   const [search, setSearch] = useState<string>('')
   const [select, setSelect] = useState<any>(null)
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null)
+  const snapPoints = useMemo(() => ['25%', '50%', '70%', '90%'], [])
   const renderItem = ({ item }: any) => (
     <Item
-      item={item[labelKey!]?.toString() ||
-                    item[valueKey!]?.toString() ||
-                item}
-      originalValue={item}
+      item={item?.[labelKey || '']?.toString() ||
+                    item?.[valueKey || '']?.toString() ||
+        item || defaultValue}
+      selected={select?.[labelKey || '']?.toString() ||
+                    select?.[valueKey || '']?.toString() ||
+        select || defaultValue}
       onPress={() => {
-        setVisible(false)
+        bottomSheetModalRef.current?.close()
         if (validateFunction()) {
           setSelect(item)
         }
@@ -99,6 +116,7 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
 
   useEffect(() => {
     if (select) {
+      console.log(select)
       onValueChange(select)
     }
   }, [select])
@@ -107,7 +125,7 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
     <>
       <TouchableOpacity
         style={[styles.container, style]}
-        onPress={() => setVisible(true)}
+        onPress={() => bottomSheetModalRef.current?.present()}
       >
         <View
           style={styles.containerIconAndSelect}
@@ -123,7 +141,7 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
               styles.label,
               labelStyle
             ]}
-          >{select?.[labelKey!]?.toString() || select || defaultValue}
+          >{select?.[labelKey || '']?.toString() || select || defaultValue}
           </Text>
           <Icon
             name={arrowIcon?.name || 'chevron-down-outline'}
@@ -133,7 +151,92 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
           />
         </View>
       </TouchableOpacity>
-      <Modal
+      {/* <BottomSheetModalProvider> */}
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={1}
+        snapPoints={snapPoints}
+        backdropComponent={BottomSheetBackdrop}
+        backgroundStyle={{
+          backgroundColor: theme.white
+        }}
+      >
+        <View style={{
+          padding: 10,
+          flex: 1
+        }}
+        >
+          <Text style={{
+            fontSize: fonts.header,
+            color: theme.gray,
+            textAlign: 'center',
+            marginTop: 2,
+            marginBottom: 5,
+            fontWeight: '700'
+          }}
+          >Seleccionar
+          </Text>
+          {withSearch && (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <InputIcon
+                value={search}
+                onChangeText={setSearch}
+                keyboardType='default'
+                placeholder={searchlabel}
+                icon={{
+                  name: 'search1',
+                  color: theme.graygreen,
+                  size: 20,
+                  type: 'a'
+                }}
+                containerStyle={{
+                  flex: 1,
+                  borderColor: theme.graygreen
+                }}
+                style={{
+                  fontSize: fonts.small,
+                  flex: 1
+                }}
+              />
+            </View>
+          )}
+
+          {/* <FlashList
+            data={items?.filter(e => {
+              if (typeof e === 'string' || typeof e === 'number') {
+                return e.toString().toLowerCase().includes(search.toLowerCase())
+              }
+              if (typeof e === 'object') {
+                return e?.[labelKey || '']?.toString().toLowerCase().includes(search.toLowerCase()) || e?.[valueKey || '']?.toString()?.toLowerCase()?.includes(search.toLowerCase())
+              }
+              return false
+            }) || []}
+            renderItem={renderItem}
+            estimatedItemSize={43}
+            ListEmptyComponent={() => <EmptyList />}
+            extraData={items}
+          /> */}
+          <BottomSheetFlatList
+            data={items?.filter(e => {
+              if (typeof e === 'string' || typeof e === 'number') {
+                return e.toString().toLowerCase().includes(search.toLowerCase())
+              }
+              if (typeof e === 'object') {
+                return e?.[labelKey || '']?.toString().toLowerCase().includes(search.toLowerCase()) || e?.[valueKey || '']?.toString()?.toLowerCase()?.includes(search.toLowerCase())
+              }
+              return false
+            }) || []}
+            renderItem={renderItem}
+            contentContainerStyle={{
+              backgroundColor: theme.white
+            }}
+            ListEmptyComponent={() => <EmptyList />}
+          />
+        </View>
+      </BottomSheetModal>
+
+      {/* </BottomSheetModalProvider> */}
+      {/* <Modal
         animationType='fade'
         onRequestClose={() => setVisible(false)}
         visible={visible}
@@ -177,7 +280,7 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
                     return e.toString().toLowerCase().includes(search.toLowerCase())
                   }
                   if (typeof e === 'object') {
-                    return e?.[labelKey!]?.toString().toLowerCase().includes(search.toLowerCase()) || e?.[valueKey!]?.toString()?.toLowerCase()?.includes(search.toLowerCase())
+                    return e?.[labelKey || '']?.toString().toLowerCase().includes(search.toLowerCase()) || e?.[valueKey || '']?.toString()?.toLowerCase()?.includes(search.toLowerCase())
                   }
                   return false
                 }) || []}
@@ -190,7 +293,7 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
 
           </TouchableWithoutFeedback>
         </TouchableOpacity>
-      </Modal>
+      </Modal> */}
     </>
   )
 }, (prev, next) => JSON.stringify(prev) === JSON.stringify(next))
@@ -236,5 +339,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     flex: 0.45
+  },
+  containerModal: {
+    flex: 1
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 10
   }
 })

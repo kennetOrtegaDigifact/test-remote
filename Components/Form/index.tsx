@@ -30,12 +30,12 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
     setDate(false)
   }, [setValue])
 
-  const handleChangePicker = useCallback((fieldName: string, value: {[key: string]: any[]}, valueKey: string | number) => {
-    setValue(fieldName, (value[valueKey] || value))
+  const handleChangePicker = useCallback((fieldName: string, value: {[key: string]: any[]}, valueKey?: string | number) => {
+    setValue(fieldName, (value[valueKey || ''] || value))
   }, [setValue])
 
-  const handleDefaultValuePicker = useCallback((data: any[], labelKey: string, valueKey: string, defaultValue: string, value: {[key: string]: any[]}) => {
-    return data?.find(d => d?.[valueKey] === value || d === value)?.[labelKey || ''] || value || defaultValue
+  const handleDefaultValuePicker = useCallback((data?: any[], labelKey?: string, valueKey?: string, defaultValue?: string, value?: {[key: string]: any[]}) => {
+    return data?.find(d => d?.[valueKey || '']?.toString() === value?.toString() || d?.toString() === value?.toString())?.[labelKey || ''] || value || defaultValue
   }, [])
 
   return (
