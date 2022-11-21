@@ -1599,3 +1599,62 @@ export const tiposDocumentoGlobal: {
     ]
   }
 }
+
+// ------------ MODELO PA ----------------
+// obj.id = e.IDCustomer
+// obj.countryCode = e.SCountryCode
+// obj.tipoCliente = e.TipoCliente
+// obj.cTaxId = e.CTaxID
+// obj.DV = e.DV
+// obj.nombreOrga = e.NombreOrganizacion
+// obj.nombreContacto = e.NombreContacto
+// obj.cargo = e.Cargo
+// obj.telefono = e.Telefono
+// obj.correo = e.Correo
+// obj.direccion = e.Direccion1
+// obj.provincia = e.Provincia
+// obj.distrito = e.Distrito
+// obj.corregimiento = e.Corregimiento
+export const clientFetchProps: {
+  [key: string]: {
+    keys: string[],
+    props: {
+      [key: string]: string
+    }
+  }
+} = {
+  PA: {
+    keys: [
+      'id',
+      'countryCode',
+      'tipoCliente',
+      'cTaxId',
+      'DV',
+      'nombreOrga',
+      'nombreContacto',
+      'cargo',
+      'telefono',
+      'correo',
+      'direccion',
+      'provincia',
+      'distrito',
+      'corregimiento'
+    ],
+    props: {
+      id: 'IDCustomer',
+      countryCode: 'SCountryCode',
+      tipoCliente: 'TipoCliente',
+      cTaxId: 'CTaxID',
+      DV: 'DV',
+      nombreOrga: 'NombreOrganizacion',
+      nombreContacto: 'NombreContacto',
+      cargo: 'Cargo',
+      telefono: 'Telefono',
+      correo: 'Correo',
+      direccion: 'Direccion1',
+      provincia: 'Provincia',
+      distrito: 'Distrito',
+      corregimiento: 'Corregimiento'
+    }
+  }
+}

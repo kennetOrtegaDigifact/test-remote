@@ -109,26 +109,30 @@ export type Usuario = {
 }
 
 export type Cliente={
-    id: string|number,
-    country: string,
-    sTaxId: string|number,
-    tipoCliente: string,
-    NIT: string|number,
-    nombreOrganizacion: string,
-    nombreContacto: string,
-    cargo: string,
-    telefono: string,
-    correo: string,
-    IDBitacoraCustomer: string | number,
-    estado: string,
-    fechaCreacion: Date,
-    observaciones: string,
-    direccion: string,
-    municipio: string,
-    departamento: string,
-    pais?: string,
-    nit?: string,
-    name?: string,
+    cTaxId?: string
+    DV?: string
+    tipoCliente?: string
+    tipoContribuyente?: string
+    nombreOrga?: string
+    nombreContacto?: string
+    countryCode?: string
+    country?: string
+    cargo?: string
+    telefono?: string
+    correo?: string
+    direccion?: string
+    provincia?: string
+    distrito?: string
+    corregimiento?: string
+    IDBitacoraCustomer?: number | string
+    NIT?: number | string
+    departamento?: string
+    estado?: string
+    fechaCreacion?: string
+    id?: number | string
+    municipio?: string
+    observaciones?: string
+    sTaxId?: number | string
 }
 
 type OTI={
