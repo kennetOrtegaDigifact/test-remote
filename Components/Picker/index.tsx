@@ -62,24 +62,24 @@ const EmptyList: React.FC = React.memo(function EmptyList () {
   )
 }, (prev, next) => JSON.stringify(prev) === JSON.stringify(next))
 
-type pickerProps={
-    items: string[] | any[],
-    style?: ViewStyle,
-    labelStyle?: TextStyle,
-    arrowIcon?: IconType,
-    inputIcon?: IconType,
-    labelKey?: string,
-    valueKey?: string,
-    defaultValue?: string,
-    dropDownMaxHeight?: number,
-    minHeight?: number,
-    searchlabel?: string,
-    withSearch?: boolean,
-    validateFunction?: () => boolean,
-    onValueChange?: (value: any) => void,
+type pickerProps = {
+  items: string[] | any[],
+  style?: ViewStyle,
+  labelStyle?: TextStyle,
+  arrowIcon?: IconType,
+  inputIcon?: IconType,
+  labelKey?: string,
+  valueKey?: string,
+  defaultValue?: string,
+  dropDownMaxHeight?: number,
+  minHeight?: number,
+  searchlabel?: string,
+  withSearch?: boolean,
+  validateFunction?: () => boolean,
+  onValueChange?: (value: any) => void,
 }
 
-export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
+export const PickerTS: React.FC<pickerProps> = React.memo(function Picke ({
   items = [],
   style,
   labelStyle,
@@ -91,7 +91,7 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
   searchlabel = 'Buscar...',
   withSearch = false,
   validateFunction = () => true,
-  onValueChange = () => {}
+  onValueChange = () => { }
 }) {
   const [search, setSearch] = useState<string>('')
   const [select, setSelect] = useState<any>(null)
@@ -100,10 +100,10 @@ export const Picker: React.FC<pickerProps> = React.memo(function Picke ({
   const renderItem = ({ item }: any) => (
     <Item
       item={item?.[labelKey || '']?.toString() ||
-                    item?.[valueKey || '']?.toString() ||
+        item?.[valueKey || '']?.toString() ||
         item || defaultValue}
       selected={select?.[labelKey || '']?.toString() ||
-                    select?.[valueKey || '']?.toString() ||
+        select?.[valueKey || '']?.toString() ||
         select || defaultValue}
       onPress={() => {
         bottomSheetModalRef.current?.close()

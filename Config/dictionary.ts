@@ -1,4 +1,4 @@
-import { countriesDictionaryType } from '../types'
+import { countriesDictionaryType, ServiceFetchProps } from '../types'
 
 export const countriesDictionary: Array<countriesDictionaryType> = [
   {
@@ -1457,6 +1457,12 @@ export const countriesDictionary: Array<countriesDictionaryType> = [
 
 export const LoginCountries: Array<countriesDictionaryType> = [
   {
+    name_en: '-- Seleccione un pais --',
+    name_es: '-- Seleccione un pais --',
+    dial_code: '',
+    code: ''
+  },
+  {
     name_en: 'Guatemala',
     name_es: 'Guatemala',
     dial_code: '+502',
@@ -1615,14 +1621,7 @@ export const tiposDocumentoGlobal: {
 // obj.provincia = e.Provincia
 // obj.distrito = e.Distrito
 // obj.corregimiento = e.Corregimiento
-export const clientFetchProps: {
-  [key: string]: {
-    keys: string[],
-    props: {
-      [key: string]: string
-    }
-  }
-} = {
+export const clientFetchProps: ServiceFetchProps = {
   PA: {
     keys: [
       'id',
@@ -1658,3 +1657,73 @@ export const clientFetchProps: {
     }
   }
 }
+
+export const productFetchProps: ServiceFetchProps = {
+  GT: {
+    keys: [
+      'name',
+      'price',
+      'unit',
+      'tipo',
+      'ean'
+    ],
+    props: {
+      name: 'D',
+      price: 'LP',
+      tipo: 'CTG',
+      unit: 'U',
+      ean: 'EAN'
+    }
+  },
+  PA: {
+    keys: [
+      'country',
+      'taxid',
+      'name',
+      'price',
+      'unit',
+      'impuestos',
+      'ean',
+      'segmento',
+      'familia'
+    ],
+    props: {
+      country: 'CC',
+      taxid: 'TID',
+      name: 'D',
+      price: 'LP',
+      unit: 'U',
+      impuestos: 'CTG',
+      ean: 'EAN',
+      segmento: 'CPBMSabr',
+      familia: 'CPBMS'
+    }
+  }
+}
+
+export const ITBMSDictionary: Array<{label: string, value: string, rate?: number}> = [
+  {
+    label: '-- Selecccione Tasa ITBMS  --',
+    value: '-1'
+  },
+  {
+    label: 'Tasa del 0% (Excento)',
+    value: '00',
+    rate: 0
+  },
+  {
+    label: 'Tasa del 7%',
+    value: '01',
+    rate: 0.07
+  },
+  {
+    label: 'Tasa del 10%',
+    value: '02',
+    rate: 0.1
+  },
+  {
+    label: 'Tasa del 15%',
+    value: '03',
+    rate: 0.15
+  }
+]

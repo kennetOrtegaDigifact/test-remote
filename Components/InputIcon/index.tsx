@@ -1,20 +1,20 @@
 import React, { useState } from 'react'
-import { PixelRatio, StyleSheet, TextInput, TextInputProps, TouchableOpacity, View, ViewStyle } from 'react-native'
+import { PixelRatio, Platform, StyleSheet, TextInput, TextInputProps, TouchableOpacity, View, ViewStyle } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
 import { IconType } from '../../types'
 import Icon from '../Icon'
 interface inputProps extends TextInputProps {
-    icon?: IconType,
-    switchIcon?: IconType,
-    isSecureTextInput?: boolean,
-    containerStyle?: ViewStyle,
-    disabled?: boolean
+  icon?: IconType,
+  switchIcon?: IconType,
+  isSecureTextInput?: boolean,
+  containerStyle?: ViewStyle,
+  disabled?: boolean
 }
 export const InputIcon: React.FC<inputProps> = React.memo(function InputIcon ({ containerStyle, icon, switchIcon, isSecureTextInput = false, disabled = false, ...props }) {
   const [visible, setVisible] = useState(isSecureTextInput)
   return (
     <>
-      <View style={[styles.container, containerStyle]}>
+      <View style={[styles.container, { paddingVertical: Platform.OS === 'ios' ? 10 : 0 }, containerStyle]}>
         <Icon
           name={icon?.name || ''}
           size={icon?.size || 20}
@@ -22,8 +22,8 @@ export const InputIcon: React.FC<inputProps> = React.memo(function InputIcon ({ 
           color={icon?.color || theme.purple}
         />
         <TextInput
-          style={[styles.input]}
           {...props}
+          style={[styles.input, props.style, { flex: 1 }]}
           returnKeyType='next'
           secureTextEntry={visible}
           editable={!disabled}

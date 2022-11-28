@@ -7,6 +7,7 @@ import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
 import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, ConsultaDTE, NIT, DashboardType, userInterface } from '../types'
+import { productFetchProps } from '../Config/dictionary'
 const parser = new XMLParser(options)
 
 type FetchProps={
@@ -1598,77 +1599,70 @@ export const cancelDTEService = async ({
     })
 }
 
-export const getAllProductsService = async ({
-  requestor,
-  taxid,
-  userName,
+export const getAllProductsServiceTS = async ({
   country,
-  signal = new AbortController().signal
-}: FetchProps): Promise<{
-  code: number;
-  data: Producto[]
+  signal = new AbortController().signal,
+  xml
+}: {
+    country: string
+    signal?: AbortSignal,
+    xml: string
+}): Promise<{
+    code: number
+    data: Cliente[]
 }> => {
   return globalThis.fetch(urlWsSoap, {
     signal,
-    method: 'post',
+    method: 'POST',
     headers: { 'Content-Type': 'text/xml' },
-    body: `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>EXEC_STORED_PROC</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${userName}</UserName>
-      <Data1>GetAllProductsAndServices</Data1>
-      <Data2>${country}|${taxid}</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-      </soap:Envelope>`
+    body: xml
   })
     .then(res => res.text())
-    .then(response => {
+    .then(res => {
       try {
-        const dataParser = parser.parse(response)
-        const rows = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        const dataParsed = parser.parse(res)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1
         if (rows > 0) {
-          const data = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-          const dataArr = []
-          dataArr.push(data)
-          const products: Producto[] = dataArr.flat().map(e => {
+          const productosData: any = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
+          //   console.log('---------- GET ALL PRODUCTS DATA --------------------------\n', productosData)
+          const dataRows: any[] = []
+          dataRows.push(productosData)
+          const data: Producto[] = dataRows.flat().map((e: any) => {
             const obj: Producto = {
-              descripcion: e.D,
-              precio: e.LP,
-              tipo: e.CTG,
-              unidad: e.U,
-              codigo: e.EAN,
-              cantidad: 1,
-              descuento: 0
+              quantity: 1,
+              discount: 0,
+              selected: false
             }
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Producto lleva mas props dependendiendo del pais
+            productFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = e?.[productFetchProps?.[country]?.props?.[key]] || ''
+              if (key === 'impuestos') { // hay casos especiales donde hay que traducir un JSON. esto en GT no sucede
+                obj[key] = JSON.parse(e?.[productFetchProps?.[country]?.props?.[key]] || '{}')
+              }
+            })
+            // console.log('PRODUCTO FINAL', obj)
             return obj
           })
           return {
             code: appCodes.ok,
-            data: products
+            data
           }
         }
-        console.error('GET ALL PRODUCTS SERVICE DATA EMPTY')
         return {
           code: appCodes.dataVacio,
           data: []
         }
-      } catch (ex) {
-        console.error('EXCEPTION GET ALL PRODUCTS SERVICE', ex)
+      } catch (err: any) {
+        console.log('EXCEPTION GET ALL PRODUCTS SERVICE TS', err)
         return {
           code: appCodes.processError,
           data: []
         }
       }
     })
-    .catch(err => {
-      console.error('ERROR CATCH GET ALL PRODUCTS SERVICE', err)
+    .catch((err: Error) => {
+      console.log('ERROR CATCH GET ALL PRODUCTS SERVICE TS', err)
       if (err.message === 'Aborted') {
         return {
           code: appCodes.ok,
@@ -1682,37 +1676,15 @@ export const getAllProductsService = async ({
     })
 }
 
-export const addEditProductService = async ({
-  requestor,
-  taxid,
-  userName,
-  country,
-  descripcion,
-  precio,
-  codigo,
-  tipo,
-  unidad
-}: FetchProps & Producto): Promise<{
+export const addEditProductServiceTS = async ({
+  xml
+}: {xml: string}): Promise<{
   code: number
 }> => {
   return globalThis.fetch(urlWsSoap, {
     method: 'post',
     headers: { 'Content-Type': 'text/xml; charset=UTF-8' },
-    body: `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>EXEC_STORED_PROC</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${userName}</UserName>
-      <Data1>UpsertProductsAndServices</Data1>
-      <Data2>GT|${taxid}|${descripcion}|${precio}|0|${unidad}|0|${codigo}|0|${userName}|0|0|${tipo}</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-    </soap:Envelope>`
+    body: xml
   })
     .then(res => res.text())
     .then(response => {
@@ -1747,33 +1719,15 @@ export const addEditProductService = async ({
     })
 }
 
-export const deleteProductService = async ({
-  taxid,
-  country,
-  eanprod
+export const deleteProductServiceTS = async ({
+  xml
 }: {
-    taxid: string,
-    country: string,
-    eanprod: string
+    xml: string
 }): Promise<{code: number}> => {
   return globalThis.fetch(urlWsSoap, {
     method: 'post',
     headers: { 'Content-Type': 'text/xml' },
-    body: `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
-      <Transaction>EXEC_STORED_PROC</Transaction>
-      <Country>${country}</Country>
-      <Entity>000000123456</Entity>
-      <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-      <UserName>${country}.000000123456.MARIESLOSPOSTMAS</UserName>
-      <Data1>DeleteProductsAndServices</Data1>
-      <Data2>GT|${taxid}|${eanprod}</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-              </soap:Envelope>`
+    body: xml
   })
     .then(res => res.text())
     .then(response => {
@@ -1858,7 +1812,7 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
               sTaxId: e.STaxID || '',
               tipoCliente: e.TipoCliente || '',
               NIT: e.NIT || '',
-              nombreOrganizacion: e.NombreOrganizacion || '',
+              nombreOrga: e.NombreOrganizacion || '',
               nombreContacto: e.NombreContacto || '',
               cargo: e.Cargo || '',
               telefono: e.Telefono || '',

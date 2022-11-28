@@ -1,8 +1,16 @@
+import { useCallback } from 'react'
+import { useToast } from 'react-native-toast-notifications'
 import { useSelector } from 'react-redux'
+import { appCodes } from '../Config/appCodes'
 import { ReduxState } from '../Redux/store'
+import { addEditProductServiceTS, deleteProductServiceTS, getAllProductsServiceTS } from '../Services/apiService'
+import { ComponentSchema, Impuestos, OTI, Producto } from '../types'
+import { useXmlFetchConstructor } from './useXmlFetchConstructor'
 
 export const useComponentSchema = () => {
-  const { country } = useSelector((state: ReduxState) => state.userDB)
+  const { country, requestor, taxid, userName } = useSelector((state: ReduxState) => state.userDB)
+  const toast = useToast()
+  const { getAllClientsXml, addEditClientXml, deleteClientXml, getAllProductsXml, deleteProductsXml, addEditProductsXml } = useXmlFetchConstructor()
 
   const consultas: {
       [key: string]: {
@@ -35,7 +43,161 @@ export const useComponentSchema = () => {
       }
     }
   }
+
+  const borrarProducto = useCallback(async (props: Producto) => {
+    console.log('BORRAR PRODUCTO PA ', props)
+    const { ean, name } = props
+    const t = toast.show('Borrando producto', {
+      type: 'loading',
+      data: {
+        theme: 'dark'
+      },
+      duration: 60000
+    })
+    const xml = deleteProductsXml({ ean: ean || '' })
+    return deleteProductServiceTS({
+      xml
+    })
+      .then(res => {
+        if (res.code === appCodes.ok) {
+          setTimeout(() => {
+            toast.update(t, 'Producto eliminado correctamente', {
+              type: 'ok',
+              duration: 5000
+            })
+          }, 500)
+        }
+        if (res.code === appCodes.processError) {
+          setTimeout(() => {
+            toast.update(t, 'Algo salio mal al tratar de eliminar el producto, porfavor verifique la informacion o vuelvalo a intentar, si el error persiste reportelo.', {
+              type: 'error',
+              duration: 5000
+            })
+          }, 500)
+        }
+        if (res.code === appCodes.dataVacio) {
+          setTimeout(() => {
+            toast.update(t, `No fue posible eliminar el producto${name ? ` "${name}"` : ''}`, {
+              type: 'advertise',
+              duration: 5000
+            })
+          }, 500)
+        }
+        return res.code
+      })
+  }, [])
+
+  const getProducts = useCallback(async (signal: AbortSignal) => {
+    const xml = getAllProductsXml()
+    return getAllProductsServiceTS({
+      country,
+      xml,
+      signal
+    })
+      .then(res => res)
+  }, [])
+
+  const addEditProducts = useCallback((props: any) => {
+    console.log('COMOOOOOOOOOO', props)
+    const dictionaryTaxes: {[key: string]: string} = {
+      SUME911: '01',
+      TasaPortabilidadNumerica: '02',
+      ImpuestoSobreSeguro: '03'
+    }
+    const OTIS: OTI[] = Object.keys(props)?.map((key: any) => {
+      const obj: OTI = {
+        Codigo: '',
+        Tasa: 0,
+        Valor: 0
+      }
+      if (dictionaryTaxes?.[key]) {
+        obj.Codigo = dictionaryTaxes?.[key]
+        obj.Tasa = (parseFloat(props?.[key]) / 100) || 0
+        obj.Valor = ((parseFloat(props?.[key]) / 100) || 0) * parseFloat((props?.precio || 0))
+      }
+      return obj
+    })?.filter(e => e.Codigo !== '')
+
+    const impuestos: Impuestos = {
+      ISC: {
+        Tasa: (parseFloat(props?.ISC || 0) / 100),
+        Valor: (parseFloat(props?.ISC || 0) / 100) * parseFloat(props?.precio || 0)
+      },
+      ITBMS: props?.ITBMS || '00',
+      OTI: OTIS
+    }
+
+    console.log('IMPUESTOS PA', impuestos)
+    const t = toast.show('Creando/Editando producto', {
+      type: 'loading',
+      data: {
+        theme: 'dark'
+      },
+      duration: 60000
+    })
+    const xml = addEditProductsXml(props)
+    return addEditProductServiceTS({
+      xml
+    })
+      .then(res => {
+        if (res?.code === appCodes.ok) {
+          setTimeout(() => {
+            toast.update(t, 'Producto Creado/Editado Correctamente', {
+              type: 'ok',
+              duration: 5000
+            })
+          }, 500)
+        }
+        if (res?.code === appCodes.processError) {
+          setTimeout(() => {
+            toast.update(t, 'Algo salio mal al tratar de Crear o Editar el producto, porfavor verifique la informacion o vuelvalo a intentar, si el error persiste reportelo.', {
+              type: 'error',
+              duration: 5000
+            })
+          }, 500)
+        }
+        if (res?.code === appCodes.dataVacio) {
+          setTimeout(() => {
+            toast.update(t, `No fue posible Crear o Editar el producto${props?.name ? ` "${props?.name}"` : ''}`, {
+              type: 'advertise',
+              duration: 5000
+            })
+          }, 500)
+        }
+        return res
+      })
+  }, [])
+
+  const products: ComponentSchema = {
+    PA: {
+      labels: {
+        searchLabel: 'Buscar Producto Por Nombre/Codigo',
+        ean: 'Codigo: ',
+        price: 'Precio: B/.'
+      },
+      searchKeys: ['name', 'ean'],
+      functions: {
+        borrar: borrarProducto,
+        fetchData: getProducts,
+        addEdit: addEditProducts
+      }
+    },
+    GT: {
+      labels: {
+        searchLabel: 'Buscar Producto Por Nombre/Codigo',
+        ean: 'Codigo: ',
+        price: 'Precio: Q.'
+      },
+      searchKeys: ['name', 'ean'],
+      functions: {
+        borrar: borrarProducto,
+        fetchData: getProducts,
+        addEdit: addEditProducts
+      }
+    }
+  }
   return {
-    consultasComponentSchema: consultas[country]
+    consultasComponentSchema: consultas[country],
+    productosComponentSchema: products[country]
   }
 }

@@ -1,5 +1,9 @@
 import { KeyboardType, TextStyle, ViewStyle } from 'react-native'
 import { RegisterOptions, FieldValues, FieldPath, UseFormProps } from 'react-hook-form'
+import { ObjectSchema } from 'yup'
+import { ObjectShape, TypeOfShape } from 'yup/lib/object'
+import { AnyObject } from 'yup/lib/types'
+
 export interface IconType {
     name?: string,
     size?: number,
@@ -140,26 +144,29 @@ type OTI={
     Tasa: number
     Valor: number
 }
+type Impuestos = {
+    ISC?: {
+        Tasa?: number
+        Valor?: number
+    },
+    ITBMS?: string | number
+    OTI?: OTI[]
+}
+
 export interface Producto {
     country?: string
-    taxid?: string|number
-    descripcion?: string
-    precio: number
-    unidad?: string
-    impuestos?: {
-        ISC?: {
-            Tasa?: number
-            Valor?: number
-        },
-        IBMS?: string|number
-        OTI?: OTI[]
-    }
-    codigo?: string
+    taxid?: string | number
+    name?: string
+    price?: number
+    unit?: string
+    impuestos?: Impuestos
+    ean?: string
     segmento?: number
     familia?: number
-    cantidad?: number
-    descuento?: number
+    quantity?: number
+    discount?: number
     tipo?: string
+    selected?: boolean
 }
 
 export type User={
@@ -196,7 +203,7 @@ export interface userInterface {
 }
 
 export type formulario = {
-    type: 'inputText'|'picker'|'dateTime',
+    type: 'inputText' | 'picker' | 'dateTime' | 'switch' | 'accionable' | 'selectProduct',
     label?: string,
     labelStyle?: TextStyle,
     name: string,
@@ -205,20 +212,24 @@ export type formulario = {
     disabled?: boolean,
     secureTextEntry?: boolean,
     switchIcon?: IconType,
+    switchForm?: Array<formulario>
+    required?: boolean,
+    list?: Array<any>
+    onBlur?: (values?: any) => void
     picker?: {
-        data?: Array<unknown>,
+        data?: Array<any>,
         labelKey?: string,
         valueKey?: string,
         defaultValue: string,
         withSearch?: boolean,
         searchlabel?: string,
-        onChange?: (value: unknown) => void,
+        onChange?: (value: any) => void,
         labelStyle?: TextStyle,
         style?: ViewStyle,
         arrowIcon?: IconType
     },
     icon?: IconType,
-    rules?: Omit<RegisterOptions<FieldValues, FieldPath<FieldValues>>, 'valueAsNumber'|'valueAsDate'|'setValueAs'|'disabled'>,
+    rules?: Omit<RegisterOptions<FieldValues, FieldPath<FieldValues>>, 'valueAsNumber' | 'valueAsDate' | 'setValueAs' | 'disabled'>,
     style?: ViewStyle
 }
 
@@ -350,14 +361,30 @@ export type DinamycConsultasServiceHook={
     }
 }
 
+export type ValidatorSchema = {
+    [key: string]: (props?: any) => ObjectSchema<ObjectShape, AnyObject, TypeOfShape<ObjectShape>>
+}
+
+export type ServiceFetchProps = {
+  [key: string]: {
+    keys: string[],
+    props: {
+      [key: string]: string
+    }
+  }
+}
+
 export type ComponentSchema = {
     [key: string]: {
         labels: {
             searchLabel: string,
             [key: string]: string
         },
+        searchKeys?: string[],
         functions: {
-            [key: string]: (props: any) => Promise<any>
+            borrar: (props: any) => Promise<any>
+            fetchData: (props: any) => Promise<any>
+            addEdit: (props: any) => Promise<any>
         }
     }
 }

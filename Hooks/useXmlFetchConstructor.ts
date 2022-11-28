@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { Cliente } from '../types'
+import { Cliente, Producto } from '../types'
 
 export const useXmlFetchConstructor = () => {
   const { country, requestor, taxid, userName } = useSelector((state: ReduxState) => state.userDB)
@@ -34,6 +34,77 @@ export const useXmlFetchConstructor = () => {
                         <Data3></Data3>
                     </RequestTransaction>
                 </soap:Body>
+            </soap:Envelope>`
+  }, [])
+
+  const deleteProductsConstructor = useCallback(({
+    ean
+  }: {ean: string|number}) => {
+    const datos: {
+      requestTransaction: {[key: string]: string}
+    } = {
+      requestTransaction: {
+        GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
+        PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
+      }
+    }
+    return `<?xml version="1.0" encoding="utf-8"?>
+            <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                <soap:Body>
+                    <RequestTransaction ${datos?.requestTransaction?.[country]}>
+                        <Requestor>${requestor}</Requestor>
+                        <Transaction>EXEC_STORED_PROC</Transaction>
+                        <Country>${country}</Country>
+                        <Entity>${taxid}</Entity>
+                        <User>${requestor}</User>
+                        <UserName>${country}.${taxid}.${userName}</UserName>
+                        <Data1>DeleteProductsAndServices</Data1>
+                        <Data2>${country}|${taxid}|${ean}</Data2>
+                        <Data3></Data3>
+                    </RequestTransaction>
+                </soap:Body>
+            </soap:Envelope>`
+  }, [])
+
+  const addEditProductsConstructor = useCallback((item: Producto) => {
+    const { name, price, unit, ean, familia, impuestos, segmento, tipo } = item
+    const datos: {
+      requestTransaction: {[key: string]: string}
+      data: {[key: string]: string},
+      userName: {[key: string]: string}
+    } = {
+      data: {
+        GT: `${country}|${taxid}|${name}|${price}|0|${unit}|0|${ean}|0|${userName}|0|0|${tipo}`,
+        PA: `${country}|${taxid}|${name}|${price}|0|${unit}|0|${ean}|0|${userName}|${segmento}|${familia}|${JSON.stringify(impuestos)}`
+      },
+      requestTransaction: {
+        GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
+        PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
+      },
+      userName: {
+        PA: '',
+        GT: ''
+      }
+    }
+    return `<?xml version="1.0" encoding="utf-8"?>
+            <soap:Envelope
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+              xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+              <soap:Body>
+                <RequestTransaction
+                  ${datos?.requestTransaction?.[country]}>
+                  <Requestor>${requestor}</Requestor>
+                  <Transaction>EXEC_STORED_PROC</Transaction>
+                  <Country>${country}</Country>
+                  <Entity>${taxid}</Entity>
+                  <User>${requestor}</User>
+                  <UserName>${country}.${taxid}.${userName}</UserName>
+                  <Data1>UpsertProductsAndServices</Data1>
+                  <Data2>${datos?.data?.[country]}</Data2>
+                  <Data3></Data3>
+                </RequestTransaction>
+              </soap:Body>
             </soap:Envelope>`
   }, [])
 
@@ -141,6 +212,8 @@ export const useXmlFetchConstructor = () => {
     getAllClientsXml: getAllClientsConstructor,
     addEditClientXml: addEditClientsConstructor,
     deleteClientXml: deleteClientXmlConstructor,
-    getAllProductsXml: getAllProductsConstructor
+    getAllProductsXml: getAllProductsConstructor,
+    deleteProductsXml: deleteProductsConstructor,
+    addEditProductsXml: addEditProductsConstructor
   }
 }

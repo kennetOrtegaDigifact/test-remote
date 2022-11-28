@@ -15,7 +15,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { InputIcon } from '../../Components/InputIcon'
 import { ErrorLabel } from '../../Components/ErrorLabel'
 import Icon from '../../Components/Icon'
-import { Picker } from '../../Components/Picker'
+import { PickerTS } from '../../Components/Picker'
 import { LoginCountries } from '../../Config/dictionary'
 
 export const Login: React.FC = () => {
@@ -146,7 +146,7 @@ export const Login: React.FC = () => {
           <Controller
             control={control}
             render={({ field: { onChange, onBlur, value } }) => (
-              <Picker
+              <PickerTS
                 items={LoginCountries}
                 defaultValue='-- Seleccione un pais --'
                 labelKey='name_es'
@@ -157,8 +157,6 @@ export const Login: React.FC = () => {
                   size: 20,
                   type: 'm'
                 }}
-                withSearch
-                searchlabel='Buscar Pais...'
                 labelStyle={{
                   color: theme.white,
                   fontSize: fonts.normal

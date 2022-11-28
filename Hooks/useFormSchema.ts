@@ -1,10 +1,13 @@
+import { yupResolver } from '@hookform/resolvers/yup'
 import { useSelector } from 'react-redux'
-import { LoginCountries, tiposDocumentoGlobal } from '../Config/dictionary'
+import { ITBMSDictionary, LoginCountries, tiposDocumentoGlobal } from '../Config/dictionary'
 import { fonts, theme } from '../Config/theme'
 import { ReduxState } from '../Redux/store'
 import { formulario, FormularioPerCountry } from '../types'
+import { useValidator } from './useValidator'
 
 export const useFormSchema = () => {
+  const { selectProductoValidatorSchema } = useValidator()
   const { country, establecimientos, infoFiscalUser, usuarios } = useSelector((state: ReduxState) => state.userDB)
   const loginFormSchema: Array<formulario> = [
     {
@@ -258,8 +261,75 @@ export const useFormSchema = () => {
       }
     }
   }
+  const selectProduct: FormularioPerCountry = {
+    PA: {
+      schema: [
+        {
+          name: 'name',
+          type: 'inputText',
+          placeholder: 'Descripcion',
+          required: true,
+          label: 'Descripcion : ',
+          icon: {
+            name: 'file-document-edit',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          }
+        },
+        {
+          name: 'quantity',
+          type: 'inputText',
+          placeholder: 'Cantidad',
+          keyboardType: 'decimal-pad',
+          required: true,
+          label: 'Cantidad : ',
+          icon: {
+            name: 'scale-balance',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Tasa ITBMS: ',
+          required: true,
+          name: 'impuestos.ITBMS',
+          icon: {
+            name: 'scale-balance',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: ITBMSDictionary,
+            labelKey: 'label',
+            valueKey: 'value',
+            defaultValue: '-- Selecccione Tasa ITBMS  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          },
+          rules: {
+            required: 'Seleccione una tasa de ITBMS valida o seleccione excento (0%)',
+            validate: value => value !== '-1'
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          quantity: '1',
+          name: '',
+          'impuestos.ITBMS': ''
+        },
+        resolver: yupResolver(selectProductoValidatorSchema())
+      }
+    }
+  }
   return {
     loginFormSchema,
-    consultasFiltroFormSchema: consultasFiltroFormSchema[country]
+    consultasFiltroFormSchema: consultasFiltroFormSchema[country],
+    selectProductFormSchema: selectProduct[country]
   }
 }
