@@ -3,50 +3,17 @@ import { useToast } from 'react-native-toast-notifications'
 import { useSelector } from 'react-redux'
 import { appCodes } from '../Config/appCodes'
 import { ReduxState } from '../Redux/store'
-import { addEditClientServiceTS, addEditProductServiceTS, deleteClientServiceTS, deleteProductServiceTS, getAllClientsServiceTS, getAllProductsServiceTS } from '../Services/apiService'
 import { Cliente, ComponentSchema, Impuestos, OTI, Producto } from '../types'
-import { useXmlFetchConstructor } from './useXmlFetchConstructor'
+import { useApiService } from './useApiService'
 
 export const useComponentSchema = () => {
-  const { country, requestor, taxid, userName } = useSelector((state: ReduxState) => state.userDB)
+  const { country } = useSelector((state: ReduxState) => state.userDB)
   const toast = useToast()
-  const { getAllClientsXml, addEditClientXml, deleteClientXml, getAllProductsXml, deleteProductsXml, addEditProductsXml } = useXmlFetchConstructor()
+  const { getAllClientsServiceTS, addEditClientServiceTS, deleteClientServiceTS, deleteProductServiceTS, getAllProductsServiceTS, addEditProductServiceTS } = useApiService()
 
-  const consultas: {
-      [key: string]: {
-          labels: {
-              searchLabel: string,
-              [key: string]: string
-          }
-      }
-  } = {
-    GT: {
-      labels: {
-        searchLabel: 'Buscar por No.Autorizacion/Serie',
-        numeroDocumento: 'Numero de Documento: ',
-        numeroAuth: 'Numero de Autorizacion: ',
-        numeroSerie: 'Numero de Serie: ',
-        establecimiento: 'Establecimiento: ',
-        clientName: 'Cliente: ',
-        fechaEmision: 'Fecha de emision: ',
-        clientTaxid: 'NIT: ',
-        cancelled: 'Documento Anulado: ',
-        documentType: 'Tipo de documento: ',
-        razonSocial: 'Razon Social: ',
-        userName: 'Usuario que la emitio: ',
-        monto: 'Monto: Q'
-      }
-    },
-    PA: {
-      labels: {
-        searchLabel: 'Buscar por No.Autorizacion/RUC'
-      }
-    }
-  }
-
-  const borrarProducto = useCallback(async (props: Producto) => {
-    console.log('BORRAR PRODUCTO PA ', props)
-    const { ean, name } = props
+  const borrarProducto = useCallback(async (item: Producto) => {
+    const { name } = item
+    console.log('BORRAR PRODUCTO PA ', item)
     const t = toast.show('Borrando producto', {
       type: 'loading',
       data: {
@@ -54,9 +21,8 @@ export const useComponentSchema = () => {
       },
       duration: 60000
     })
-    const xml = deleteProductsXml({ ean: ean || '' })
     return deleteProductServiceTS({
-      xml
+      item
     })
       .then(res => {
         if (res.code === appCodes.ok) {
@@ -88,10 +54,7 @@ export const useComponentSchema = () => {
   }, [])
 
   const getProducts = useCallback(async (signal: AbortSignal) => {
-    const xml = getAllProductsXml()
     return getAllProductsServiceTS({
-      country,
-      xml,
       signal
     })
       .then(res => res)
@@ -127,7 +90,12 @@ export const useComponentSchema = () => {
       OTI: OTIS
     }
 
-    console.log('IMPUESTOS PA', impuestos)
+    const item = {
+      ...props,
+      impuestos
+    }
+
+    console.log('PRODUCTO FINAL', item)
     const t = toast.show('Creando/Editando producto', {
       type: 'loading',
       data: {
@@ -135,9 +103,8 @@ export const useComponentSchema = () => {
       },
       duration: 60000
     })
-    const xml = addEditProductsXml(props)
     return addEditProductServiceTS({
-      xml
+      item
     })
       .then(res => {
         if (res?.code === appCodes.ok) {
@@ -198,12 +165,11 @@ export const useComponentSchema = () => {
   }
 
   const getAllClients = useCallback(async (signal: AbortSignal) => {
-    const xml = getAllClientsXml()
-    return getAllClientsServiceTS({ country, xml, signal })
+    return getAllClientsServiceTS({ country, signal })
       .then(res => res)
-  }, [])
+  }, [country, getAllClientsServiceTS])
 
-  const deleteClient = useCallback((item: Cliente) => {
+  const deleteClient = useCallback(async (item: Cliente) => {
     const t = toast.show('Borrando cliente', {
       type: 'loading',
       data: {
@@ -211,7 +177,7 @@ export const useComponentSchema = () => {
       },
       duration: 60000
     })
-    return deleteClientServiceTS({ xml: deleteClientXml(item) })
+    return deleteClientServiceTS({ item })
       .then(res => {
         if (res.code === appCodes.ok) {
           setTimeout(() => {
@@ -239,10 +205,9 @@ export const useComponentSchema = () => {
         }
         return res.code
       })
-  }, [])
+  }, [deleteClientServiceTS, toast])
 
-  const addEditClient = useCallback((item: Cliente) => {
-    console.log('XML FINAL', addEditClientXml(item))
+  const addEditClient = useCallback(async (item: Cliente) => {
     const t = toast.show('Creando/Editando cliente', {
       type: 'loading',
       data: {
@@ -250,7 +215,7 @@ export const useComponentSchema = () => {
       },
       duration: 60000
     })
-    return addEditClientServiceTS({ xml: addEditClientXml(item) })
+    return addEditClientServiceTS({ item })
       .then(res => {
         if (res?.code === appCodes.ok) {
           setTimeout(() => {
@@ -278,7 +243,7 @@ export const useComponentSchema = () => {
         }
         return res
       })
-  }, [])
+  }, [addEditClientServiceTS, toast])
 
   const clientes: ComponentSchema = {
     PA: {
@@ -294,10 +259,23 @@ export const useComponentSchema = () => {
         addEdit: addEditClient,
         borrar: deleteClient
       }
+    },
+    GT: {
+      labels: {
+        searchLabel: 'Buscar Cliente Por Nombre/NIT',
+        cTaxId: 'NIT del Cliente: ',
+        country: 'Pais: ',
+        direccion: 'Direccion: '
+      },
+      searchKeys: ['cTaxId', 'nombreOrga'],
+      functions: {
+        fetchData: getAllClients,
+        addEdit: addEditClient,
+        borrar: deleteClient
+      }
     }
   }
   return {
-    consultasComponentSchema: consultas[country],
     productosComponentSchema: products[country],
     clientesComponentSchema: clientes[country]
   }

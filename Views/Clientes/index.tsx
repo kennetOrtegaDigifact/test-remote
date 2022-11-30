@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { Text, TouchableOpacity, View, StyleSheet, RefreshControl, Alert } from 'react-native'
 import { useToast } from 'react-native-toast-notifications'
 import { useDispatch, useSelector } from 'react-redux'
-import { AccessDeniedScreen } from '../../Components/AccessDeniedScreen'
+// import { AccessDeniedScreen } from '../../Components/AccessDeniedScreen'
 import { fonts, theme } from '../../Config/theme'
 import { addUser } from '../../Redux/userReducer'
 import {
@@ -334,13 +334,13 @@ const ClientesV = () => {
     return () => controller && controller.abort()
   }, [])
 
-  if (!permisos?.Clientes?.granted || false) {
-    return (
-      <>
-        <AccessDeniedScreen />
-      </>
-    )
-  }
+  // if (!permisos?.Clientes?.granted || false) {
+  //   return (
+  //     <>
+  //       <AccessDeniedScreen />
+  //     </>
+  //   )
+  // }
   return (
     <>
       {/* <BottomSheetModalProvider> */}

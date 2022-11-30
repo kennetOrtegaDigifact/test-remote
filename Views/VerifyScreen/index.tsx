@@ -1,17 +1,31 @@
 import React, { useEffect } from 'react'
 import { View, Image, StyleSheet, ActivityIndicator } from 'react-native'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-native'
 import { theme } from '../../Config/theme'
+import { useApiService } from '../../Hooks/useApiService'
 import { ReduxState } from '../../Redux/store'
+import { setUtils } from '../../Redux/utilsReducer'
+import { UTILSDB } from '../../types'
 export const VerifyScreen: React.FC = () => {
   const user = useSelector((state: ReduxState) => state.userDB)
   const navigate = useNavigate()
+  const { countryCodes } = useSelector((state: ReduxState) => state.utilsDB)
+  const { getCountryCodes } = useApiService()
+  const dispatch = useDispatch()
   useEffect(() => {
     if (user?.token?.length) {
       setTimeout(() => {
         navigate(`/${user.country}/Dashboard`, { replace: true })
       }, 1000)
+      if (!countryCodes?.length) {
+        getCountryCodes().then(resCountryCodes => {
+          const utils: UTILSDB = {
+            countryCodes: resCountryCodes.data
+          }
+          dispatch(setUtils(utils))
+        })
+      }
     } else {
       setTimeout(() => {
         navigate('/Login', { replace: true })

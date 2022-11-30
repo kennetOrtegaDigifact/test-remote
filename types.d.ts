@@ -416,15 +416,15 @@ type CountryCodes = {
 }
 
 export interface UTILSDB {
-    corregimientos: any[]
-    distritos: any[]
-    provincias: any[]
-    countryCodes: CountryCodes[]
-    currencies: any[]
-    incoterms: any[]
-    familias: Familia[]
-    segmentos: Segmento[]
-    units: UnidadDeMedida[]
+    corregimientos?: any[]
+    distritos?: any[]
+    provincias?: any[]
+    countryCodes?: CountryCodes[]
+    currencies?: any[]
+    incoterms?: any[]
+    familias?: Familia[]
+    segmentos?: Segmento[]
+    units?: UnidadDeMedida[]
 }
 
 export type FELDocumentTypes={

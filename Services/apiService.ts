@@ -1862,80 +1862,80 @@ export const deleteProductServiceTS = async ({
 //     })
 // }
 
-export const getAllClientsServiceTS = async ({
-  country,
-  signal = new AbortController().signal,
-  xml
-}: {
-    country: string
-    signal?: AbortSignal,
-    xml: string
-}): Promise<{
-    code: number
-    data: Cliente[]
-}> => {
-  return globalThis.fetch(urlWsSoap, {
-    signal,
-    headers: { 'Content-Type': 'text/xml' },
-    method: 'POST',
-    body: xml
-  })
-    .then(res => res.text())
-    .then(response => {
-      try {
-        const dataParsed = parser.parse(response)
-        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
-        if (rows > 0) {
-          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
-          const container: any[] = []
-          container.push(dataResponse)
-          const data: Cliente[] = container?.flat()?.map((e: Cliente) => {
-            const obj: Cliente = {}
-            // Primero creamos el objeto base con sus key por pais ya que el tipo Cliente lleva mas props dependendiendo del pais
-            clientFetchProps?.[country]?.keys?.forEach((key: string) => {
-              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
-              obj[key as keyof typeof obj] = e?.[clientFetchProps?.[country]?.props?.[key]] || ''
-              if (key === 'cargo') {
-                // console.log('COMOOOOOOOOOOOOOOO', e?.[clientFetchProps?.[country]?.props?.[key]])
-                const cargo = JSON?.parse(e?.[clientFetchProps?.[country]?.props?.[key]]?.replace(/\\/gi, '') || '{}') || {}
-                obj.tipoContribuyente = cargo?.Tipo || ''
-                obj.estado = cargo?.Estado || ''
-              }
-            })
-            return obj
-          })
-          console.log('CLIENTES FINALES', data)
-          return {
-            code: appCodes.ok,
-            data
-          }
-        }
-        return {
-          code: appCodes.dataVacio,
-          data: []
-        }
-      } catch (ex) {
-        console.log('ERROR EXCEPTION GET ALL CLIENTS SERVICE TS', ex)
-        return {
-          code: appCodes.processError,
-          data: []
-        }
-      }
-    })
-    .catch((err: Error) => {
-      console.log('ERROR EXCEPTION GET ALL CLIENTS SERVICE TS', err)
-      if (err.message === 'Aborted') {
-        return {
-          code: appCodes.ok,
-          data: []
-        }
-      }
-      return {
-        code: appCodes.processError,
-        data: []
-      }
-    })
-}
+// export const getAllClientsServiceTS = async ({
+//   country,
+//   signal = new AbortController().signal,
+//   xml
+// }: {
+//     country: string
+//     signal?: AbortSignal,
+//     xml: string
+// }): Promise<{
+//     code: number
+//     data: Cliente[]
+// }> => {
+//   return globalThis.fetch(urlWsSoap, {
+//     signal,
+//     headers: { 'Content-Type': 'text/xml' },
+//     method: 'POST',
+//     body: xml
+//   })
+//     .then(res => res.text())
+//     .then(response => {
+//       try {
+//         const dataParsed = parser.parse(response)
+//         const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+//         if (rows > 0) {
+//           const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+//           const container: any[] = []
+//           container.push(dataResponse)
+//           const data: Cliente[] = container?.flat()?.map((e: Cliente) => {
+//             const obj: Cliente = {}
+//             // Primero creamos el objeto base con sus key por pais ya que el tipo Cliente lleva mas props dependendiendo del pais
+//             clientFetchProps?.[country]?.keys?.forEach((key: string) => {
+//               // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+//               obj[key as keyof typeof obj] = e?.[clientFetchProps?.[country]?.props?.[key]] || ''
+//               if (key === 'cargo') {
+//                 // console.log('COMOOOOOOOOOOOOOOO', e?.[clientFetchProps?.[country]?.props?.[key]])
+//                 const cargo = JSON?.parse(e?.[clientFetchProps?.[country]?.props?.[key]]?.replace(/\\/gi, '') || '{}') || {}
+//                 obj.tipoContribuyente = cargo?.Tipo || ''
+//                 obj.estado = cargo?.Estado || ''
+//               }
+//             })
+//             return obj
+//           })
+//           console.log('CLIENTES FINALES', data)
+//           return {
+//             code: appCodes.ok,
+//             data
+//           }
+//         }
+//         return {
+//           code: appCodes.dataVacio,
+//           data: []
+//         }
+//       } catch (ex) {
+//         console.log('ERROR EXCEPTION GET ALL CLIENTS SERVICE TS', ex)
+//         return {
+//           code: appCodes.processError,
+//           data: []
+//         }
+//       }
+//     })
+//     .catch((err: Error) => {
+//       console.log('ERROR EXCEPTION GET ALL CLIENTS SERVICE TS', err)
+//       if (err.message === 'Aborted') {
+//         return {
+//           code: appCodes.ok,
+//           data: []
+//         }
+//       }
+//       return {
+//         code: appCodes.processError,
+//         data: []
+//       }
+//     })
+// }
 
 /**
  * It makes a POST request to a SOAP endpoint, parses the response, and returns an object with a code

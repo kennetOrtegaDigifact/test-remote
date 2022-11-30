@@ -12,7 +12,7 @@ export const useFormSchema = ({
   : {
     onBlur?: (values?: any) => void
   }) => {
-  const { selectProductoValidatorSchema, clientesValidatorSchema } = useValidator()
+  const { clientesValidatorSchema, selectProductoValidatorSchema } = useValidator()
   const { country, establecimientos, infoFiscalUser, usuarios } = useSelector((state: ReduxState) => state.userDB)
   const { countryCodes, corregimientos, provincias, distritos, units, segmentos, familias } = useSelector((state: ReduxState) => state.utilsDB)
 
@@ -463,72 +463,72 @@ export const useFormSchema = ({
       }
     }
   }
-  const selectProduct: FormularioPerCountry = {
-    PA: {
-      schema: [
-        {
-          name: 'name',
-          type: 'inputText',
-          placeholder: 'Descripcion',
-          required: true,
-          label: 'Descripcion : ',
-          icon: {
-            name: 'file-document-edit',
-            color: theme.graygreen,
-            size: 20,
-            type: 'm'
-          }
-        },
-        {
-          name: 'quantity',
-          type: 'inputText',
-          placeholder: 'Cantidad',
-          keyboardType: 'decimal-pad',
-          required: true,
-          label: 'Cantidad : ',
-          icon: {
-            name: 'scale-balance',
-            color: theme.graygreen,
-            size: 20,
-            type: 'm'
-          }
-        },
-        {
-          type: 'picker',
-          label: 'Tasa ITBMS: ',
-          required: true,
-          name: 'impuestos.ITBMS',
-          icon: {
-            name: 'scale-balance',
-            color: theme.gray,
-            size: 20,
-            type: 'm'
-          },
-          picker: {
-            data: ITBMSDictionary,
-            labelKey: 'label',
-            valueKey: 'value',
-            defaultValue: '-- Selecccione Tasa ITBMS  --',
-            arrowIcon: {
-              color: theme.gray
-            }
-          },
-          rules: {
-            required: 'Seleccione una tasa de ITBMS valida o seleccione excento (0%)',
-            validate: value => value !== '-1'
-          }
-        }
-      ],
-      settings: {
-        defaultValues: {
-          quantity: '1',
-          name: '',
-          'impuestos.ITBMS': ''
-        },
-        resolver: yupResolver(selectProductoValidatorSchema())
-      }
-    }
-  }
+  // const selectProduct: FormularioPerCountry = {
+  //   PA: {
+  //     schema: [
+  //       {
+  //         name: 'name',
+  //         type: 'inputText',
+  //         placeholder: 'Descripcion',
+  //         required: true,
+  //         label: 'Descripcion : ',
+  //         icon: {
+  //           name: 'file-document-edit',
+  //           color: theme.graygreen,
+  //           size: 20,
+  //           type: 'm'
+  //         }
+  //       },
+  //       {
+  //         name: 'quantity',
+  //         type: 'inputText',
+  //         placeholder: 'Cantidad',
+  //         keyboardType: 'decimal-pad',
+  //         required: true,
+  //         label: 'Cantidad : ',
+  //         icon: {
+  //           name: 'scale-balance',
+  //           color: theme.graygreen,
+  //           size: 20,
+  //           type: 'm'
+  //         }
+  //       },
+  //       {
+  //         type: 'picker',
+  //         label: 'Tasa ITBMS: ',
+  //         required: true,
+  //         name: 'impuestos.ITBMS',
+  //         icon: {
+  //           name: 'scale-balance',
+  //           color: theme.gray,
+  //           size: 20,
+  //           type: 'm'
+  //         },
+  //         picker: {
+  //           data: ITBMSDictionary,
+  //           labelKey: 'label',
+  //           valueKey: 'value',
+  //           defaultValue: '-- Selecccione Tasa ITBMS  --',
+  //           arrowIcon: {
+  //             color: theme.gray
+  //           }
+  //         },
+  //         rules: {
+  //           required: 'Seleccione una tasa de ITBMS valida o seleccione excento (0%)',
+  //           validate: value => value !== '-1'
+  //         }
+  //       }
+  //     ],
+  //     settings: {
+  //       defaultValues: {
+  //         quantity: '1',
+  //         name: '',
+  //         'impuestos.ITBMS': ''
+  //       },
+  //       resolver: yupResolver(selectProductoValidatorSchema())
+  //     }
+  //   }
+  // }
 
   const clientes: FormularioPerCountry = {
     GT: {
@@ -931,7 +931,7 @@ export const useFormSchema = ({
   return {
     loginFormSchema,
     clientsFormSchema: (customCountry?: string) => clientes[customCountry || country],
-    consultasFiltroFormSchema: consultasFiltroFormSchema[country],
-    selectProductFormSchema: selectProduct[country]
+    consultasFiltroFormSchema: consultasFiltroFormSchema[country]
+    // selectProductFormSchema: selectProduct[country]
   }
 }

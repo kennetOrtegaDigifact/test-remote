@@ -145,6 +145,9 @@ export const useValidator = () => {
           }
         )
     }),
+    GT: () => yup.object().shape({
+
+    }),
     generico: () => yup.object().shape({
       countryCode: yup
         .string()
