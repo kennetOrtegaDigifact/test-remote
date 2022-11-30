@@ -3,9 +3,7 @@ import { Text, TouchableOpacity, View, StyleSheet, RefreshControl, Alert } from 
 import { useToast } from 'react-native-toast-notifications'
 import { useDispatch, useSelector } from 'react-redux'
 import { AccessDeniedScreen } from '../../Components/AccessDeniedScreen'
-import { Icon } from '../../Components/Icon'
 import { fonts, theme } from '../../Config/theme'
-import { appCodes } from '../../Config/utilities'
 import { addUser } from '../../Redux/userReducer'
 import {
   BottomSheetModal,
@@ -22,6 +20,8 @@ import { Cliente, formulario } from '../../types'
 import { ItemClient } from './ItemClient'
 import { clientsCustomFormCountry } from '../../Config/dictionary'
 import { verifyRUC } from '../../Services/apiService'
+import { appCodes } from '../../Config/appCodes'
+import Icon from '../../Components/Icon'
 
 const ListLimit = ({ isEmpty = false }: {isEmpty: boolean}) => {
   return (
@@ -163,9 +163,9 @@ const ClientesV = () => {
   const handleEdit = useCallback((item: Cliente) => {
     if (permisos?.Clientes?.Editar?.granted) {
       const dictionary = Object.keys(defaultValuesSchema || {})
-      const obj = {}
-      dictionary.forEach((key) => {
-        obj[key] = item?.[key]?.toString() || ''
+      const obj: any = {}
+      dictionary.forEach((key: string) => {
+        obj[key as keyof typeof obj] = item?.[key as keyof typeof item]?.toString() || ''
       })
       console.log('ESQUEMA FINAL', obj)
       setDefaultValuesSchema(obj)

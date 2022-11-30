@@ -12,9 +12,11 @@ type ItemProps={
     country: string
 }
 
-const commonKeys = {
+const commonKeys: {
+    nombre: {[key: string]: string}
+} = {
   nombre: {
-    GT: '',
+    GT: 'nombreContacto',
     PA: 'nombreContacto'
   }
 }
@@ -52,9 +54,9 @@ export const ItemClient: React.FC<ItemProps> = React.memo(function Item ({
               color: theme.graygreen,
               fontWeight: '700'
             }}
-          >{item[commonKeys?.nombre?.[country]] || '---'}
+          >{item[commonKeys?.nombre?.[country as keyof typeof commonKeys] as keyof typeof item] || '---'}
           </Text>
-          {Object.keys(item).map((key, i) => {
+          {Object.keys(item).map((key: string, i: number) => {
             if (clientesComponentSchema?.labels?.[key]) {
               return (
                 <View
@@ -78,7 +80,7 @@ export const ItemClient: React.FC<ItemProps> = React.memo(function Item ({
                       fontSize: fonts.small,
                       color: theme.gray50
                     }}
-                  >{`${item?.[key]}`}
+                  >{`${item?.[key as keyof typeof item]}`}
                   </Text>
                 </View>
               )
