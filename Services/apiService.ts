@@ -7,7 +7,9 @@ import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
 import { InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, Filter, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, ConsultaDTE, NIT, DashboardType, userInterface } from '../types'
-import { productFetchProps } from '../Config/dictionary'
+import { clientFetchProps, productFetchProps } from '../Config/dictionary'
+
+const urlApiNUC = 'https://pactest.digifact.com.pa/pa.com.apinuc/api'
 const parser = new XMLParser(options)
 
 type FetchProps={
@@ -312,10 +314,10 @@ export const loginService = async ({ Username = '', Password = '', taxid = '', u
                                                                 return getUsersByTaxid({ country, requestor, taxid, userName: user })
                                                                   .then(res => {
                                                                     if (res.code === appCodes.ok) {
-                                                                      return getAllClientsService({ country, requestor, taxid, userName: user })
+                                                                      return getAllClientsServiceTS({ country, xml: '' })
                                                                         .then(resClients => {
-                                                                          return getAllProductsService({ country, requestor, taxid, userName: user })
-                                                                            .then(resProducts => {
+                                                                          return getAllProductsServiceTS({ country, xml: '' })
+                                                                            .then((resProducts) => {
                                                                               if (globalAccesoContingencia || personalAccesoContingencia) {
                                                                                 let contingenciaDocsRequest = 0
                                                                                 if (globalRequestAccesos) {
@@ -1762,72 +1764,147 @@ export const deleteProductServiceTS = async ({
     })
 }
 
-export const getAllClientsService = async ({
-  requestor,
-  taxid,
+// export const getAllClientsService = async ({
+//   requestor,
+//   taxid,
+//   country,
+//   userName,
+//   signal = new AbortController().signal
+// }: FetchProps): Promise<{
+//   code: number;
+//   data: Cliente[]
+// }> => {
+//   return globalThis.fetch(urlWsSoap, {
+//     signal,
+//     method: 'POST',
+//     headers: { 'Content-Type': 'text/xml' },
+//     body: `<soap:Envelope
+// xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+// xmlns:xsd= "http://www.w3.org/2001/XMLSchema"
+// xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
+//   <soap:Body>
+//     <RequestTransaction
+//       xmlns="http://www.fact.com.mx/schema/ws">
+//       <Requestor>${requestor}</Requestor>
+//       <Transaction>SHARED_INFO_EFACE</Transaction>
+//       <Country>${country}</Country>
+//       <Entity>${taxid}</Entity>
+//       <User>${requestor}</User>
+//       <UserName>${userName}</UserName>
+//       <Data1>SHARED_NFRONT_GETCUSTOMERBYSTAXID_2</Data1>
+//       <Data2>SCountryCode|${country}</Data2>
+//       <Data3></Data3>
+//     </RequestTransaction>
+//   </soap:Body>
+//     </soap:Envelope>`
+//   })
+//     .then(res => res.text())
+//     .then(response => {
+//       try {
+//         const dataParser = parser.parse(response)
+//         const rowsCount = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+//         if (rowsCount > 0) {
+//           const rowData = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
+//           const array = []
+//           array.push(rowData)
+//           const data: Cliente[] = array.flat().map(e => {
+//             const obj: Cliente = {
+//               id: e.IDCustomer || '',
+//               country: e.SCountryCode || '',
+//               sTaxId: e.STaxID || '',
+//               tipoCliente: e.TipoCliente || '',
+//               NIT: e.NIT || '',
+//               nombreOrga: e.NombreOrganizacion || '',
+//               nombreContacto: e.NombreContacto || '',
+//               cargo: e.Cargo || '',
+//               telefono: e.Telefono || '',
+//               correo: e.Correo || '',
+//               IDBitacoraCustomer: e.IDBitacoraCustomer || '',
+//               estado: e.status || '',
+//               fechaCreacion: e.fecha || '',
+//               observaciones: e.observaciones || '',
+//               direccion: e.Direccion1 || '',
+//               municipio: e.Municipio || '',
+//               departamento: e.Departamento || ''
+//             }
+
+//             return obj
+//           })
+//           return {
+//             code: appCodes.ok,
+//             data
+//           }
+//         }
+//         return {
+//           code: appCodes.dataVacio,
+//           data: []
+//         }
+//       } catch (ex) {
+//         console.log('EXCEPTION GET ALL CLIENTS SERVICE', ex)
+//         return {
+//           code: appCodes.processError,
+//           data: []
+//         }
+//       }
+//     })
+//     .catch(err => {
+//       console.log('ERROR CATCH GET ALL CLIENTS SERVICE', err)
+//       if (err.message === 'Aborted') {
+//         return {
+//           code: appCodes.ok,
+//           data: []
+//         }
+//       }
+//       return {
+//         code: appCodes.processError,
+//         data: []
+//       }
+//     })
+// }
+
+export const getAllClientsServiceTS = async ({
   country,
-  userName,
-  signal = new AbortController().signal
-}: FetchProps): Promise<{
-  code: number;
-  data: Cliente[]
+  signal = new AbortController().signal,
+  xml
+}: {
+    country: string
+    signal?: AbortSignal,
+    xml: string
+}): Promise<{
+    code: number
+    data: Cliente[]
 }> => {
   return globalThis.fetch(urlWsSoap, {
     signal,
-    method: 'POST',
     headers: { 'Content-Type': 'text/xml' },
-    body: `<soap:Envelope
-xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
-xmlns:xsd= "http://www.w3.org/2001/XMLSchema"
-xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction
-      xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>SHARED_INFO_EFACE</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${userName}</UserName>
-      <Data1>SHARED_NFRONT_GETCUSTOMERBYSTAXID_2</Data1>
-      <Data2>SCountryCode|${country}</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-    </soap:Envelope>`
+    method: 'POST',
+    body: xml
   })
     .then(res => res.text())
     .then(response => {
       try {
-        const dataParser = parser.parse(response)
-        const rowsCount = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-        if (rowsCount > 0) {
-          const rowData = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-          const array = []
-          array.push(rowData)
-          const data: Cliente[] = array.flat().map(e => {
-            const obj: Cliente = {
-              id: e.IDCustomer || '',
-              country: e.SCountryCode || '',
-              sTaxId: e.STaxID || '',
-              tipoCliente: e.TipoCliente || '',
-              NIT: e.NIT || '',
-              nombreOrga: e.NombreOrganizacion || '',
-              nombreContacto: e.NombreContacto || '',
-              cargo: e.Cargo || '',
-              telefono: e.Telefono || '',
-              correo: e.Correo || '',
-              IDBitacoraCustomer: e.IDBitacoraCustomer || '',
-              estado: e.status || '',
-              fechaCreacion: e.fecha || '',
-              observaciones: e.observaciones || '',
-              direccion: e.Direccion1 || '',
-              municipio: e.Municipio || '',
-              departamento: e.Departamento || ''
-            }
-
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Cliente[] = container?.flat()?.map((e: Cliente) => {
+            const obj: Cliente = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Cliente lleva mas props dependendiendo del pais
+            clientFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = e?.[clientFetchProps?.[country]?.props?.[key]] || ''
+              if (key === 'cargo') {
+                // console.log('COMOOOOOOOOOOOOOOO', e?.[clientFetchProps?.[country]?.props?.[key]])
+                const cargo = JSON?.parse(e?.[clientFetchProps?.[country]?.props?.[key]]?.replace(/\\/gi, '') || '{}') || {}
+                obj.tipoContribuyente = cargo?.Tipo || ''
+                obj.estado = cargo?.Estado || ''
+              }
+            })
             return obj
           })
+          console.log('CLIENTES FINALES', data)
           return {
             code: appCodes.ok,
             data
@@ -1838,15 +1915,15 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
           data: []
         }
       } catch (ex) {
-        console.log('EXCEPTION GET ALL CLIENTS SERVICE', ex)
+        console.log('ERROR EXCEPTION GET ALL CLIENTS SERVICE TS', ex)
         return {
           code: appCodes.processError,
           data: []
         }
       }
     })
-    .catch(err => {
-      console.log('ERROR CATCH GET ALL CLIENTS SERVICE', err)
+    .catch((err: Error) => {
+      console.log('ERROR EXCEPTION GET ALL CLIENTS SERVICE TS', err)
       if (err.message === 'Aborted') {
         return {
           code: appCodes.ok,
@@ -1976,46 +2053,224 @@ export const validateNITService = async ({
     })
 }
 
-export const addEditClientService = async ({
-  requestor,
-  taxid,
-  userName,
-  country,
-  pais,
-  nit,
-  name,
-  telefono,
-  correo,
-  direccion,
-  municipio,
-  departamento
-}: FetchProps&Cliente): Promise<{
-  code: number
+/**
+ * It takes an object with three properties, RUC, tipo, and token, and returns an object with two
+ * properties, code and data.
+ *
+ * The code property is a number, and the data property is an object with three properties, DV,
+ * nombreContacto, and TipoRuc.
+ *
+ * The DV property is a number, the nombreContacto property is a string, and the TipoRuc property is a
+ * number.
+ *
+ * The tipo property is optional, and if it is not provided, it will default to 1.
+ *
+ * The function will make a fetch request to a URL, and if the response is successful, it will return
+ * an object with the code property set to appCodes.ok, and the data property set to an object with the
+ * DV, nombreContacto, and TipoRuc properties set to the values from the
+ * @Params
+ * @string  - RUC
+ * @number  - tipo
+ * @string  - token
+ * @returns An object with two properties: code and data.
+ */
+
+export const verifyRUC = async ({
+  RUC,
+  tipo,
+  token
+}: {
+    RUC: string
+    tipo?: number
+    token: string
+}): Promise<{
+    code: number
+    data?: {
+        DV: number
+        nombreContacto: string
+        tipoCliente: number
+        tipoContribuyente: string
+        estado: string
+    }
 }> => {
+  const genericTypes: number[] = []
+  if (tipo && Number(tipo) !== 9000) {
+    genericTypes.push(tipo)
+  } else {
+    genericTypes.push(1)// 1 - NATURAL, 2 - JURIDICO
+    genericTypes.push(2)
+  }
+  let responseRUC: {
+        code: number
+        data?: {
+            DV: number
+            nombreContacto: string
+            tipoCliente: number
+            tipoContribuyente: string
+            estado: string
+        }
+    } = {
+      code: appCodes.dataVacio
+    }
+  for (const t of genericTypes) {
+    await globalThis.fetch(`${urlApiNUC}/GetInfoRuc?RUC=${RUC}&TIPO=${t}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token
+      }
+    })
+      .then(res => res.json())
+      .then(response => {
+        if (response?.Ok === true) {
+          responseRUC = {
+            code: appCodes.ok,
+            data: {
+              DV: response.DV,
+              nombreContacto: response.Nombre,
+              tipoCliente: response.TipoRuc,
+              tipoContribuyente: response.Tipo,
+              estado: response.Estado
+            }
+          }
+        }
+      })
+  }
+  return responseRUC
+}
+
+// export const addEditClientService = async ({
+//   requestor,
+//   taxid,
+//   userName,
+//   country,
+//   pais,
+//   nit,
+//   name,
+//   telefono,
+//   correo,
+//   direccion,
+//   municipio,
+//   departamento
+// }: FetchProps&Cliente): Promise<{
+//   code: number
+// }> => {
+//   return globalThis.fetch(urlWsSoap, {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'text/xml; charset=UTF-8' },
+//     body: `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
+//   <soap:Body>
+//     <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
+//       <Requestor>${requestor}</Requestor>
+//       <Transaction>SHARED_INFO_EFACE</Transaction>
+//       <Country>${country}</Country>
+//       <Entity>${taxid}</Entity>
+//       <User>${requestor}</User>
+//       <UserName>${userName}</UserName>
+//       <Data1>SHARED_NFRONT_ADDCUSTOMER_2</Data1>
+//       <Data2>SCountryCode|${pais}|TipoCliente|INDIVIDUAL|NIT|${nit}|NombreOrganizacion|${name}|NombreContacto|${name}|Cargo|Cliente|Telefono|${telefono}|Correo|${correo}|Direccion1|${direccion}|Municipio|${municipio}|Departamento|${departamento}</Data2>
+//       <Data3></Data3>
+//     </RequestTransaction>
+//   </soap:Body>
+//                 </soap:Envelope>`
+//   })
+//     .then(res => res.text())
+//     .then(response => {
+//       try {
+//         const data = parser.parse(response)
+//         if (data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response.Result) {
+//           return {
+//             code: appCodes.ok
+//           }
+//         }
+//         return {
+//           code: appCodes.dataVacio
+//         }
+//       } catch (ex) {
+//         console.log('EXCEPTION ADD CLIENT SERVICE', ex)
+//         return {
+//           code: appCodes.processError
+//         }
+//       }
+//     })
+//     .catch(err => {
+//       console.log('ERROR CATCH ADD CLIENT SERVICE', err)
+//       return {
+//         code: appCodes.processError
+//       }
+//     })
+// }
+
+// export const deleteClientService = async ({
+//   requestor,
+//   country,
+//   taxid,
+//   userName,
+//   clientNit
+// }: FetchProps&{clientNit: string}): Promise<{
+//   code: number
+// }> => {
+//   return globalThis.fetch(urlWsSoap, {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'text/xml' },
+//     body: `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
+//   <soap:Body>
+//     <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
+//       <Requestor>${requestor}</Requestor>
+//       <Transaction>SHARED_INFO_EFACE</Transaction>
+//       <Country>GT</Country>
+//       <Entity>${taxid}</Entity>
+//       <User>${requestor}</User>
+//       <UserName>${userName}</UserName>
+//       <Data1>SHARED_NFRONT_DELETECUSTOMERBYSTAXIDBYNIT</Data1>
+//       <Data2>ScountryCode|GT|STAXID|${taxid}|NIT|${clientNit}</Data2>
+//       <Data3></Data3>
+//     </RequestTransaction>
+//   </soap:Body>
+// </soap:Envelope>`
+//   })
+//     .then(res => res.text())
+//     .then(response => {
+//       try {
+//         const data = parser.parse(response)
+//         if (data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response.Result) {
+//           return {
+//             code: appCodes.ok
+//           }
+//         }
+//         return {
+//           code: appCodes.dataVacio
+//         }
+//       } catch (ex) {
+//         console.log('EXCEPTION DELETE CLIENT SERVICE', ex)
+//         return {
+//           code: appCodes.processError
+//         }
+//       }
+//     })
+//     .catch(err => {
+//       console.log('ERROR CATCH DELETE CLIENT SERVICE', err)
+//       return {
+//         code: appCodes.processError
+//       }
+//     })
+// }
+
+export const addEditClientServiceTS = async ({ xml, signal = new AbortController().signal }: {xml: string, signal?: AbortSignal}): Promise<{code: number}> => {
+  console.log('XML A AGREGAR/EDITAR CLIENTE', xml)
   return globalThis.fetch(urlWsSoap, {
+    signal,
     method: 'POST',
-    headers: { 'Content-Type': 'text/xml; charset=UTF-8' },
-    body: `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>SHARED_INFO_EFACE</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${userName}</UserName>
-      <Data1>SHARED_NFRONT_ADDCUSTOMER_2</Data1>
-      <Data2>SCountryCode|${pais}|TipoCliente|INDIVIDUAL|NIT|${nit}|NombreOrganizacion|${name}|NombreContacto|${name}|Cargo|Cliente|Telefono|${telefono}|Correo|${correo}|Direccion1|${direccion}|Municipio|${municipio}|Departamento|${departamento}</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-                </soap:Envelope>`
+    headers: {
+      'Content-Type': 'text/xml'
+    },
+    body: xml
   })
     .then(res => res.text())
     .then(response => {
+      const dataParser = parser.parse(response)
       try {
-        const data = parser.parse(response)
-        if (data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response.Result) {
+        if (dataParser?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.Response?.Result) {
           return {
             code: appCodes.ok
           }
@@ -2023,54 +2278,33 @@ export const addEditClientService = async ({
         return {
           code: appCodes.dataVacio
         }
-      } catch (ex) {
-        console.log('EXCEPTION ADD CLIENT SERVICE', ex)
+      } catch (err) {
+        console.error('ERROR CATCH EXCEPTION EN ADD CLIENT SERVICE TS', err)
         return {
           code: appCodes.processError
         }
       }
-    })
-    .catch(err => {
-      console.log('ERROR CATCH ADD CLIENT SERVICE', err)
+    }).catch(err => {
+      console.error('ERROR CATCH EN ADD CLIENT SERVICE TS', err)
       return {
         code: appCodes.processError
       }
     })
 }
 
-export const deleteClientService = async ({
-  requestor,
-  country,
-  taxid,
-  userName,
-  clientNit
-}: FetchProps&{clientNit: string}): Promise<{
-  code: number
-}> => {
+export const deleteClientServiceTS = async ({ xml, signal = new AbortController().signal }: {xml: string, signal?: AbortSignal}): Promise<{code: number}> => {
+  console.log('COMOOO', xml)
   return globalThis.fetch(urlWsSoap, {
+    signal,
     method: 'POST',
     headers: { 'Content-Type': 'text/xml' },
-    body: `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>SHARED_INFO_EFACE</Transaction>
-      <Country>GT</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${userName}</UserName>
-      <Data1>SHARED_NFRONT_DELETECUSTOMERBYSTAXIDBYNIT</Data1>
-      <Data2>ScountryCode|GT|STAXID|${taxid}|NIT|${clientNit}</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-</soap:Envelope>`
+    body: xml
   })
     .then(res => res.text())
     .then(response => {
       try {
-        const data = parser.parse(response)
-        if (data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response.Result) {
+        const dataParsed = parser.parse(response)
+        if (dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.Response?.Result) {
           return {
             code: appCodes.ok
           }
@@ -2079,14 +2313,14 @@ export const deleteClientService = async ({
           code: appCodes.dataVacio
         }
       } catch (ex) {
-        console.log('EXCEPTION DELETE CLIENT SERVICE', ex)
+        console.log('EXCEPTION DELETE CLIENT SERVICE TS', ex)
         return {
           code: appCodes.processError
         }
       }
     })
-    .catch(err => {
-      console.log('ERROR CATCH DELETE CLIENT SERVICE', err)
+    .catch((err: Error) => {
+      console.log('CATCH ERROR DELETE CLIENT SERVICE TS', err)
       return {
         code: appCodes.processError
       }

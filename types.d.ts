@@ -236,7 +236,9 @@ export type formulario = {
 export type FormularioPerCountry = {
     [key: string]: {
         schema: Array<formulario>,
-        settings: UseFormProps
+        settings: UseFormProps,
+        observables?: string[],
+        onBlurValues?: string[]
     }
 }
 
@@ -387,4 +389,46 @@ export type ComponentSchema = {
             addEdit: (props: any) => Promise<any>
         }
     }
+}
+
+type UnidadDeMedida = {
+    label: string
+    medida: string
+    sistema: string
+    nombre: string
+    simbolo: string
+    comentarios: string
+}
+
+export type Familia = {
+    codFamilia: number
+    nombreFamilia: string
+}
+
+export type Segmento = {
+    codSegmento: number
+    nombreSegmento: string
+}
+
+type CountryCodes = {
+    countryName: string
+    countryCode: string | number
+}
+
+export interface UTILSDB {
+    corregimientos: any[]
+    distritos: any[]
+    provincias: any[]
+    countryCodes: CountryCodes[]
+    currencies: any[]
+    incoterms: any[]
+    familias: Familia[]
+    segmentos: Segmento[]
+    units: UnidadDeMedida[]
+}
+
+export type FELDocumentTypes={
+    code: number|string
+    name: string
+    no: number|string
 }

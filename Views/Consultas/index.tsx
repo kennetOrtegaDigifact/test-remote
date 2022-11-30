@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { View, Text, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native'
 import {
   BottomSheetModal,
-  BottomSheetModalProvider,
   BottomSheetBackdrop,
   BottomSheetScrollView
 } from '@gorhom/bottom-sheet'

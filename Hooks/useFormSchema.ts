@@ -1,14 +1,21 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useSelector } from 'react-redux'
-import { ITBMSDictionary, LoginCountries, tiposDocumentoGlobal } from '../Config/dictionary'
+import { ITBMSDictionary, LoginCountries, tiposDocumentoGT, tiposDocumentoPA } from '../Config/dictionary'
 import { fonts, theme } from '../Config/theme'
 import { ReduxState } from '../Redux/store'
 import { formulario, FormularioPerCountry } from '../types'
 import { useValidator } from './useValidator'
 
-export const useFormSchema = () => {
-  const { selectProductoValidatorSchema } = useValidator()
+export const useFormSchema = ({
+  onBlur = (values) => { console.log('UNHANDLED ONBLUR', values) }
+}
+  : {
+    onBlur?: (values?: any) => void
+  }) => {
+  const { selectProductoValidatorSchema, clientesValidatorSchema } = useValidator()
   const { country, establecimientos, infoFiscalUser, usuarios } = useSelector((state: ReduxState) => state.userDB)
+  const { countryCodes, corregimientos, provincias, distritos, units, segmentos, familias } = useSelector((state: ReduxState) => state.utilsDB)
+
   const loginFormSchema: Array<formulario> = [
     {
       type: 'picker',
@@ -166,7 +173,7 @@ export const useFormSchema = () => {
             type: 'i'
           },
           picker: {
-            data: tiposDocumentoGlobal?.[country]?.[infoFiscalUser.afiliacion],
+            data: [{ name: '-- Selecccione un Tipo de Documento  --', code: '', no: '' }, ...(tiposDocumentoGT?.[infoFiscalUser?.afiliacion] || [])],
             defaultValue: '-- Filtrar por Tipo de Documento  --',
             labelKey: 'name',
             valueKey: 'no',
@@ -259,6 +266,201 @@ export const useFormSchema = () => {
         mode: 'onSubmit',
         shouldFocusError: true
       }
+    },
+    PA: {
+      schema: [
+        {
+          name: 'taxidReceptor',
+          type: 'inputText',
+          placeholder: 'Filtrar por RUC',
+          label: 'Filtro por RUC :',
+          icon: {
+            name: 'card-account-details',
+            size: 20,
+            color: theme.graygreen,
+            type: 'm'
+          }
+        },
+        {
+          name: 'CUFE',
+          type: 'inputText',
+          placeholder: 'Filtrar por CUFE',
+          label: 'Filtro por CUFE :',
+          icon: {
+            name: 'qrcode',
+            size: 20,
+            color: theme.graygreen,
+            type: 'm'
+          }
+        },
+        {
+          name: 'montoInicio',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          label: 'Filtrar por Monto Inicial :',
+          placeholder: 'Mondo desde',
+          icon: {
+            name: 'cash',
+            size: 20,
+            color: theme.graygreen,
+            type: 'm'
+          }
+        },
+        {
+          name: 'montoFin',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          label: 'Filtrar por Monto Final :',
+          placeholder: 'Mondo hasta',
+          icon: {
+            name: 'cash',
+            size: 20,
+            color: theme.graygreen,
+            type: 'm'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Filtrar por Establecimientos: ',
+          name: 'establecimientos',
+          icon: {
+            name: 'office-building-marker',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: [{ nombre: '-- Selecccione un Establecimiento  --', numero: '' }, ...(establecimientos || [])],
+            labelKey: 'nombre',
+            valueKey: 'numero',
+            defaultValue: '-- Selecccione un Establecimiento  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Filtrar por Tipo de Documento: ',
+          name: 'tipoDocumento',
+          icon: {
+            name: 'receipt',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [{ name: '-- Selecccione un Tipo de Documento  --', code: '', no: '' }, ...tiposDocumentoPA],
+            labelKey: 'name',
+            valueKey: 'no',
+            defaultValue: '-- Selecccione un Tipo de Documento  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Filtrar por Usuario: ',
+          name: 'porUsuario',
+          icon: {
+            name: 'people',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [{ userName: '-- Selecccione un Usuario  --' }, ...(usuarios || [])],
+            labelKey: 'userName',
+            valueKey: 'userName',
+            defaultValue: '-- Selecccione un Usuario  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Filtrar por Documentos Anulados: ',
+          name: 'porAnulados',
+          icon: {
+            name: 'cancel',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: [{ label: '-- Filtro por Anulados  --', value: '0' }, { value: '0', label: 'NO' }, { value: '1', label: 'SI' }],
+            labelKey: 'label',
+            valueKey: 'value',
+            defaultValue: '-- Filtro por Anulados  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Filtrar por Cantidad de Documentos: ',
+          name: 'cantidadDocumentos',
+          icon: {
+            name: 'receipt',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [10, 20, 30, 50, 100, 150],
+            defaultValue: '10',
+            arrowIcon: {
+              color: theme.gray
+            }
+          }
+        },
+        {
+          name: 'fechaInicio',
+          type: 'dateTime',
+          label: 'Filtrar por Fecha de Inicio :',
+          placeholder: 'Filtrar por Fecha Desde',
+          icon: {
+            name: 'calendar',
+            type: 'i',
+            color: theme.graygreen,
+            size: 20
+          }
+        },
+        {
+          name: 'fechaFin',
+          type: 'dateTime',
+          label: 'Filtrar por Fecha de Fin :',
+          placeholder: 'Filtrar por Fecha Hasta',
+          icon: {
+            name: 'calendar',
+            type: 'i',
+            color: theme.graygreen,
+            size: 20
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          taxidReceptor: '',
+          CUFE: '',
+          montoInicio: '',
+          montoFin: '',
+          establecimientos: '',
+          tipoDocumento: '',
+          porUsuario: '',
+          porAnulados: '',
+          cantidadDocumentos: '10',
+          fechaInicio: '',
+          fechaFin: ''
+        },
+        mode: 'onSubmit',
+        shouldFocusError: true,
+        reValidateMode: 'onChange'
+      }
     }
   }
   const selectProduct: FormularioPerCountry = {
@@ -327,8 +529,408 @@ export const useFormSchema = () => {
       }
     }
   }
+
+  const clientes: FormularioPerCountry = {
+    GT: {
+      schema: [
+
+      ],
+      settings: {
+
+      }
+    },
+    PA: {
+      schema: [
+        {
+          type: 'picker',
+          label: 'Pais del Cliente: ',
+          name: 'countryCode',
+          required: true,
+          icon: {
+            name: 'map',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: [{ countryName: '-- Selecccione un Pais  --', countryCode: '-1' }, ...countryCodes],
+            labelKey: 'countryName',
+            valueKey: 'countryCode',
+            defaultValue: '-- Selecccione un Pais  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Pais'
+          },
+          rules: {
+            required: 'Seleccione un Pais Valido'
+          }
+        },
+        {
+          name: 'cTaxId',
+          placeholder: 'RUC',
+          label: 'RUC del Cliente:',
+          required: true,
+          type: 'inputText',
+          onBlur,
+          icon: {
+            name: 'badge-account',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El RUC del Cliente es obligatorio'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Tipo de RUC: ',
+          name: 'tipoCliente',
+          required: true,
+          icon: {
+            name: 'person',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [{ name: '-- Selecccione un Tipo de RUC  --', code: '' }, { name: 'Natural', code: '1' }, { name: 'Juridico', code: '2' }],
+            labelKey: 'name',
+            valueKey: 'code',
+            defaultValue: '-- Selecccione un Tipo de RUC  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          },
+          rules: {
+            required: 'Seleccione un Tipo de RUC Valido'
+          }
+        },
+        {
+          name: 'tipoContribuyente',
+          placeholder: '(Campo Automatico al introducir un RUC)',
+          label: 'Tipo de Cliente:',
+          required: true,
+          type: 'inputText',
+          disabled: true,
+          icon: {
+            name: 'qr-code',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El Tipo de Cliente es obligatorio'
+          }
+        },
+        {
+          name: 'DV',
+          placeholder: '(Campo Automatico al introducir un RUC)',
+          label: 'Digito Verificador del RUC del Cliente:',
+          required: true,
+          type: 'inputText',
+          disabled: true,
+          icon: {
+            name: 'qr-code',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El Digito Verificador del RUC del Cliente es obligatorio'
+          }
+        },
+        {
+          name: 'nombreContacto',
+          placeholder: 'Nombre de Contacto',
+          label: 'Nombre de Contacto del Cliente:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'badge-account-horizontal',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El Nombre de Contacto del Cliente es obligatorio'
+          }
+        },
+        {
+          name: 'direccion',
+          placeholder: 'Direccion',
+          label: 'Direccion Completa del Cliente:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'location',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'La Direccion del Cliente es obligatoria'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Provincia del Cliente: ',
+          required: true,
+          name: 'provincia',
+          icon: {
+            name: 'location',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [{ nombre: '-- Selecccione una Provincia  --', codProvincia: '' }, ...provincias],
+            labelKey: 'nombre',
+            valueKey: 'codProvincia',
+            defaultValue: '-- Selecccione una Provincia  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Provincia'
+          },
+          rules: {
+            required: 'Seleccione una Provincia Valida'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Distrito del Cliente: ',
+          required: true,
+          name: 'distrito',
+          icon: {
+            name: 'location',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [{ nombre: '-- Selecccione un Distrito  --', codDistrito: '' }, ...distritos],
+            labelKey: 'nombre',
+            valueKey: 'codDistrito',
+            defaultValue: '-- Selecccione un Distrito  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Distrito'
+          },
+          rules: {
+            required: 'Seleccione un Distrito Valido'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Corregimiento del Cliente: ',
+          required: true,
+          name: 'corregimiento',
+          icon: {
+            name: 'location',
+            color: theme.gray,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [{ nombre: '-- Selecccione un Corregimiento  --', codCorregimiento: '' }, ...corregimientos],
+            labelKey: 'nombre',
+            valueKey: 'codCorregimiento',
+            defaultValue: '-- Selecccione un Corregimiento  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Corregimiento'
+          },
+          rules: {
+            required: 'Seleccione un Corregimiento Valido'
+          }
+        },
+        {
+          name: 'telefono',
+          placeholder: 'Telefono (###-##### o ####-####)',
+          required: true,
+          label: 'Telefono del Cliente :',
+          type: 'inputText',
+          icon: {
+            name: 'phone',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El Telefono del Cliente es obligatorio'
+          }
+        },
+        {
+          name: 'correo',
+          placeholder: 'Correo Electronico',
+          label: 'Correo Electronico del Cliente :',
+          required: true,
+          type: 'inputText',
+          keyboardType: 'email-address',
+          icon: {
+            name: 'email',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El Correo del Cliente es obligatorio'
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          cTaxId: '',
+          DV: '',
+          nombreContacto: '',
+          countryCode: '',
+          direccion: '',
+          provincia: '',
+          distrito: '',
+          corregimiento: '',
+          telefono: '',
+          correo: '',
+          tipoCliente: '',
+          tipoContribuyente: '',
+          estado: ''
+        },
+        resolver: yupResolver(clientesValidatorSchema()())
+      },
+      observables: ['countryCode', 'provincia', 'distrito'],
+      onBlurValues: ['cTaxId', 'tipoCliente', 'countryCode']
+    },
+    generico: {
+      schema: [
+        {
+          type: 'picker',
+          label: 'Pais del Cliente: ',
+          required: true,
+          name: 'countryCode',
+          icon: {
+            name: 'map',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: [{ countryName: '-- Selecccione un Pais  --', countryCode: '-1' }, ...countryCodes],
+            labelKey: 'countryName',
+            valueKey: 'countryCode',
+            defaultValue: '-- Selecccione un Pais  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Pais'
+          },
+          rules: {
+            required: 'Seleccione un Pais Valido'
+          }
+        },
+        {
+          name: 'cTaxId',
+          placeholder: 'Identificador Tributario',
+          label: 'Identificador Tributario del Cliente:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'badge-account',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El Identificador Tributario del Cliente es obligatorio'
+          }
+        },
+        {
+          name: 'nombreContacto',
+          placeholder: 'Nombre de Contacto',
+          label: 'Nombre de Contacto del Cliente:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'badge-account-horizontal',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El Nombre de Contacto del Cliente es obligatorio'
+          }
+        },
+        {
+          name: 'nombreOrga',
+          placeholder: 'Nombre de Organizacion',
+          label: 'Nombre de Organizacion del Cliente:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'badge-account-horizontal',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          }
+        },
+        {
+          name: 'telefono',
+          placeholder: 'Telefono',
+          label: 'Telefono del Cliente :',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'phone',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El Telefono del Cliente es obligatorio'
+          }
+        },
+        {
+          name: 'correo',
+          placeholder: 'Correo Electronico',
+          label: 'Correo Electronico del Cliente :',
+          required: true,
+          type: 'inputText',
+          keyboardType: 'email-address',
+          icon: {
+            name: 'email',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El Correo del Cliente es obligatorio'
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          cTaxId: '',
+          nombreContacto: '',
+          nombreOrga: '',
+          countryCode: '',
+          telefono: '',
+          correo: ''
+        },
+        resolver: yupResolver(clientesValidatorSchema('generico')())
+      },
+      observables: ['countryCode']
+    }
+  }
   return {
     loginFormSchema,
+    clientsFormSchema: (customCountry?: string) => clientes[customCountry || country],
     consultasFiltroFormSchema: consultasFiltroFormSchema[country],
     selectProductFormSchema: selectProduct[country]
   }

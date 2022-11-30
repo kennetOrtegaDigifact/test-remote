@@ -54,10 +54,10 @@ const App = () => {
 
   return (
 
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <NativeRouter basename='/' initialEntries={['/']}>
-          <Provider store={store}>
+    <Provider store={store}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <BottomSheetModalProvider>
+          <NativeRouter basename='/' initialEntries={['/']}>
             <PersistGate loading={null} persistor={persistor}>
               <ToastProvider
                 placement='top'
@@ -229,10 +229,10 @@ const App = () => {
                 </SafeAreaView>
               </ToastProvider>
             </PersistGate>
-          </Provider>
-        </NativeRouter>
-      </BottomSheetModalProvider>
-    </GestureHandlerRootView>
+          </NativeRouter>
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
+    </Provider>
   )
 }
 

@@ -1,4 +1,4 @@
-import { countriesDictionaryType, ServiceFetchProps } from '../types'
+import { countriesDictionaryType, DocumentTypes, FELDocumentTypes, ServiceFetchProps } from '../types'
 
 export const countriesDictionary: Array<countriesDictionaryType> = [
   {
@@ -1491,119 +1491,122 @@ export const months: string[] = [
   'Diciembre'
 ]
 
-export const tiposDocumentoGlobal: {
-  [key: string]: {
-    [key: string]: {
-      no: number
-      code: string
-      name: string
-    }[]
-  }
+export const tiposDocumentoPA: FELDocumentTypes[] = [
+  { name: 'Factura de Operación Interna', no: '01', code: '01' },
+  { name: 'Factura de Importación', no: '02', code: '02' },
+  { name: 'Factura de Exportación', no: '03', code: '03' },
+  { name: 'Nota de Crédito Referente a una o Varias FE', no: '04', code: '04' },
+  { name: 'Nota de Débito Referente a una o Varias FE', no: '05', code: '05' },
+  { name: 'Nota de Crédito Genérica', no: '06', code: '06' },
+  { name: 'Nota de Débito Genérica', no: '07', code: '07' },
+  { name: 'Nota de Zona Franca', no: '08', code: '08' },
+  { name: 'Reembolso', no: '09', code: '09' }
+]
+export const tiposDocumentoGT: {
+  [key: string]: FELDocumentTypes[]
 } = {
-  GT: {
-    GEN: [
-      {
-        no: 1,
-        code: 'FACT',
-        name: 'Factura'
-      },
-      {
-        no: 2,
-        code: 'FCAM',
-        name: 'Factura Cambiaria'
-      },
-      {
-        no: 9,
-        code: 'NCRE',
-        name: 'Nota de Credito'
-      },
-      {
-        no: 10,
-        code: 'NDEB',
-        name: 'Nota de Debito'
-      },
-      {
-        no: 6,
-        code: 'RECI',
-        name: 'Recibo'
-      },
-      {
-        no: 5,
-        code: 'RDON',
-        name: 'Recibo de Donacion'
-      }
-    ],
-    PEQ: [
-      {
-        no: 3,
-        code: 'FPEQ',
-        name: 'Factura Pequeño Contribuyente'
-      },
-      {
-        no: 4,
-        code: 'FCAP',
-        name: 'Factura Cambiaria Pequeño Contribuyente'
-      },
-      {
-        no: 6,
-        code: 'RECI',
-        name: 'Recibo'
-      }
-    ],
-    PEE: [
-      {
-        no: 13,
-        code: 'FAPE',
-        name: 'Factura Pequeño Contribuyente Regimen Electronico'
-      },
-      {
-        no: 14,
-        code: 'FCPE',
-        name: 'Factura Cambiaria Pequeño Contribuyente Regimen Electronico'
-      },
-      {
-        no: 6,
-        code: 'RECI',
-        name: 'Recibo'
-      }
-    ],
-    AGR: [
-      {
-        no: 11,
-        code: 'FACA',
-        name: 'Factura Contribuyente Agropecuario'
-      },
-      {
-        no: 12,
-        code: 'FCCA',
-        name: 'Factura Cambiaria Contribuyente Agropecuario'
-      }
-    ],
-    AGE: [
-      {
-        no: 15,
-        code: 'FAAE',
-        name: 'Factura Contribuyente Agropecuario Regimen Electronico Especial'
-      },
-      {
-        no: 16,
-        code: 'FCAE',
-        name: 'Factura Cambiaria Contribuyente Agropecuario Regimen Electronico Especial'
-      }
-    ],
-    EXE: [
-      {
-        no: 6,
-        code: 'RECI',
-        name: 'Recibo'
-      },
-      {
-        no: 5,
-        code: 'RDON',
-        name: 'Recibo de Donacion'
-      }
-    ]
-  }
+  GEN: [
+    {
+      no: 1,
+      code: 'FACT',
+      name: 'Factura'
+    },
+    {
+      no: 2,
+      code: 'FCAM',
+      name: 'Factura Cambiaria'
+    },
+    {
+      no: 9,
+      code: 'NCRE',
+      name: 'Nota de Credito'
+    },
+    {
+      no: 10,
+      code: 'NDEB',
+      name: 'Nota de Debito'
+    },
+    {
+      no: 6,
+      code: 'RECI',
+      name: 'Recibo'
+    },
+    {
+      no: 5,
+      code: 'RDON',
+      name: 'Recibo de Donacion'
+    }
+  ],
+  PEQ: [
+    {
+      no: 3,
+      code: 'FPEQ',
+      name: 'Factura Pequeño Contribuyente'
+    },
+    {
+      no: 4,
+      code: 'FCAP',
+      name: 'Factura Cambiaria Pequeño Contribuyente'
+    },
+    {
+      no: 6,
+      code: 'RECI',
+      name: 'Recibo'
+    }
+  ],
+  PEE: [
+    {
+      no: 13,
+      code: 'FAPE',
+      name: 'Factura Pequeño Contribuyente Regimen Electronico'
+    },
+    {
+      no: 14,
+      code: 'FCPE',
+      name: 'Factura Cambiaria Pequeño Contribuyente Regimen Electronico'
+    },
+    {
+      no: 6,
+      code: 'RECI',
+      name: 'Recibo'
+    }
+  ],
+  AGR: [
+    {
+      no: 11,
+      code: 'FACA',
+      name: 'Factura Contribuyente Agropecuario'
+    },
+    {
+      no: 12,
+      code: 'FCCA',
+      name: 'Factura Cambiaria Contribuyente Agropecuario'
+    }
+  ],
+  AGE: [
+    {
+      no: 15,
+      code: 'FAAE',
+      name: 'Factura Contribuyente Agropecuario Regimen Electronico Especial'
+    },
+    {
+      no: 16,
+      code: 'FCAE',
+      name: 'Factura Cambiaria Contribuyente Agropecuario Regimen Electronico Especial'
+    }
+  ],
+  EXE: [
+    {
+      no: 6,
+      code: 'RECI',
+      name: 'Recibo'
+    },
+    {
+      no: 5,
+      code: 'RDON',
+      name: 'Recibo de Donacion'
+    }
+  ]
 }
 
 // ------------ MODELO PA ----------------
@@ -1621,6 +1624,24 @@ export const tiposDocumentoGlobal: {
 // obj.provincia = e.Provincia
 // obj.distrito = e.Distrito
 // obj.corregimiento = e.Corregimiento
+// ----------- MODELO GT ----------------
+// id: e.IDCustomer || '',
+// country: e.SCountryCode || '',
+// sTaxId: e.STaxID || '',
+// tipoCliente: e.TipoCliente || '',
+// NIT: e.NIT || '',
+// nombreOrga: e.NombreOrganizacion || '',
+// nombreContacto: e.NombreContacto || '',
+// cargo: e.Cargo || '',
+// telefono: e.Telefono || '',
+// correo: e.Correo || '',
+// IDBitacoraCustomer: e.IDBitacoraCustomer || '',
+// estado: e.status || '',
+// fechaCreacion: e.fecha || '',
+// observaciones: e.observaciones || '',
+// direccion: e.Direccion1 || '',
+// municipio: e.Municipio || '',
+// departamento: e.Departamento || ''
 export const clientFetchProps: ServiceFetchProps = {
   PA: {
     keys: [
@@ -1654,6 +1675,38 @@ export const clientFetchProps: ServiceFetchProps = {
       provincia: 'Provincia',
       distrito: 'Distrito',
       corregimiento: 'Corregimiento'
+    }
+  },
+  GT: {
+    keys: [
+      'id',
+      'country',
+      'sTaxId',
+      'tipoCliente',
+      'cTaxId',
+      'nombreOrga',
+      'nombreContacto',
+      'telefono',
+      'correo',
+      'estado',
+      'direccion',
+      'municipio',
+      'departamento'
+    ],
+    props: {
+      id: 'IDCustomer',
+      country: 'SCountryCode',
+      sTaxId: 'STaxID',
+      tipoCliente: 'TipoCliente',
+      cTaxId: 'NIT',
+      nombreOrga: 'NombreOrganizacion',
+      nombreContacto: '',
+      telefono: 'NombreContacto',
+      correo: 'Correo',
+      estado: 'status',
+      direccion: 'Direccion1',
+      municipio: 'Municipio',
+      departamento: 'Departamento'
     }
   }
 }
@@ -1727,3 +1780,5 @@ export const ITBMSDictionary: Array<{label: string, value: string, rate?: number
     rate: 0.15
   }
 ]
+
+export const clientsCustomFormCountry = ['PA', 'GT', '-1']
