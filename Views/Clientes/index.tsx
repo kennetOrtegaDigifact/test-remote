@@ -18,10 +18,10 @@ import { useComponentSchema } from '../../Hooks/useComponentSchema'
 import { ReduxState } from '../../Redux/store'
 import { Cliente, formulario } from '../../types'
 import { ItemClient } from './ItemClient'
-import { clientsCustomFormCountry } from '../../Config/dictionary'
-import { verifyRUC } from '../../Services/apiService'
+import { clientsCustomFormCountry, MunicipiosGT } from '../../Config/dictionary'
 import { appCodes } from '../../Config/appCodes'
 import Icon from '../../Components/Icon'
+import { useApiService } from '../../Hooks/useApiService'
 
 const ListLimit = ({ isEmpty = false }: {isEmpty: boolean}) => {
   return (
@@ -89,6 +89,7 @@ const ClientesV = () => {
   const [customCountry, setCustomCountry] = useState<string>(country)
   const [search, setSearch] = useState<string>('')
   const { clientesComponentSchema } = useComponentSchema()
+  const { verifyRUC, getInfoByNITService } = useApiService()
   const onBlur = useCallback((values: any) => {
     const dictionary = clientsFormSchema(customCountry)?.onBlurValues || []
     const keys = Object.keys(values || {}) || []
@@ -122,6 +123,38 @@ const ClientesV = () => {
                 setDefaultValuesSchema(schema)
               }
             })
+          return null
+        }
+        case 'GT': {
+          console.log('GT CAPTADO')
+          const obj: {
+             [key: string]: any
+          } = {}
+          dictionary.forEach((key: any) => {
+            obj[key] = values?.[key] || ''
+          })
+          console.log('OBJETO GT', obj)
+          getInfoByNITService({ cTaxId: obj?.cTaxId })
+            .then(res => {
+              if (res?.code === appCodes.ok) {
+                const schema: any = {}
+                keys.forEach((key: string) => {
+                  schema[key] = res?.data?.[key as keyof typeof res.data]?.toString() || values[key]?.toString()
+                })
+                // console.log('saliooo', schema)
+                setDefaultValuesSchema(schema)
+              } else {
+                const schema = values
+                keys.forEach(key => {
+                  if (!dictionary.some((d: any) => d === key)) {
+                    schema[key] = ''
+                  }
+                })
+                console.log('ESQUEMA', schema)
+                setDefaultValuesSchema(schema)
+              }
+            })
+          return null
         }
       }
     }
@@ -263,7 +296,7 @@ const ClientesV = () => {
           // console.log('DISTRITOS FILTRADOS', data)
           const defaultSchemaFiltered: formulario|undefined = defaultSchema?.find((s: formulario) => s.name === 'distrito')
           // console.log('SCHEMA FILTRADO', defaultSchemaFiltered)
-          const finalSchema:any = {
+          const finalSchema: any = {
             ...defaultSchemaFiltered,
             picker: {
               ...(defaultSchemaFiltered?.picker || {}),
@@ -290,14 +323,14 @@ const ClientesV = () => {
       case 'distrito': {
         if (value?.toString()?.length) {
           const data: any[] = corregimientos?.filter((c: any) => {
-          // console.log(c)
+            // console.log(c)
             const corrProps = (c?.codCorregimiento)?.split('-')
             return `${(corrProps?.[0] || '')}-${(corrProps?.[1] || '')}` === value?.toString()
           })
           // console.log('CORREGIMIENTOS FILTRADOS', data)
           const defaultSchemaFiltered: formulario|undefined = defaultSchema?.find((s: formulario) => s.name === 'corregimiento')
           // console.log('ESQUEMA FILTRADO', defaultSchemaFiltered)
-          const finalSchema:any = {
+          const finalSchema: any = {
             ...defaultSchemaFiltered,
             picker: {
               ...(defaultSchemaFiltered?.picker || {}),
@@ -312,7 +345,7 @@ const ClientesV = () => {
             const obj: formulario = s
             if (s?.name === 'corregimiento') {
               return finalSchema
-            // console.log(JSON.stringify(obj))
+              // console.log(JSON.stringify(obj))
             }
             return obj
           })
@@ -322,6 +355,35 @@ const ClientesV = () => {
         }
         return null
       }
+      case 'departamento': {
+        console.log('DEFAULT SCHEMA', defaultSchema)
+        const data: string[] = MunicipiosGT?.[(value || '') as keyof typeof MunicipiosGT] || []
+        const defaultSchemaFiltered: formulario|undefined = defaultSchema?.find((s: formulario) => s.name === 'municipio')
+        const finalSchema: any = {
+          ...defaultSchemaFiltered,
+          picker: {
+            ...(defaultSchemaFiltered?.picker || {}),
+            data: [
+              { '': '-- Selecccione un Municipio  --' },
+              ...data
+            ]
+          }
+        }
+        console.log('MUNICIPIOS FILTRADOS', data)
+        const result: formulario[] = defaultSchema?.map((s: formulario) => {
+          const obj: formulario = s
+          if (s?.name === 'municipio') {
+            return finalSchema
+            // console.log(JSON.stringify(obj))
+          }
+          return obj
+        })
+
+        // console.log('AL FINAL QUEDA', result)
+        setDefaultSchema(result)
+        return null
+      }
+      default:
     }
   }, [defaultSchema])
 

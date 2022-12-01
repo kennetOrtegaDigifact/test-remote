@@ -83,3 +83,52 @@ export const cleanUserName = ({ usuario = '' }: {usuario: string}): string => {
   }
   return userRegex[length[userRegex.length]]
 }
+/**
+ * It takes a string and replaces all the special characters with their normal characters.
+ * </code>
+ * @param {string} [string2clean] - The string to be cleaned.
+ * @returns A function that takes a string and returns a string.
+ */
+
+export const regexSpecialChars = (string2clean?: string): string => {
+  if (string2clean) {
+    let stringClean = string2clean.replace(/Ã/g, 'Ñ')
+    stringClean = stringClean.replace(/Ã¡/g, 'á')
+    stringClean = stringClean.replace(/Ã/g, 'Á')
+    stringClean = stringClean.replace(/Ã©/g, 'é')
+    stringClean = stringClean.replace(/Ã/g, 'É')
+    stringClean = stringClean.replace(/Ã­/g, 'í')
+    stringClean = stringClean.replace(/Ã/g, 'Í')
+    stringClean = stringClean.replace(/Ã³/g, 'ó')
+    stringClean = stringClean.replace(/Ã/g, 'Ó')
+    stringClean = stringClean.replace(/Ãº/g, 'ú')
+    stringClean = stringClean.replace(/Ã/g, 'Ú')
+    stringClean = stringClean.replace(/Ã±/g, 'ñ')
+    return stringClean
+  }
+  return ''
+}
+
+/**
+ * It replaces all the special characters in a string with their HTML code
+ * @param {string} [string2clean] - The string to be cleaned.
+ * @returns A function that takes a string and returns a string.
+ */
+export const invertRegexSpecialChars = (string2clean?: string): string => {
+  if (string2clean) {
+    let stringClean = string2clean.replace(/¨Ñ/g, 'Ã')
+    stringClean = stringClean.replace(/á/g, 'Ã¡')
+    stringClean = stringClean.replace(/Á/g, 'Ã')
+    stringClean = stringClean.replace(/é/g, 'Ã©')
+    stringClean = stringClean.replace(/É/g, 'Ã')
+    stringClean = stringClean.replace(/í/g, 'Ã')
+    stringClean = stringClean.replace(/Í/g, 'Ã')
+    stringClean = stringClean.replace(/ó/g, 'Ã³')
+    stringClean = stringClean.replace(/Ó/g, 'Ã')
+    stringClean = stringClean.replace(/ú/g, 'Ãº')
+    stringClean = stringClean.replace(/Ú/g, 'Ã')
+    stringClean = stringClean.replace(/ñ/g, 'Ã±')
+    return stringClean
+  }
+  return ''
+}

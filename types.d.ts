@@ -321,8 +321,8 @@ export type ConsultaDTE = {
 
 export type NIT={
     country: string
-    taxid: string
-    nombre: string
+    cTaxId: string
+    nombreContacto: string
     direccion: string
     departamento: string
     municipio: string

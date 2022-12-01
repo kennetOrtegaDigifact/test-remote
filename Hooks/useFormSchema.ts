@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useSelector } from 'react-redux'
-import { ITBMSDictionary, LoginCountries, tiposDocumentoGT, tiposDocumentoPA } from '../Config/dictionary'
+import { DepartamentosGT, ITBMSDictionary, LoginCountries, MunicipiosGT, tiposDocumentoGT, tiposDocumentoPA } from '../Config/dictionary'
 import { fonts, theme } from '../Config/theme'
 import { ReduxState } from '../Redux/store'
 import { formulario, FormularioPerCountry } from '../types'
@@ -533,11 +533,170 @@ export const useFormSchema = ({
   const clientes: FormularioPerCountry = {
     GT: {
       schema: [
-
+        {
+          type: 'picker',
+          label: 'Pais del Cliente: ',
+          name: 'countryCode',
+          required: true,
+          icon: {
+            name: 'map',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: [{ countryName: '-- Selecccione un Pais  --', countryCode: '-1' }, ...(countryCodes || [])],
+            labelKey: 'countryName',
+            valueKey: 'countryCode',
+            defaultValue: '-- Selecccione un Pais  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Pais'
+          },
+          rules: {
+            required: 'Seleccione un Pais Valido'
+          }
+        },
+        {
+          name: 'cTaxId',
+          placeholder: 'NIT/Identificador Tributario',
+          label: 'NIT/Identificador Tributario del Cliente:',
+          required: true,
+          type: 'inputText',
+          onBlur,
+          icon: {
+            name: 'badge-account',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El NIT/Identificador Tributario del Cliente es obligatorio'
+          }
+        },
+        {
+          name: 'nombreContacto',
+          placeholder: 'Nombre de Contacto',
+          label: 'Nombre de Contacto del Cliente:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'badge-account-horizontal',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'El Nombre de Contacto del Cliente es obligatorio'
+          }
+        },
+        {
+          name: 'direccion',
+          placeholder: 'Direccion',
+          label: 'Direccion Completa del Cliente:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'location',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'La Direccion del Cliente es obligatoria'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Departamento del Cliente: ',
+          name: 'departamento',
+          required: true,
+          icon: {
+            name: 'location',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [{ '': '-- Selecccione un Departamento  --' }, { '-- Selecccione un Departamento  --': '' }, ...(DepartamentosGT || [])],
+            defaultValue: '-- Selecccione un Departamento  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Departamento'
+          },
+          rules: {
+            required: 'Seleccione un Departamento Valido'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Municipio del Cliente: ',
+          name: 'municipio',
+          required: true,
+          icon: {
+            name: 'location',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          picker: {
+            data: [...(MunicipiosGT?.[''] || [])],
+            defaultValue: '-- Selecccione un Municipio  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Municipio'
+          },
+          rules: {
+            required: 'Seleccione un Municipio Valido'
+          }
+        },
+        {
+          name: 'telefono',
+          placeholder: 'Telefono (####-####;####-####...etc)',
+          label: 'Telefono del Cliente :',
+          type: 'inputText',
+          keyboardType: 'phone-pad',
+          icon: {
+            name: 'phone',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          }
+        },
+        {
+          name: 'correo',
+          placeholder: 'Correo Electronico',
+          label: 'Correo Electronico del Cliente :',
+          type: 'inputText',
+          keyboardType: 'email-address',
+          icon: {
+            name: 'email',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          }
+        }
       ],
       settings: {
-
-      }
+        defaultValues: {
+          cTaxId: '',
+          nombreContacto: '',
+          countryCode: '',
+          direccion: '',
+          departamento: '',
+          municipio: '',
+          telefono: '',
+          correo: ''
+        }
+      },
+      observables: ['departamento'],
+      onBlurValues: ['cTaxId']
     },
     PA: {
       schema: [
@@ -553,7 +712,7 @@ export const useFormSchema = ({
             type: 'm'
           },
           picker: {
-            data: [{ countryName: '-- Selecccione un Pais  --', countryCode: '-1' }, ...countryCodes],
+            data: [{ countryName: '-- Selecccione un Pais  --', countryCode: '-1' }, ...(countryCodes || [])],
             labelKey: 'countryName',
             valueKey: 'countryCode',
             defaultValue: '-- Selecccione un Pais  --',
@@ -686,7 +845,7 @@ export const useFormSchema = ({
             type: 'i'
           },
           picker: {
-            data: [{ nombre: '-- Selecccione una Provincia  --', codProvincia: '' }, ...provincias],
+            data: [{ nombre: '-- Selecccione una Provincia  --', codProvincia: '' }, ...(provincias || [])],
             labelKey: 'nombre',
             valueKey: 'codProvincia',
             defaultValue: '-- Selecccione una Provincia  --',
@@ -712,7 +871,7 @@ export const useFormSchema = ({
             type: 'i'
           },
           picker: {
-            data: [{ nombre: '-- Selecccione un Distrito  --', codDistrito: '' }, ...distritos],
+            data: [{ nombre: '-- Selecccione un Distrito  --', codDistrito: '' }, ...(distritos || [])],
             labelKey: 'nombre',
             valueKey: 'codDistrito',
             defaultValue: '-- Selecccione un Distrito  --',
@@ -738,7 +897,7 @@ export const useFormSchema = ({
             type: 'i'
           },
           picker: {
-            data: [{ nombre: '-- Selecccione un Corregimiento  --', codCorregimiento: '' }, ...corregimientos],
+            data: [{ nombre: '-- Selecccione un Corregimiento  --', codCorregimiento: '' }, ...(corregimientos || [])],
             labelKey: 'nombre',
             valueKey: 'codCorregimiento',
             defaultValue: '-- Selecccione un Corregimiento  --',
@@ -821,7 +980,7 @@ export const useFormSchema = ({
             type: 'm'
           },
           picker: {
-            data: [{ countryName: '-- Selecccione un Pais  --', countryCode: '-1' }, ...countryCodes],
+            data: [{ countryName: '-- Selecccione un Pais  --', countryCode: '-1' }, ...(countryCodes || [])],
             labelKey: 'countryName',
             valueKey: 'countryCode',
             defaultValue: '-- Selecccione un Pais  --',

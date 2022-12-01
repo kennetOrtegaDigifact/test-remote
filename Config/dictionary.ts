@@ -225,7 +225,7 @@ export const clientFetchProps: ServiceFetchProps = {
   GT: {
     keys: [
       'id',
-      'country',
+      'countryCode',
       'sTaxId',
       'tipoCliente',
       'cTaxId',
@@ -240,13 +240,13 @@ export const clientFetchProps: ServiceFetchProps = {
     ],
     props: {
       id: 'IDCustomer',
-      country: 'SCountryCode',
+      countryCode: 'SCountryCode',
       sTaxId: 'STaxID',
       tipoCliente: 'TipoCliente',
       cTaxId: 'NIT',
       nombreOrga: 'NombreOrganizacion',
       nombreContacto: 'NombreContacto',
-      telefono: 'NombreContacto',
+      telefono: 'Telefono',
       correo: 'Correo',
       estado: 'status',
       direccion: 'Direccion1',
@@ -329,6 +329,9 @@ export const ITBMSDictionary: Array<{label: string, value: string, rate?: number
 export const clientsCustomFormCountry = ['PA', 'GT', '-1']
 
 export const MunicipiosGT = {
+  '': [
+    '-- Selecccione un Municipio  --'
+  ],
   'Alta Verapaz': [
     'Cahabón',
     'Chahal',
@@ -418,7 +421,7 @@ export const MunicipiosGT = {
     'Chinautla',
     'Chuarrancho',
     'Fraijanes',
-    'Guatemala City',
+    'Guatemala',
     'Mixco',
     'Palencia',
     'Petapa',
@@ -708,7 +711,7 @@ export const MunicipiosGT = {
   ]
 }
 
-export const DepartamentosGT = [
+export const DepartamentosGT: string[] = [
   'Alta Verapaz',
   'Baja Verapaz',
   'Chimaltenango',
