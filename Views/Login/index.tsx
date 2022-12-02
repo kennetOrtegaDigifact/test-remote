@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useToast } from 'react-native-toast-notifications'
 import { loginSchema } from '../../Validators/loginSchema'
 import deviceInfoModule from 'react-native-device-info'
-import { loginService, recoverPasswordService } from '../../Services/apiService'
+import { recoverPasswordService } from '../../Services/apiService'
 import { deletePadLeft } from '../../Config/utilities'
 import { appCodes } from '../../Config/appCodes'
 import { useDispatch } from 'react-redux'
@@ -17,6 +17,7 @@ import { ErrorLabel } from '../../Components/ErrorLabel'
 import Icon from '../../Components/Icon'
 import { PickerTS } from '../../Components/Picker'
 import { LoginCountries } from '../../Config/dictionary'
+import { useApiService } from '../../Hooks/useApiService'
 
 export const Login: React.FC = () => {
   const { control, handleSubmit, formState: { errors, isSubmitting }, setValue, getValues } = useForm({
@@ -33,6 +34,7 @@ export const Login: React.FC = () => {
   })
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const { loginServiceTS } = useApiService()
   const toast = useToast()
   const handleChangePicker = useCallback((fieldName: 'username' | 'password' | 'taxid' | 'country' = 'country', value: {[key: string]: any}, valueKey: string | number) => {
     setValue(fieldName, (value[valueKey] || value))
@@ -45,7 +47,7 @@ export const Login: React.FC = () => {
     if (country === 'GT') {
       const nit = deletePadLeft(taxid)
       TAXID = taxid.padStart(12, '0').replace(/[^0-9Kk]/g, '').replace('k', 'K').replace('-', '').replace('/', '').trim()
-      return loginService({
+      return loginServiceTS({
         country,
         nit,
         taxid: TAXID,

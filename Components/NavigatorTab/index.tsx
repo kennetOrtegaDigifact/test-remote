@@ -93,7 +93,7 @@ const NavigatorTabC: React.FC = () => {
               color: theme.gray25,
               size: 22
             }}
-            to={`/${user.country}/Dashboard`}
+            to='/-/Dashboard'
             label='Inicio'
           />
           <Tab
@@ -126,7 +126,7 @@ const NavigatorTabC: React.FC = () => {
               color: theme.gray25,
               size: 22
             }}
-            to={`/${user.country}/Productos`}
+            to='/-/Productos'
             label='Productos'
           />
           <Tab
@@ -137,7 +137,7 @@ const NavigatorTabC: React.FC = () => {
               color: theme.gray25,
               size: 22
             }}
-            to={`/${user.country}/Clientes`}
+            to='/-/Clientes'
             label='Clientes'
           />
         </View>

@@ -184,7 +184,7 @@ const ClientesV = () => {
   const onSubmit = useCallback((values: Cliente) => {
     bottomSheetModalRef.current?.close()
     console.log(values)
-    clientesComponentSchema?.functions?.addEdit(values)
+    return clientesComponentSchema?.functions?.addEdit(values)
       .then(async res => {
         console.log('RESPONSE CREATE CLIENT', res)
         if (res?.code === appCodes.ok) {
@@ -322,7 +322,7 @@ const ClientesV = () => {
       }
       case 'distrito': {
         if (value?.toString()?.length) {
-          const data: any[] = corregimientos?.filter((c: any) => {
+          const data: any[] | undefined = corregimientos?.filter((c: any) => {
             // console.log(c)
             const corrProps = (c?.codCorregimiento)?.split('-')
             return `${(corrProps?.[0] || '')}-${(corrProps?.[1] || '')}` === value?.toString()
@@ -336,7 +336,7 @@ const ClientesV = () => {
               ...(defaultSchemaFiltered?.picker || {}),
               data: [
                 { nombre: '-- Selecccione un Corregimiento  --', codCorregimiento: '' },
-                ...data
+                ...(data || [])
               ]
             }
           }

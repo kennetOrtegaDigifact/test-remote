@@ -3,7 +3,7 @@ import { ReduxState } from '../Redux/store'
 import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, userInterface, CountryCodes } from '../types'
 import { XMLParser } from 'fast-xml-parser'
 import base64 from 'react-native-base64'
-import { urlApiMs, urlWsRest, urlWsRestV2, urlWsSoap, urlWsToken, urlXMLTransformation } from '../Config/api'
+import { urlApiMs, urlsByCountry, urlWsRest, urlWsRestV2, urlWsSoap, urlWsToken, urlXMLTransformation } from '../Config/api'
 import { establecimientosSpliter, regexSpecialChars } from '../Config/utilities'
 import DeviceInfo from 'react-native-device-info'
 import ReactNativeBlobUtil from 'react-native-blob-util'
@@ -29,172 +29,6 @@ export const useApiService = () => {
   const { urls } = useSelector((state: ReduxState) => state.userDB)
   const { getAllClientsXml, addEditClientXml, deleteClientXml, getAllProductsXml, deleteProductsXml, addEditProductsXml } = useXmlFetchConstructor()
   const { country } = useSelector((state: ReduxState) => state.userDB)
-  //   const getDTESServiceGT = useCallback(({
-  //     country = '',
-  //     taxid = '',
-  //     requestor = '',
-  //     userName = '',
-  //     nitReceptor = '',
-  //     numeroSerie = '',
-  //     establecimientos,
-  //     allDTESorUsername = '',
-  //     tipoDocumento,
-  //     fechaInicio = '',
-  //     fechaFin = '',
-  //     amountFrom,
-  //     amountTo,
-  //     paymentType,
-  //     porAnulados,
-  //     limit = 30,
-  //     signal
-  //   }: FetchProps & Filter): Promise<{
-  //   code: number
-  //   data?: ConsultaDTE[]
-  // }> => {
-  //     const xml = `<?xml version = "1.0" encoding = "utf-8" ?>
-  //                 <soap:Envelope
-  //                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  //                   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  //                   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  //                   <soap:Body>
-  //                     <RequestTransaction
-  //                       xmlns="http://www.fact.com.mx/schema/ws">
-  //                       <Requestor>${requestor}</Requestor>
-  //                       <Transaction>SEARCH_BASIC</Transaction>
-  //                       <Country>${country}</Country>
-  //                       <Entity>${taxid}</Entity>
-  //                       <User>${requestor}</User>
-  //                       <UserName>${country}.${taxid}.${userName}</UserName>
-  //                       <Data1>
-  //                         <![CDATA[
-  //                         <SearchCriteria
-  //                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  //                           xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  //                           <ApplySearchCriteria>true</ApplySearchCriteria>
-  //                           <SCountryCode>${country}</SCountryCode>
-  //                           <STaxIdOrName>${taxid}</STaxIdOrName>
-  //                           <Branch>${establecimientos || '1'}|${allDTESorUsername || 'n'}|</Branch>
-  //                           <CurrencyCode>GTQ</CurrencyCode>
-  //                           <RCountryCode>${country}</RCountryCode>
-  //                           <RTaxIdOrName>${nitReceptor}</RTaxIdOrName>
-  //                           <SKind>${tipoDocumento || '0'}</SKind>
-  //                           <ReturnBatchAsLike>${Boolean(numeroSerie?.length)}</ReturnBatchAsLike>
-  //                           <Batch>${numeroSerie}</Batch>
-  //                           <UseSerialFrom>false</UseSerialFrom>
-  //                           <UseSerialTo>false</UseSerialTo>
-  //                           <SerialFrom>0</SerialFrom>
-  //                           <SerialTo>0</SerialTo>
-  //                           <UseInternalIDFrom>false</UseInternalIDFrom>
-  //                           <UseInternalIDTo>false</UseInternalIDTo>
-  //                           <InternalIDFrom>0</InternalIDFrom>
-  //                           <InternalIDTo>0</InternalIDTo>
-  //                           <UseDateFrom>${Boolean(fechaInicio?.length)}</UseDateFrom>
-  //                           <UseDateTo>${Boolean(fechaFin?.length)}</UseDateTo>
-  //                           <DateFrom>${fechaInicio || '2000-01-01'}T00:00:00</DateFrom>
-  //                           <DateTo>${fechaFin || new Date().toISOString().slice(0, 10)}T23:59:59.999</DateTo>
-  //                           <UseAmountFrom>${(amountFrom || 0) >= 0}</UseAmountFrom>
-  //                           <UseAmountTo>${(amountTo || 0) > 0}</UseAmountTo>
-  //                           <AmountFrom>${amountFrom || '0'}</AmountFrom>
-  //                           <AmountTo>${amountTo || '0'}</AmountTo>
-  //                           <Paid>${paymentType || '2'}</Paid>
-  //                           <Cancelled>${porAnulados || '0'}</Cancelled>
-  //                           <Distributed>2</Distributed>
-  //                           <QueryTop>${limit || '30'}</QueryTop>
-  //                           <OrderBy>0</OrderBy>
-  //                           <Descending>true</Descending>
-  //                         </SearchCriteria>]]>
-  //                       </Data1>
-  //                       <Data2></Data2>
-  //                       <Data3></Data3>
-  //                     </RequestTransaction>
-  //                   </soap:Body>
-  //                 </soap:Envelope>`
-  //     // console.log(xml)
-  //     return globalThis.fetch(urls?.urlWsSoap, {
-  //       signal,
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'text/xml' },
-  //       body: xml
-  //     })
-  //       .then(res => res.text())
-  //       .then((response) => {
-  //         try {
-  //           const dataParser = parser.parse(response)
-  //           // console.log('FETCH DTES', dataParser)
-  //           const rows =
-  //           dataParser.Envelope.Body.RequestTransactionResponse
-  //             .RequestTransactionResult.ResponseData.ResponseData1
-  //           if (rows > 0) {
-  //             const data =
-  //             dataParser.Envelope.Body.RequestTransactionResponse
-  //               .RequestTransactionResult.ResponseData.ResponseDataSet.diffgram
-  //               .NewDataSet.B
-  //             const arrayDTES = []
-  //             arrayDTES.push(data)
-  //             if (arrayDTES.length) {
-  //               const dataDTES: ConsultaDTE[] = arrayDTES.flat().map((dte) => {
-  //                 const obj: ConsultaDTE = {
-  //                   documentType: dte.A,
-  //                   countryCode: dte.W,
-  //                   clientTaxid: dte.B,
-  //                   clientName: dte.C,
-  //                   userCountryCode: dte.X,
-  //                   userTaxId: dte.Y,
-  //                   razonSocial: dte.Z,
-  //                   numeroSerie: dte.D,
-  //                   numeroDocumento: dte.E,
-  //                   establecimiento: dte.S,
-  //                   fechaEmision: dte.F,
-  //                   monto: dte.G,
-  //                   paidTime: dte.H,
-  //                   cancelled: dte.I,
-  //                   numeroAuth: dte.DG,
-  //                   internalID: dte.IntID,
-  //                   userName: dte.userName
-  //                 }
-  //                 return obj
-  //               })
-  //               return {
-  //                 code: appCodes.ok,
-  //                 data: dataDTES
-  //               }
-  //             }
-  //           }
-  //           return {
-  //             code: appCodes.dataVacio
-  //           }
-  //         } catch (ex) {
-  //           console.log('EXCEPTION GET DTES SERVICE', ex)
-  //           return {
-  //             code: appCodes.processError
-  //           }
-  //         }
-  //       })
-  //       .catch((err) => {
-  //         console.log('ERROR FECTH DTES', err)
-  //         if (err.message === 'Aborted') {
-  //           return {
-  //             code: appCodes.ok
-  //           }
-  //         }
-  //         return {
-  //           code: appCodes.processError
-  //         }
-  //       })
-  //   }, [urls?.urlWsSoap])
-
-  //   const schema: {
-  //         getDTESService: {
-  //           [key: string]: any
-  //       }
-  //   } = {
-  //     getDTESService: {
-  //       GT: getDTESServiceGT
-  //     }
-  //   }
-  //   return {
-  //     Services: schema
-  //   }
 
   const getCountryCodes = async (): Promise<{
     code: number
@@ -263,7 +97,43 @@ export const useApiService = () => {
       })
   }
 
-  const loginService = async ({ Username = '', Password = '', taxid = '', user = '', country = '', nit = '' }): Promise<userInterface> => {
+  const getCertTokenServiceTS = async ({ userName, taxid, password, country }: {userName: string, taxid: string, password: string, country: string}): Promise<{
+    code: number
+    data: string
+    key: string
+  }> => {
+    console.log('BODY LOGIN JSON', JSON.stringify({ Username: `${country}.${taxid}.${userName}`, Password: password }))
+    return globalThis.fetch(urlsByCountry?.[country]?.urlToken || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Username: `${country}.${taxid}.${userName}`, Password: password })
+    }).then(r => r.json().then(data => ({ status: r.status, body: data })))
+      .then(response => {
+        console.log('CERT TOKEN SERVICE RESPONSE', response)
+        if (response.status === 200) {
+          return {
+            code: appCodes.ok,
+            data: response?.body?.Token,
+            key: 'token'
+          }
+        }
+        return {
+          code: appCodes.invalidData,
+          data: '',
+          key: 'token'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR getCertTokenServiceTS', err)
+        return {
+          code: appCodes.processError,
+          data: '',
+          key: 'token'
+        }
+      })
+  }
+
+  const loginServiceTS = async ({ Username = '', Password = '', taxid = '', user = '', country = '', nit = '' }): Promise<userInterface> => {
     console.log('BODY LOGIN JSON', JSON.stringify({ Username, Password, nit }))
     return globalThis.fetch(urlWsToken, {
       method: 'POST',
@@ -1848,7 +1718,8 @@ export const useApiService = () => {
     signal?: AbortSignal,
 }): Promise<{
     code: number
-    data: Cliente[]
+    data: Producto[],
+    key: string
 }> => {
     const xml = getAllProductsXml()
     return globalThis.fetch(urlWsSoap, {
@@ -1886,18 +1757,21 @@ export const useApiService = () => {
             })
             return {
               code: appCodes.ok,
-              data
+              data,
+              key: 'productos'
             }
           }
           return {
             code: appCodes.dataVacio,
-            data: []
+            data: [],
+            key: 'productos'
           }
         } catch (err: any) {
           console.log('EXCEPTION GET ALL PRODUCTS SERVICE TS', err)
           return {
             code: appCodes.processError,
-            data: []
+            data: [],
+            key: 'productos'
           }
         }
       })
@@ -1906,12 +1780,14 @@ export const useApiService = () => {
         if (err.message === 'Aborted') {
           return {
             code: appCodes.ok,
-            data: []
+            data: [],
+            key: 'productos'
           }
         }
         return {
           code: appCodes.processError,
-          data: []
+          data: [],
+          key: 'productos'
         }
       })
   }
@@ -2014,6 +1890,7 @@ export const useApiService = () => {
 }): Promise<{
     code: number
     data: Cliente[]
+    key: string
 }> => {
     return globalThis.fetch(urlWsSoap, {
       signal,
@@ -2047,18 +1924,21 @@ export const useApiService = () => {
             console.log('CLIENTES FINALES', data)
             return {
               code: appCodes.ok,
-              data
+              data,
+              key: 'clientes'
             }
           }
           return {
             code: appCodes.dataVacio,
-            data: []
+            data: [],
+            key: 'clientes'
           }
         } catch (ex) {
           console.log('ERROR EXCEPTION GET ALL CLIENTS SERVICE TS', ex)
           return {
             code: appCodes.processError,
-            data: []
+            data: [],
+            key: 'clientes'
           }
         }
       })
@@ -2067,12 +1947,14 @@ export const useApiService = () => {
         if (err.message === 'Aborted') {
           return {
             code: appCodes.ok,
-            data: []
+            data: [],
+            key: 'clientes'
           }
         }
         return {
           code: appCodes.processError,
-          data: []
+          data: [],
+          key: 'clientes'
         }
       })
   }
@@ -3397,7 +3279,8 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
       })
   }
   return {
-    loginService,
+    loginServiceTS,
+    getCertTokenServiceTS,
     getAllClientsServiceTS,
     addEditClientServiceTS,
     deleteClientServiceTS,
@@ -3406,6 +3289,7 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     addEditProductServiceTS,
     getCountryCodes,
     getInfoByNITService,
-    verifyRUC
+    verifyRUC,
+    getTokenMIPOSService
   }
 }

@@ -179,9 +179,11 @@ export type User={
 
 export interface userInterface {
     code: number
+    cleanTaxId: string
     taxid: string,
     country: string,
     token: string,
+    fetchUser: string
     userName: string,
     APIMSTOKEN: string,
     requestor: string,

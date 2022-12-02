@@ -12,7 +12,8 @@ export const useURLS = (): {urls: {[key: string]: string}} => {
     urlWsSoap: '',
     urlWsJsonToXml: '',
     urlWsJsonToXml2: '',
-    urlWsToken: ''
+    urlWsToken: '',
+    urlApiNUC: ''
   })
   const getURLSGT = useCallback(() => {
     const urlsConfig = configuracionApp?.filter(e => e.idTipoConfiguracion === 8)
@@ -21,6 +22,7 @@ export const useURLS = (): {urls: {[key: string]: string}} => {
       obj[`url${e?.tipoOperacion || ''}`] = e?.valor?.toString() || ''
     })
     setUrls(obj)
+    console.log('URLS OBJECT', obj)
   }, [configuracionApp])
 
   useEffect(() => {
