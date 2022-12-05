@@ -2440,10 +2440,16 @@ export const useApiService = () => {
 
   const getAllClientsServiceTS = async ({
     country,
-    signal = new AbortController().signal
+    signal = new AbortController().signal,
+    taxid,
+    requestor,
+    userName
   }: {
-    country: string
+    country?: string
     signal?: AbortSignal
+    taxid?: string
+    requestor?: string
+    userName?: string
 }): Promise<{
     code: number
     data: Cliente[]
@@ -2453,7 +2459,7 @@ export const useApiService = () => {
       signal,
       headers: { 'Content-Type': 'text/xml' },
       method: 'POST',
-      body: getAllClientsXml() || ''
+      body: getAllClientsXml({ country, requestor, taxid, userName }) || ''
     })
       .then(res => res.text())
       .then(response => {

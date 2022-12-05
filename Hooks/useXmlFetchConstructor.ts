@@ -104,7 +104,7 @@ export const useXmlFetchConstructor = () => {
             </soap:Envelope>`
   }, [])
 
-  const getAllClientsConstructor = useCallback(() => {
+  const getAllClientsConstructor = useCallback(({ country = '', taxid = '', requestor = '', userName = '' }: {country?: string, taxid?: string, requestor?: string, userName?: string}) => {
     return `<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope
             xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
@@ -112,15 +112,15 @@ export const useXmlFetchConstructor = () => {
             xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
             <soap:Body>
                 <RequestTransaction
-                ${requestTransaction?.[country]}>
-                <Requestor>${requestor}</Requestor>
+                ${requestTransaction?.[user?.country || country]}>
+                <Requestor>${user?.requestor || requestor}</Requestor>
                 <Transaction>SHARED_INFO_EFACE</Transaction>
-                <Country>${country}</Country>
+                <Country>${user?.country || country}</Country>
                 <Entity>${taxid}</Entity>
-                <User>${requestor}</User>
-                <UserName>${userName}</UserName>
+                <User>${user?.requestor || requestor}</User>
+                <UserName>${user?.userName || userName}</UserName>
                 <Data1>SHARED_NFRONT_GETCUSTOMERBYSTAXID_2</Data1>
-                <Data2>SCountryCode|${country}</Data2>
+                <Data2>SCountryCode|${user?.country || country}</Data2>
                 <Data3></Data3>
                 </RequestTransaction>
             </soap:Body>
