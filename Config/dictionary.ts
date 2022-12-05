@@ -347,6 +347,151 @@ export const sharedDataFetchProps: ServiceFetchProps = {
     }
   }
 }
+// ------------- INFO FISCAL GT MODEL ---------------
+// nombre = rinf.Nom
+// calle = rinf.Ca
+// ciudad = rinf.cd
+// zona = rinf.zon
+// frases = rinf.FRASES
+// afiliacion = rinf.AfiliacionIVA
+// postalEstablecimientos = rinf.ESTCODPOSTAL
+// establecimientos = establecimientosSpliter({ establecimientos: rinf.EST })
+// dirEstablecimientos = rinf.ESTDIR
+// cm = rinf.cm
+// tipoPersoneria = rinf.TipoPersoneria
+// nit = nit
+export const infoFiscalFetchProps: ServiceFetchProps = {
+  GT: {
+    keys: [
+      'nombre',
+      'calle',
+      'ciudad',
+      'zona',
+      'frases',
+      'afiliacion',
+      'postalEstablecimientos',
+      'establecimientos',
+      'dirEstablecimientos',
+      'cm',
+      'tipoPersoneria',
+      'taxid'
+    ],
+    props: {
+      nombre: 'Nom',
+      calle: 'Ca',
+      ciudad: 'cd',
+      zona: 'zon',
+      frases: 'FRASES',
+      afiliacion: 'AfiliacionIVA',
+      postalEstablecimientos: 'ESTCODPOSTAL',
+      establecimientos: 'EST',
+      dirEstablecimientos: 'ESTDIR',
+      cm: 'cm',
+      tipoPersoneria: 'TipoPersoneria',
+      taxid: 'NIT'
+    }
+  },
+  PA: {
+    keys: [
+      'razonSocial',
+      'taxid',
+      'tipoContribuyente',
+      'dv',
+      'calle',
+      'provincia',
+      'distrito',
+      'corregimiento',
+      'codProvincia',
+      'codDistrito',
+      'codCorregimiento'
+    ],
+    props: {
+      razonSocial: 'Nom',
+      taxid: 'TaxID',
+      tipoContribuyente: 'TipoContribuyente',
+      dv: 'DV',
+      calle: 'CA',
+      provincia: 'Provincia',
+      distrito: 'Distrito',
+      corregimiento: 'Corregimiento',
+      codProvincia: 'CodProvincia',
+      codDistrito: 'CodDistrito',
+      codCorregimiento: 'CodCorregimiento'
+    }
+  }
+}
+// ----------------- ESTABLECIMIENTOS GT MODEL ------------------------
+// id = e.idEstablecimiento || ''
+// numero = e.ne || ''
+// nombre = e.nombre || ''
+// direccion = e.direccion || ''
+// municipio = e.municipio || ''
+// departamento = e.departamento || ''
+// codPostal = e.codPostal || ''
+// pais = e.pais || ''
+// estado = e.Estado || ''
+export const establecimientosFetchProps: ServiceFetchProps = {
+  GT: {
+    keys: [
+      'id',
+      'taxid',
+      'numero',
+      'nombre',
+      'direccion',
+      'municipio',
+      'departamento',
+      'codPostal',
+      'pais',
+      'estado'
+    ],
+    props: {
+      id: 'idEstablecimiento',
+      taxid: 'nit',
+      numero: 'ne',
+      nombre: 'nombre',
+      direccion: 'direccion',
+      municipio: 'municipio',
+      departamento: 'departamento',
+      codPostal: 'codPostal',
+      pais: 'pais',
+      estado: 'Estado'
+    }
+  },
+  PA: {
+    keys: [
+      'nProvincia',
+      'nDistrito',
+      'nCorregimiento',
+      'provincia',
+      'distrito',
+      'corregimiento',
+      'direccion',
+      'tipoSucursal',
+      'coordenadas',
+      'ne',
+      'numero',
+      'nombre',
+      'taxid',
+      'telefono'
+    ],
+    props: {
+      nProvincia: 'NProvincia',
+      nDistrito: 'NDistrito',
+      nCorregimiento: 'NCorregimiento',
+      provincia: 'provincia',
+      distrito: 'distrito',
+      corregimiento: 'corregimiento',
+      direccion: 'Direccion',
+      tipoSucursal: 'TipoSuc',
+      coordenadas: 'Coordenadas',
+      ne: 'NE',
+      numero: 'NE',
+      nombre: 'Nombre',
+      taxid: 'TaxID',
+      telefono: 'Telefono'
+    }
+  }
+}
 
 export const ITBMSDictionary: Array<{label: string, value: string, rate?: number}> = [
   {

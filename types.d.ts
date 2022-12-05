@@ -24,32 +24,57 @@ export type Branch = {
 }
 
 export type Establecimiento={
-    id: string,
-    numero: number,
-    nombre: string,
-    direccion: string,
-    municipio: string,
-    departamento: string,
-    codPostal: string,
-    pais: string,
-    estado: string,
+    id?: string,
+    numero?: number,
+    nombre?: string,
+    direccion?: string,
+    municipio?: string,
+    departamento?: string,
+    codPostal?: string,
+    pais?: string,
+    estado?: string,
     granted?: boolean
-    nit?: string | number
+    taxid?: string
+    nProvincia?: string
+    nDistrito?: string
+    nCorregimiento?: string
+    provincia?: string
+    distrito?: string
+    corregimiento?: string
+    direccion?: string
+    tipoSucursal?: string
+    coordenadas?: string
+    ne?: string
+    numero?: string
+    nombre?: string
+    telefono?: string
 }
 
 export type InfoFiscalUser={
-    nombre: string,
-    calle: string,
-    ciudad: string,
-    zona: string,
-    frases: string,
-    afiliacion: string,
-    postalEstablecimientos: number,
-    establecimientos: Establecimiento[],
-    dirEstablecimientos: string,
-    cm: string,
-    tipoPersoneria: string,
-    nit: string
+    nombre?: string,
+    calle?: string,
+    ciudad?: string,
+    zona?: string,
+    frases?: string,
+    afiliacion?: string,
+    postalEstablecimientos?: number,
+    establecimientos?: Establecimiento[],
+    dirEstablecimientos?: string,
+    cm?: string,
+    tipoPersoneria?: string,
+
+    taxid?: string,
+
+    razonSocial?: string,
+    tipoContribuyent?: string,
+    dv?: number,
+    calle?: string,
+    provincia?: string,
+    distrito?: string,
+    corregimiento?: string,
+    codProvincia?: string,
+    codDistrito?: string,
+    codCorregimiento?: string
 }
 
 export type SharedData={
@@ -73,13 +98,13 @@ export type PermisoPorAccion = {
 }
 
 export type PermisosPadre = {
-    idRight: number,
-    description: string,
-    granted: boolean,
+    idRight?: number,
+    description?: string,
+    granted?: boolean,
     actions?: PermisoPorAccion[]
 }
 
-export type LogoPorEstablecimiento = Array<{[key: number|string]: string}>
+export type LogoPorEstablecimiento = {[key: number|string]: string}
 export type Logos={
     logoGeneral: string,
     logoPorEstablecimiento: LogoPorEstablecimiento
@@ -173,6 +198,29 @@ export interface Producto {
     selected?: boolean
 }
 
+export type PerfilFacturacionType = {
+    RazonContingencia?: string
+    Nombre: string
+    NaturalezaOperacion: string
+    TipoOperacion: string
+    DestinoOperacion: string
+    FormatoCAFE: string
+    EntregaCAFE: string
+    EnvioContenedor: string
+    TipoVenta: string
+    TipoSucursal: string
+    InformacionInteres?: string
+    FechaSalida: string
+    TipoPago?: string
+    PagoPredeterminado?: boolean
+    MetodoPago?: {
+        TiempoPago?: string
+        TipoPago?: string
+    }
+    ProductsPredeterminados?: boolean
+    ListaProductos?: Array<Producto>
+}
+
 export type User={
     taxid: string
     country: string
@@ -182,7 +230,6 @@ export type User={
 }
 
 export interface userInterface {
-    code: number
     cleanTaxId: string
     taxid: string,
     country: string,
@@ -205,7 +252,8 @@ export interface userInterface {
     talonarioContingencia: {[key: string]: string|number}
     decimales: number
     logos: Logos,
-    urls: {[key: string]: string}
+    urls: {[key: string]: string},
+    perfiles: PerfilFacturacionType[]
 }
 
 export type formulario = {

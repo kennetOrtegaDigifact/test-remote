@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, userInterface, CountryCodes, MIPOS } from '../types'
+import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, userInterface, CountryCodes, MIPOS, PerfilFacturacionType } from '../types'
 import { XMLParser } from 'fast-xml-parser'
 import base64 from 'react-native-base64'
 import { urlApiMs, urlsByCountry, urlWsRest, urlWsRestV2, urlWsSoap, urlWsToken, urlXMLTransformation } from '../Config/api'
@@ -10,8 +10,10 @@ import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
 
-import { clientFetchProps, productFetchProps, sharedDataFetchProps } from '../Config/dictionary'
+import { clientFetchProps, establecimientosFetchProps, infoFiscalFetchProps, productFetchProps, sharedDataFetchProps } from '../Config/dictionary'
 import { useXmlFetchConstructor } from './useXmlFetchConstructor'
+import { useCallback } from 'react'
+import { actionsPermissionsTemplate, fatherAccessTemplate } from '../Config/templates'
 
 type FetchProps={
   requestor: string,
@@ -27,8 +29,9 @@ const urlApiNUC = 'https://pactest.digifact.com.pa/pa.com.apinuc/api'
 
 export const useApiService = () => {
   const { urls } = useSelector((state: ReduxState) => state.userDB)
-  const { getAllClientsXml, addEditClientXml, deleteClientXml, getAllProductsXml, deleteProductsXml, addEditProductsXml, getAccountDetailsXml } = useXmlFetchConstructor()
+  const { getAllClientsXml, addEditClientXml, deleteClientXml, getAllProductsXml, deleteProductsXml, addEditProductsXml, getAccountDetailsXml, infoFiscalXml, getAllEstablecimientosXml, getConfigAppXml, getCatalogPermissionsFatherXml, getCatalogPermissionsActionsXml, getUserFatherPermissionsXml, getUserActionsPermissionsXml } = useXmlFetchConstructor()
   const { country } = useSelector((state: ReduxState) => state.userDB)
+  const user = useSelector((state: ReduxState) => state.userDB)
 
   const getCountryCodes = async (): Promise<{
     code: number
@@ -181,6 +184,250 @@ export const useApiService = () => {
         }
       })
   }
+
+  const getInfoFiscalServiceTS = async ({ country, taxid, requestor, userName }: {country: string, taxid: string, requestor: string, userName: string}): Promise<{
+    code: number
+    data: InfoFiscalUser
+    key: string
+  }> => {
+    return globalThis.fetch(urlsByCountry?.[country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: infoFiscalXml({ country, taxid, requestor, userName })
+    })
+      .then(res => res.text())
+      .then(infoFiscalResponse => {
+        const dataParsed = parser.parse(infoFiscalResponse)
+        // console.log('RESPONSE REQUESTOR', data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T.RequestorGUID)
+        const count = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        if (count > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: InfoFiscalUser[] = container?.flat()?.map((e: InfoFiscalUser) => {
+            // console.log('------- INFO FISCAL ELEMENT ------------', e)
+            const obj: InfoFiscalUser|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Cliente lleva mas props dependendiendo del pais
+            infoFiscalFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              // console.log('----------------- VALUE INFO FISCAL ----------------', key)
+              if (key === 'establecimientos') {
+                obj[key as keyof typeof obj] = establecimientosSpliter({ establecimientos: e?.[infoFiscalFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '' })
+              } else {
+                obj[key as keyof typeof obj] = e?.[infoFiscalFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || ''
+              }
+            })
+            return obj
+          })
+          // console.log('----------- DATA INFO FISCAL -------------', JSON.stringify(data))
+          return {
+            code: appCodes.ok,
+            data: data?.[0] || {},
+            key: 'infoFiscalUser'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: {},
+          key: 'infoFiscalUser'
+        }
+      })
+      .catch(err => {
+        console.log(`GET INFO FISCAL USER BY ${country} CATCH ERROR`, err)
+        return {
+          code: appCodes.processError,
+          data: {},
+          key: 'infoFiscalUser'
+        }
+      })
+  }
+
+  const getAllEstablecimientosServiceTS = async ({ country, taxid, requestor, userName }: {country?: string, taxid?: string, requestor?: string, userName?: string}): Promise<{
+    code: number
+    data: Establecimiento[]
+    key: string
+  }> => {
+    // console.log('---------- XML ESTABLECIMIENTOS ------------', getAllEstablecimientosXml({ country, requestor, taxid, userName }))
+    return globalThis.fetch(urlsByCountry?.[user?.country || country || '']?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getAllEstablecimientosXml({ country, requestor, taxid, userName })
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const count = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        if (count > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Establecimiento[] = container?.flat()?.map((e: Establecimiento) => {
+            // console.log('-------- ESTABLECIMIENTOS ----------', e)
+            const obj: Establecimiento|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Cliente lleva mas props dependendiendo del pais
+            establecimientosFetchProps?.[user?.country || country || '']?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = e?.[establecimientosFetchProps?.[user?.country || country || '']?.props?.[key] as keyof typeof e]?.toString() || ''
+            })
+            return obj
+          })
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'establecimientos'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'establecimientos'
+        }
+      })
+      .catch(err => {
+        console.log(`ERROR GET ESTABLISHMENTS FOR ${country}, ERROR: `, err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'establecimientos'
+        }
+      })
+  }
+
+  const getConfigAppServiceTS = async ({ country = '', taxid = '' }: {country: string, taxid: string}): Promise<{
+    code: number
+    data: ConfiguracionApp[]
+    key: string
+  }> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getConfigAppXml({ country, taxid })
+    })
+      .then(res => res.text())
+      .then(response => {
+        const configDATA = parser.parse(response)
+        const configCount = configDATA.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        if (configCount > 0) {
+          const configRows = configDATA.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
+          const arrayConfig: ConfiguracionApp[] = []
+          arrayConfig.push(configRows)
+          // console.log('COMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO --------------------', arrayConfig)
+          // const urlsConfig = arrayConfig?.flat()?.filter(e => e.idTipoConfiguracion === 8)
+          // const urls: {[key: string]: string} = {}
+          // urlsConfig?.flat()?.forEach((e: ConfiguracionApp) => {
+          //   urls[`url${e?.tipoOperacion || ''}`] = e?.valor?.toString() || ''
+          // })
+          return {
+            code: appCodes.ok,
+            data: arrayConfig.flat(),
+            key: 'configuracionApp'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'configuracionApp'
+        }
+      })
+      .catch(err => {
+        console.log(`CATCH ERROR GET CONFIGURACION APP FOR ${country}`, err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'configuracionApp'
+        }
+      })
+  }
+
+  const getCatalogPermissionsFatherServiceTS = useCallback(async ({ country }: {country: string}) => {
+    // console.log('--------- FATHER CATALOG XML --------', getCatalogPermissionsFatherXml({ country }))
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getCatalogPermissionsFatherXml({ country })
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        if (rows > 0) {
+          const dataPermisos = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
+          const dataArr = []
+          dataArr.push(dataPermisos)
+          const obj: {[key: string]: {granted: boolean}} = {}
+          dataArr.flat().forEach(e => {
+            obj[e?.Descripcion] = {
+              granted: true
+            }
+          })
+          // console.log('--------- FATHER CATALOG DATA --------', obj)
+
+          return {
+            code: appCodes.ok,
+            data: obj
+          }
+        }
+      })
+      .catch(err => {
+        console.log(`ERROR GET CATALOG PERMISSIONS FATHER FOR ${country}`, err)
+        return {
+          code: appCodes.ok,
+          data: fatherAccessTemplate?.[country as keyof typeof fatherAccessTemplate]
+        }
+      })
+  }, [])
+
+  const getCatalogPermissionsActionsServiceTS = useCallback(async ({ country }: {country: string}) => {
+    // console.log('--------- ACTIONS CATALOG XML --------', getCatalogPermissionsActionsXml({ country }))
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getCatalogPermissionsActionsXml({ country })
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        if (rows > 0) {
+          const dataPermisos = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
+          const dataArr = []
+          dataArr.push(dataPermisos)
+          const obj: {[key: string]: {granted: boolean}} = {}
+          dataArr.flat().forEach(element => {
+            console.log('ELEMENT', element)
+            obj[element?.page] = {
+              ...obj[element?.page],
+              [element?.actionRight]: {
+                granted: true
+              }
+            }
+          })
+          // console.log('--------- ACTION CATALOG DATA --------', obj)
+
+          return {
+            code: appCodes.ok,
+            data: obj
+          }
+        }
+      })
+      .catch(err => {
+        console.log(`ERROR GET CATALOG PERMISSIONS FATHER FOR ${country}`, err)
+        return {
+          code: appCodes.ok,
+          data: actionsPermissionsTemplate?.[country as keyof typeof actionsPermissionsTemplate]
+        }
+      })
+  }, [])
+
+  const getPermissionsServiceTS = useCallback(async ({ country, requestor, userName, taxid }: { country: string, requestor: string, userName: string, taxid: string }) => {
+    console.log('------------ father permissions user ---------', getUserFatherPermissionsXml({ country, requestor, userName, taxid }))
+    console.log('------------ actions permissions user ---------', getUserActionsPermissionsXml({ country, requestor, userName, taxid }))
+    return {
+      code: 1,
+      data: [],
+      key: 'AAAAAAAA'
+    }
+  }, [])
 
   const loginServiceTS = async ({ Username = '', Password = '', taxid = '', user = '', country = '', nit = '' }): Promise<userInterface> => {
     console.log('BODY LOGIN JSON', JSON.stringify({ Username, Password, nit }))
@@ -373,7 +620,7 @@ export const useApiService = () => {
                                                 pais: '',
                                                 estado: '',
                                                 granted: true,
-                                                nit
+                                                taxid: nit
                                               }
                                               obj.id = e.idEstablecimiento || ''
                                               obj.numero = e.ne || ''
@@ -2363,8 +2610,7 @@ export const useApiService = () => {
     requestor,
     taxid,
     country,
-    userName,
-    signal = new AbortController().signal
+    userName
   }: FetchProps): Promise<{
   code: number;
   data?: PermisosPadre[] | never[]
@@ -3403,6 +3649,135 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
         }
       })
   }
+
+  const getAllPerfilFacturacionServiceTS = async ({
+    taxid = '',
+    country = ''
+  }: {
+    taxid: string
+    country: string
+}): Promise<{
+    code: number
+    data: PerfilFacturacionType[],
+    key: string
+}> => {
+    return globalThis.fetch(`${urlsByCountry?.[country]?.urlApiMs || ''}profiles/get_perfil_fact?TAXID=${taxid}`, {
+      method: 'GET'
+    })
+      .then(res => res.json())
+      .then(response => {
+        if (response?.perfiles) {
+        // console.log(response?.perfiles)
+          const arr: any[] = []
+          arr.push(response?.perfiles || [])
+          const data: PerfilFacturacionType[] = arr.flat().map(item => {
+          // console.log(item?.ListaProductos)
+            const obj: PerfilFacturacionType = {
+              DestinoOperacion: item?.DestinoOperacion || '',
+              EntregaCAFE: item?.EntregaCAFE || '',
+              EnvioContenedor: item?.EnvioContenedor || '',
+              FechaSalida: item?.FechaSalida || '',
+              FormatoCAFE: item?.FormatoCAFE || '',
+              InformacionInteres: item?.InformacionInteres || '',
+              NaturalezaOperacion: item?.NaturalezaOperacion || '',
+              Nombre: item?.Nombre || '',
+              RazonContingencia: item?.RazonContingencia || '',
+              TipoOperacion: item?.TipoOperacion || '',
+              TipoSucursal: item?.TipoSucursal || '',
+              TipoVenta: item?.TipoVenta || '',
+              ListaProductos: item?.ListaProductos || [],
+              MetodoPago: item?.MetodoPago,
+              PagoPredeterminado: item?.PagoPredeterminado,
+              ProductsPredeterminados: item?.ProductsPredeterminados
+            }
+            return obj
+          })
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'perfiles'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'perfiles'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET ALL PERFILES FACTURACION SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'perfiles'
+        }
+      })
+  }
+
+  const deletePerfilFacturacionServiceTS = async ({
+    taxid = '',
+    item
+  }: {
+    taxid: string
+    item: PerfilFacturacionType
+}): Promise<{ code: number }> => {
+    return globalThis.fetch(`${urlsByCountry?.[country]?.urlApiMs || ''}/profiles/perfil_fact?TAXID=${taxid}&TYPE=0`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item)
+    })
+      .then(res => res.json())
+      .then(response => {
+        console.log('RESPONSE DELETE PERFIL FACTURACION SERVICE TS ', response)
+        if (response?.response === 'Peticion exitosa') {
+          return {
+            code: appCodes.ok
+          }
+        }
+        return {
+          code: appCodes.dataVacio
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH  DELETE PERFILES FACTURACION SERVICE TS', err)
+        return {
+          code: appCodes.processError
+        }
+      })
+  }
+
+  const addEditPerfilFacturacionServiceTS = async ({
+    taxid = '',
+    item
+  }: {
+    taxid: string
+    item: PerfilFacturacionType
+  }): Promise<{code: number}> => {
+    return globalThis.fetch(`${urlsByCountry?.[country]?.urlApiMs || ''}/profiles/perfil_fact?TAXID=${taxid}&TYPE=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item)
+    })
+      .then(res => res.json())
+      .then(response => {
+        console.log('RESPONSE ADD EDIT PERFIL FACTURACION SERVICE TS ', response)
+        if (response?.response === 'Peticion exitosa') {
+          return {
+            code: appCodes.ok
+          }
+        }
+        return {
+          code: appCodes.dataVacio
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH  ADD EDIT PERFILES FACTURACION SERVICE TS', err)
+        return {
+          code: appCodes.processError
+        }
+      })
+  }
+
   return {
     loginServiceTS,
     getCertTokenServiceTS,
@@ -3417,6 +3792,13 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     verifyRUC,
     getTokenMIPOSService,
     getAccountDetailsServiceTS,
-    getTokenMIPOSServiceTS
+    getTokenMIPOSServiceTS,
+    getInfoFiscalServiceTS,
+    getAllEstablecimientosServiceTS,
+    getAllPerfilFacturacionServiceTS,
+    getConfigAppServiceTS,
+    getCatalogPermissionsFatherServiceTS,
+    getCatalogPermissionsActionsServiceTS,
+    getPermissionsServiceTS
   }
 }

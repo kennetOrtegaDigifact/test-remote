@@ -6,10 +6,28 @@ const requestTransaction: {[key: string]: string} = {
   GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
   PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
 }
+const Body: {
+      entity: {[key: string]: string}
+      user: {[key: string]: string}
+      tag: {[key: string]: string}
+    } = {
+      entity: {
+        GT: '000000123456',
+        PA: '155704849-2-2021'
+      },
+      user: {
+        GT: 'admon',
+        PA: 'FRANK'
+      },
+      tag: {
+        GT: 'NIT',
+        PA: 'TAXID'
+      }
+    }
 
 export const useXmlFetchConstructor = () => {
   const { country, requestor, taxid, userName } = useSelector((state: ReduxState) => state.userDB)
-
+  const user = useSelector((state: ReduxState) => state.userDB)
   const getAllProductsConstructor = useCallback(() => {
     return `<?xml version="1.0" encoding="utf-8"?>
             <soap:Envelope
@@ -143,14 +161,6 @@ export const useXmlFetchConstructor = () => {
 
   const deleteClientXmlConstructor = useCallback((item: Cliente) => {
     const { cTaxId } = item
-    const datos: {
-      tag: {[key: string]: string}
-    } = {
-      tag: {
-        GT: 'NIT',
-        PA: 'TAXID'
-      }
-    }
     return `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
               <soap:Body>
                 <RequestTransaction ${requestTransaction?.[country]}>
@@ -161,7 +171,7 @@ export const useXmlFetchConstructor = () => {
                   <User>${requestor}</User>
                   <UserName>${userName}</UserName>
                   <Data1>SHARED_NFRONT_DELETECUSTOMERBYSTAXIDBYNIT</Data1>
-                  <Data2>ScountryCode|${country}|STAXID|${taxid}|${datos?.tag?.[country]}|${cTaxId}</Data2>
+                  <Data2>ScountryCode|${country}|STAXID|${taxid}|${Body?.tag?.[country]}|${cTaxId}</Data2>
                   <Data3></Data3>
                 </RequestTransaction>
               </soap:Body>
@@ -169,19 +179,6 @@ export const useXmlFetchConstructor = () => {
   }, [])
 
   const getAccountDetailsConstructor = useCallback(({ taxid, countryCode }: {taxid: string, countryCode: string}) => {
-    const datos: {
-      entity: {[key: string]: string}
-      user: {[key: string]: string}
-    } = {
-      entity: {
-        GT: '000000123456',
-        PA: '155704849-2-2021'
-      },
-      user: {
-        GT: 'admon',
-        PA: 'FRANK'
-      }
-    }
     return `<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
           <soap:Body>
@@ -189,15 +186,152 @@ export const useXmlFetchConstructor = () => {
             <Requestor>d06a8f37-2d87-43d2-b977-04d503532786</Requestor>
             <Transaction>SHARED_INFO_EFACE</Transaction>
             <Country>${countryCode}</Country>
-            <Entity>${datos?.entity?.[countryCode]}</Entity>
+            <Entity>${Body?.entity?.[countryCode]}</Entity>
             <User>d06a8f37-2d87-43d2-b977-04d503532786</User>
-            <UserName>${countryCode}.${datos?.entity?.[countryCode]}.${datos?.user?.[countryCode]}</UserName>
+            <UserName>${countryCode}.${Body?.entity?.[countryCode]}.${Body?.user?.[countryCode]}</UserName>
             <Data1>SHARED_NFRONT_GETACCGRAL</Data1>
             <Data2>SCountryCode|${countryCode}|STAXIDTOSEEK|${taxid}</Data2>
             <Data3></Data3>
             </RequestTransaction>
           </soap:Body>
         </soap:Envelope>`
+  }, [])
+
+  const infoFiscalXMLConstructor = useCallback(({ requestor, userName, country = '', taxid }: { requestor: string, userName: string, country: string, taxid: string }) => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction ${requestTransaction?.[user?.country || country]}>
+              <Requestor>${user?.requestor || requestor}</Requestor>
+              <Transaction>SHARED_INFO_EFACE</Transaction>
+              <Country>${user?.country || country}</Country>
+              <Entity>${user?.taxid || taxid}</Entity>
+              <User>${user?.requestor || requestor}</User>
+              <UserName>${user?.country || country}.${user?.taxid || taxid}.${user?.userName || userName}</UserName>
+              <Data1>SHARED_NFRONT_GETINFOFISCALFELBYPARTNER_2</Data1>
+              <Data2>SCountryCode|${user?.country || country}</Data2>
+              <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getAllEstablecimientosXmlConstructor = useCallback(({ requestor, userName, country = '', taxid }: { requestor?: string, userName?: string, country?: string, taxid?: string }) => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+    <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Body>
+        <RequestTransaction ${requestTransaction?.[user?.country || country]}>
+        <Requestor>${user?.requestor || requestor}</Requestor>
+        <Transaction>EXEC_STORED_PROC</Transaction>
+        <Country>${user?.country || country}</Country>
+        <Entity>${user?.taxid || taxid}</Entity>
+        <User>${user?.requestor || requestor}</User>
+        <UserName>${user?.country || country}.${user?.taxid || taxid}.${user?.userName || userName}</UserName>
+        <Data1>SHARED_NFRONT_GETINFOESTABLECIMIENTOSBYUSER</Data1>
+        <Data2>SCountryCode|${user?.country || country}|Staxid|${user?.taxid || taxid}|Username|${user?.userName || userName}</Data2>
+        <Data3></Data3>
+      </RequestTransaction>
+    </soap:Body>
+    </soap:Envelope>`
+  }, [])
+
+  const getConfigAppXmlConstructor = useCallback(({ country = '', taxid = '' }: { country: string, taxid: string }) => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+    <soap:Envelope
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Body>
+            <RequestTransaction
+                ${requestTransaction?.[user?.country || country]}>
+                <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                <Transaction>EXEC_STORED_PROC</Transaction>
+                <Country>${user?.country || country}</Country>
+                <Entity>000000123456</Entity>
+                <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                <UserName>${user?.country || country}.000000123456.admon</UserName>
+                <Data1>PLANILLACC_GetConfiguracionApp</Data1>
+                <Data2>staxid|${user?.taxid || taxid}</Data2>
+                <Data3></Data3>
+            </RequestTransaction>
+        </soap:Body>
+    </soap:Envelope>`
+  }, [])
+
+  const getCatalogPermissionsFatherXmlConstructor = useCallback(({ country = '' }: {country: string}) => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+                <RequestTransaction ${requestTransaction?.[user?.country || country]}>
+                    <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                    <Transaction>EXEC_STORED_PROC</Transaction>
+                    <Country>${user?.country || country}</Country>
+                    <Entity>${Body?.entity?.[user?.country || country]}</Entity>
+                    <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                    <UserName>${user?.country || country}.${Body?.entity?.[user?.country || country]}.${Body?.user?.[user?.country || country]}</UserName>
+                    <Data1>SHARED_NFRONT_GETRIGHTSBYTIPO</Data1>
+                    <Data2>TIPO|ADMIN</Data2>
+                    <Data3></Data3>
+                </RequestTransaction>
+            </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getCatalogPermissionsActionsXmlConstructor = useCallback(({ country = '' }: {country: string}) => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+                <RequestTransaction ${requestTransaction?.[user?.country || country]}>
+                    <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                    <Transaction>EXEC_STORED_PROC</Transaction>
+                    <Country>${user?.country || country}</Country>
+                    <Entity>${Body?.entity?.[user?.country || country]}</Entity>
+                    <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                    <UserName>${user?.country || country}.${Body?.entity?.[user?.country || country]}.${Body?.user?.[user?.country || country]}</UserName>
+                    <Data1>SHARED_NFRONT_CATALOGO_ACTIONRIGHTS</Data1>
+                    <Data2>STAXID|</Data2>
+                    <Data3></Data3>
+                </RequestTransaction>
+            </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getUserFatherPermissionsXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: { requestor: string, taxid: string, country: string, userName: string }) => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+  <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Body>
+      <RequestTransaction ${requestTransaction?.[user?.country || country]}>
+      <Requestor>${user?.requestor || requestor}</Requestor>
+      <Transaction>EXEC_STORED_PROC</Transaction>
+      <Country>${user?.country || country}</Country>
+      <Entity>${user?.taxid || taxid}</Entity>
+      <User>${user?.requestor || requestor}</User>
+      <UserName>${user?.country || country}.${user?.taxid || taxid}.${user?.userName || userName}</UserName>
+      <Data1>SHARED_NFRONT_GETINFORIGHTS</Data1>
+      <Data2>SCountryCode|${user?.country || country}|Taxid|${user?.taxid || taxid}|UserName|${user?.userName || userName}</Data2>
+      <Data3></Data3>
+      </RequestTransaction>
+    </soap:Body>
+  </soap:Envelope>`
+  }, [])
+
+  const getUserActionsPermissionsXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: { requestor: string, taxid: string, country: string, userName: string }) => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+  <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Body>
+      <RequestTransaction ${requestTransaction?.[user?.country || country]}>
+      <Requestor>${user?.requestor || requestor}</Requestor>
+      <Transaction>EXEC_STORED_PROC</Transaction>
+      <Country>${user?.country || country}</Country>
+      <Entity>${user?.taxid || taxid}</Entity>
+      <User>${user?.requestor || requestor}</User>
+      <UserName>${user?.country || country}.${user?.taxid || taxid}.${user?.userName || userName}</UserName>
+      <Data1>SHARED_NFRONT_GETACTIONRIGHTS</Data1>
+      <Data2>STaxid|${user?.taxid || taxid}|UserName|${user?.userName || userName}</Data2>
+      <Data3></Data3>
+      </RequestTransaction>
+    </soap:Body>
+  </soap:Envelope>`
   }, [])
 
   return {
@@ -207,6 +341,13 @@ export const useXmlFetchConstructor = () => {
     getAllProductsXml: getAllProductsConstructor,
     deleteProductsXml: deleteProductsConstructor,
     addEditProductsXml: addEditProductsConstructor,
-    getAccountDetailsXml: getAccountDetailsConstructor
+    getAccountDetailsXml: getAccountDetailsConstructor,
+    infoFiscalXml: infoFiscalXMLConstructor,
+    getAllEstablecimientosXml: getAllEstablecimientosXmlConstructor,
+    getConfigAppXml: getConfigAppXmlConstructor,
+    getCatalogPermissionsFatherXml: getCatalogPermissionsFatherXmlConstructor,
+    getCatalogPermissionsActionsXml: getCatalogPermissionsActionsXmlConstructor,
+    getUserFatherPermissionsXml: getUserFatherPermissionsXmlConstructor,
+    getUserActionsPermissionsXml: getUserActionsPermissionsXmlConstructor
   }
 }
