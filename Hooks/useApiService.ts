@@ -454,7 +454,7 @@ export const useApiService = () => {
           const obj: {[key: string]: {granted: boolean}} = {}
           dataArr.flat().forEach(e => {
             obj[e?.Descripcion] = {
-              granted: true
+              granted: e?.Granted
             }
           })
           // console.log('--------- FATHER CATALOG DATA --------', obj)
@@ -505,7 +505,7 @@ export const useApiService = () => {
             obj[element?.page] = {
               ...obj[element?.page],
               [element?.actionRight]: {
-                granted: true
+                granted: element?.granted
               }
             }
           })
@@ -545,7 +545,7 @@ export const useApiService = () => {
     key: string
   }> => {
     // console.log('------------ father permissions user ---------', await getFatherPermissions({ country, requestor, userName, taxid }))
-    // console.log('------------ actions permissions user ---------', JSON.stringify(await getActionsPermissions({ country, requestor, userName, taxid })))
+    // console.log('------------ actions permissions user ---------', getUserActionsPermissionsXml({ country, requestor, userName, taxid }))
     return getCatalogPermissionsFatherServiceTS({ country })
       .then(async (father: any) => {
         return getCatalogPermissionsActionsServiceTS({ country })
