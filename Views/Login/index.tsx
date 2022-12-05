@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { View, Text, StyleSheet, ScrollView, Image, PixelRatio, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -18,6 +18,7 @@ import Icon from '../../Components/Icon'
 import { PickerTS } from '../../Components/Picker'
 import { LoginCountries } from '../../Config/dictionary'
 import { useApiService } from '../../Hooks/useApiService'
+import { useServiceBuilder } from '../../Hooks/useServiceBuilder'
 
 export const Login: React.FC = () => {
   const { control, handleSubmit, formState: { errors, isSubmitting }, setValue, getValues } = useForm({
@@ -35,6 +36,7 @@ export const Login: React.FC = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { loginServiceTS } = useApiService()
+  const { loginBuilder } = useServiceBuilder()
   const toast = useToast()
   const handleChangePicker = useCallback((fieldName: 'username' | 'password' | 'taxid' | 'country' = 'country', value: {[key: string]: any}, valueKey: string | number) => {
     setValue(fieldName, (value[valueKey] || value))
@@ -109,6 +111,24 @@ export const Login: React.FC = () => {
         type: 'warning'
       })
     }
+  }, [])
+
+  useEffect(() => {
+    // const taxid = '109162544'
+    // const country = 'GT'
+    // const userName = '109162544'
+    // const password='Kq290302*'
+
+    const taxid = '123456'
+    const country = 'GT'
+    const userName = 'luis1234567'
+    const password = 'fw?Uq3f+'
+
+    // const taxid = '155704849-2-2021'
+    // const country = 'PA'
+    // const userName = 'FRANK'
+    // const password = 'Digifact21*'
+    loginBuilder({ country, userName, taxid, password })
   }, [])
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>

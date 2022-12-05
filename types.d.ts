@@ -53,11 +53,15 @@ export type InfoFiscalUser={
 }
 
 export type SharedData={
-    nombre: string,
-    paquete: string,
-    creada: Date,
-    expira: Date,
-    estado: string
+    taxid?: string
+    name?: string,
+    paquete?: string,
+    creada?: Date,
+    expira?: Date,
+    estado?: string
+    email?: string
+    requestor?: string
+    restantes?: string
 }
 
 export type PermisoPorAccion = {

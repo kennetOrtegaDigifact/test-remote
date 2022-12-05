@@ -25,6 +25,7 @@ export const urlsByCountry: {[key: string]: urls} = {
     urlWsRest: `${GTURLBASE}/gt.com.fel.api.v3/api/`,
     urlWsRestV2: `${GTURLBASE}/gt.com.fel.api.v3/api/`,
     urlToken: `${GTURLBASE}/gt.com.apinuc/api/login/get_token`,
+    urlApiNUC: `${GTURLBASE}/gt.com.apinuc/api/`,
     urlXMLTransformation: `${GTURLBASE}/gt.com.fel.api.jsontoxml/api/Xmljsontransformation`,
     urlApiMs: `${GTURLBASE}/gt.com.apims/api`
   },

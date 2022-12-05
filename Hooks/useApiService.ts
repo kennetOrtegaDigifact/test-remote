@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, userInterface, CountryCodes } from '../types'
+import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, userInterface, CountryCodes, MIPOS } from '../types'
 import { XMLParser } from 'fast-xml-parser'
 import base64 from 'react-native-base64'
 import { urlApiMs, urlsByCountry, urlWsRest, urlWsRestV2, urlWsSoap, urlWsToken, urlXMLTransformation } from '../Config/api'
@@ -10,7 +10,7 @@ import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
 
-import { clientFetchProps, productFetchProps } from '../Config/dictionary'
+import { clientFetchProps, productFetchProps, sharedDataFetchProps } from '../Config/dictionary'
 import { useXmlFetchConstructor } from './useXmlFetchConstructor'
 
 type FetchProps={
@@ -27,7 +27,7 @@ const urlApiNUC = 'https://pactest.digifact.com.pa/pa.com.apinuc/api'
 
 export const useApiService = () => {
   const { urls } = useSelector((state: ReduxState) => state.userDB)
-  const { getAllClientsXml, addEditClientXml, deleteClientXml, getAllProductsXml, deleteProductsXml, addEditProductsXml } = useXmlFetchConstructor()
+  const { getAllClientsXml, addEditClientXml, deleteClientXml, getAllProductsXml, deleteProductsXml, addEditProductsXml, getAccountDetailsXml } = useXmlFetchConstructor()
   const { country } = useSelector((state: ReduxState) => state.userDB)
 
   const getCountryCodes = async (): Promise<{
@@ -109,7 +109,7 @@ export const useApiService = () => {
       body: JSON.stringify({ Username: `${country}.${taxid}.${userName}`, Password: password })
     }).then(r => r.json().then(data => ({ status: r.status, body: data })))
       .then(response => {
-        console.log('CERT TOKEN SERVICE RESPONSE', response)
+        // console.log('CERT TOKEN SERVICE RESPONSE', response)
         if (response.status === 200) {
           return {
             code: appCodes.ok,
@@ -129,6 +129,55 @@ export const useApiService = () => {
           code: appCodes.processError,
           data: '',
           key: 'token'
+        }
+      })
+  }
+
+  const getAccountDetailsServiceTS = async ({ country, taxid }: {country: string, taxid: string}): Promise<{
+    code: number
+    data: SharedData
+    key: string
+  }> => {
+    return globalThis.fetch(urlsByCountry?.[country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getAccountDetailsXml({ countryCode: country, taxid })
+    })
+      .then(res => res.text())
+      .then(requestorResponse => {
+        const dataParsed = parser.parse(requestorResponse)
+        const count = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        if (count > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: SharedData[] = container?.flat()?.map((e: SharedData) => {
+            const obj: SharedData|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Cliente lleva mas props dependendiendo del pais
+            sharedDataFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = e?.[sharedDataFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || ''
+            })
+            return obj
+          })
+          return {
+            code: appCodes.ok,
+            data: data?.[0] || {},
+            key: 'sharedData'
+          }
+        }
+        return {
+          code: appCodes.invalidData,
+          data: {},
+          key: 'sharedData'
+        }
+      })
+      .catch(err => {
+        console.log(`ERROR GET ACCOUNT DETAILS FOR ${country}, ERROR: `, err)
+        return {
+          code: appCodes.processError,
+          data: {},
+          key: 'sharedData'
         }
       })
   }
@@ -627,6 +676,82 @@ export const useApiService = () => {
       .catch(err => {
         console.log('ERROR LOGIN SERVICE', err)
         return { code: appCodes.processError }
+      })
+  }
+
+  const getTokenMIPOSServiceTS = async ({
+    country,
+    userName,
+    password,
+    taxid
+  }: {
+    country: string
+    userName: string
+    password: string
+    taxid: string|number
+    key: string
+    }): Promise<{
+      code: number
+      key: string
+      data: MIPOS
+  }> => {
+    console.log('LOGIN MIPOS', JSON.stringify({ Username: `${country}.${taxid}.${userName}`, Password: password }))
+    return globalThis.fetch('https://felgtaws.digifact.com.gt/gt.com.bac.mipos/api/Authentication/get_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Username: `${country}.${taxid}.${userName}`, Password: password })
+    })
+      .then(res => res.json())
+      .then(responseAuth => {
+        if (responseAuth?.Token) {
+          return globalThis.fetch(`https://felgtaws.digifact.com.gt/gt.com.bac.mipos/api/MiPOS/token?TAXID=${taxid}&USERNAME=${userName}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: responseAuth?.Token
+            }
+          })
+            .then(responseM => responseM.json())
+            .then(responseMIPOSTOKEN => {
+              if (responseMIPOSTOKEN?.TokenAPI && responseMIPOSTOKEN?.TokenUser) {
+                return {
+                  code: appCodes.ok,
+                  key: 'MIPOS',
+                  data: {
+                    apiToken: responseAuth?.Token || '',
+                    token: responseMIPOSTOKEN?.TokenAPI || '',
+                    userToken: responseMIPOSTOKEN?.TokenUser || ''
+                  }
+                }
+              }
+              return {
+                code: appCodes.dataVacio,
+                key: 'MIPOS',
+                data: {}
+              }
+            })
+            .catch(err => {
+              console.log('ERROR CATCH GET TOKEN MIPOS SERVICE GET CREDENTIALS', err)
+              return {
+                code: appCodes.processError,
+                key: 'MIPOS',
+                data: {}
+              }
+            })
+        }
+        return {
+          code: appCodes.unauthorized,
+          key: 'MIPOS',
+          data: {}
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET TOKEN MIPOS SERVICE', err)
+        return {
+          code: appCodes.ok,
+          key: 'MIPOS',
+          data: {}
+        }
       })
   }
 
@@ -3290,6 +3415,8 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     getCountryCodes,
     getInfoByNITService,
     verifyRUC,
-    getTokenMIPOSService
+    getTokenMIPOSService,
+    getAccountDetailsServiceTS,
+    getTokenMIPOSServiceTS
   }
 }

@@ -299,6 +299,55 @@ export const productFetchProps: ServiceFetchProps = {
   }
 }
 
+export const sharedDataFetchProps: ServiceFetchProps = {
+  GT: {
+    keys: [
+      'taxid',
+      'name',
+      'paquete',
+      'creada',
+      'expira',
+      'estado',
+      'email',
+      'requestor'
+    ],
+    props: {
+      taxid: 'NIT',
+      name: 'Name',
+      paquete: 'Paquete',
+      creada: 'CreationDate',
+      expira: 'Expira',
+      estado: 'BundleExpired',
+      email: 'email',
+      requestor: 'RequestorGUID'
+    }
+  },
+  PA: {
+    keys: [
+      'taxid',
+      'name',
+      'paquete',
+      'creada',
+      'expira',
+      'estado',
+      'email',
+      'requestor',
+      'restantes'
+    ],
+    props: {
+      taxid: 'NIT',
+      name: 'Name',
+      paquete: 'Paquete',
+      creada: 'CreationDate',
+      expira: 'Expira',
+      estado: 'BundleExpired',
+      email: 'email',
+      requestor: 'RequestorGUID',
+      restantes: 'BundleRemain'
+    }
+  }
+}
+
 export const ITBMSDictionary: Array<{label: string, value: string, rate?: number}> = [
   {
     label: '-- Selecccione Tasa ITBMS  --',

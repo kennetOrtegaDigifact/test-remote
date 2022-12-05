@@ -1,21 +1,16 @@
 import { useCallback } from 'react'
 import { useSelector } from 'react-redux'
-import { invertRegexSpecialChars } from '../Config/utilities'
 import { ReduxState } from '../Redux/store'
 import { Cliente, Producto } from '../types'
+const requestTransaction: {[key: string]: string} = {
+  GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
+  PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
+}
 
 export const useXmlFetchConstructor = () => {
   const { country, requestor, taxid, userName } = useSelector((state: ReduxState) => state.userDB)
 
   const getAllProductsConstructor = useCallback(() => {
-    const datos: {
-      requestTransaction: {[key: string]: string}
-    } = {
-      requestTransaction: {
-        GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
-        PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
-      }
-    }
     return `<?xml version="1.0" encoding="utf-8"?>
             <soap:Envelope
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -23,7 +18,7 @@ export const useXmlFetchConstructor = () => {
                 xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
                 <soap:Body>
                     <RequestTransaction
-                        ${datos?.requestTransaction?.[country]}>
+                        ${requestTransaction?.[country]}>
                         <Requestor>${requestor}</Requestor>
                         <Transaction>EXEC_STORED_PROC</Transaction>
                         <Country>${country}</Country>
@@ -41,18 +36,10 @@ export const useXmlFetchConstructor = () => {
   const deleteProductsConstructor = useCallback(({
     ean
   }: {ean: string|number}) => {
-    const datos: {
-      requestTransaction: {[key: string]: string}
-    } = {
-      requestTransaction: {
-        GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
-        PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
-      }
-    }
     return `<?xml version="1.0" encoding="utf-8"?>
             <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
                 <soap:Body>
-                    <RequestTransaction ${datos?.requestTransaction?.[country]}>
+                    <RequestTransaction ${requestTransaction?.[country]}>
                         <Requestor>${requestor}</Requestor>
                         <Transaction>EXEC_STORED_PROC</Transaction>
                         <Country>${country}</Country>
@@ -70,21 +57,11 @@ export const useXmlFetchConstructor = () => {
   const addEditProductsConstructor = useCallback((item: Producto) => {
     const { name, price, unit, ean, familia, impuestos, segmento, tipo } = item
     const datos: {
-      requestTransaction: {[key: string]: string}
-      data: {[key: string]: string},
-      userName: {[key: string]: string}
+      data: {[key: string]: string}
     } = {
       data: {
         GT: `${country}|${taxid}|${name}|${price}|0|${unit}|0|${ean}|0|${userName}|0|0|${tipo}`,
         PA: `${country}|${taxid}|${name}|${price}|0|${unit}|0|${ean}|0|${userName}|${segmento}|${familia}|${JSON.stringify(impuestos)}`
-      },
-      requestTransaction: {
-        GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
-        PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
-      },
-      userName: {
-        PA: '',
-        GT: ''
       }
     }
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -94,7 +71,7 @@ export const useXmlFetchConstructor = () => {
               xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
               <soap:Body>
                 <RequestTransaction
-                  ${datos?.requestTransaction?.[country]}>
+                  ${requestTransaction?.[country]}>
                   <Requestor>${requestor}</Requestor>
                   <Transaction>EXEC_STORED_PROC</Transaction>
                   <Country>${country}</Country>
@@ -110,14 +87,6 @@ export const useXmlFetchConstructor = () => {
   }, [])
 
   const getAllClientsConstructor = useCallback(() => {
-    const datos: {
-      requestTransaction: {[key: string]: string}
-    } = {
-      requestTransaction: {
-        GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
-        PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
-      }
-    }
     return `<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope
             xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
@@ -125,7 +94,7 @@ export const useXmlFetchConstructor = () => {
             xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
             <soap:Body>
                 <RequestTransaction
-                ${datos?.requestTransaction?.[country]}>
+                ${requestTransaction?.[country]}>
                 <Requestor>${requestor}</Requestor>
                 <Transaction>SHARED_INFO_EFACE</Transaction>
                 <Country>${country}</Country>
@@ -143,16 +112,11 @@ export const useXmlFetchConstructor = () => {
   const addEditClientsConstructor = useCallback((item: Cliente) => {
     const { DV, cTaxId, cargo, corregimiento, correo, countryCode, departamento, direccion, distrito, municipio, nombreContacto, nombreOrga, provincia, telefono, tipoCliente } = item
     const datos: {
-      requestTransaction: {[key: string]: string}
       data: {[key: string]: string}
     } = {
       data: {
         GT: `SCountryCode|${countryCode}|TipoCliente|INDIVIDUAL|NIT|${cTaxId}|NombreOrganizacion|${nombreContacto}|NombreContacto|${nombreContacto}|Cargo|Cliente|Telefono|${telefono}|Correo|${correo}|Direccion1|${direccion}|Municipio|${municipio}|Departamento|${departamento}`,
         PA: `SCountryCode|${countryCode}|STAXID|${taxid}|CTAXID|${cTaxId}|DV|${DV}|TipoCliente|${tipoCliente}|NombreOrganizacion|${nombreContacto}|NombreContacto|${nombreContacto}|Cargo|${cargo || ''}|Telefono|${telefono}|Correo|${correo}|Direccion1|${direccion}|Provincia|${provincia}|Distrito|${distrito}|Corregimiento|${corregimiento}`
-      },
-      requestTransaction: {
-        GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
-        PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
       }
     }
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -162,7 +126,7 @@ export const useXmlFetchConstructor = () => {
                 xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/"
               >
                 <soap:Body>
-                  <RequestTransaction ${datos?.requestTransaction?.[country]}>
+                  <RequestTransaction ${requestTransaction?.[country]}>
                     <Requestor>${requestor}</Requestor>
                     <Transaction>SHARED_INFO_EFACE</Transaction>
                     <Country>${country}</Country>
@@ -180,21 +144,16 @@ export const useXmlFetchConstructor = () => {
   const deleteClientXmlConstructor = useCallback((item: Cliente) => {
     const { cTaxId } = item
     const datos: {
-      requestTransaction: {[key: string]: string}
       tag: {[key: string]: string}
     } = {
       tag: {
         GT: 'NIT',
         PA: 'TAXID'
-      },
-      requestTransaction: {
-        GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
-        PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
       }
     }
     return `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
               <soap:Body>
-                <RequestTransaction ${datos?.requestTransaction?.[country]}>
+                <RequestTransaction ${requestTransaction?.[country]}>
                   <Requestor>${requestor}</Requestor>
                   <Transaction>SHARED_INFO_EFACE</Transaction>
                   <Country>${country}</Country>
@@ -209,12 +168,45 @@ export const useXmlFetchConstructor = () => {
             </soap:Envelope>`
   }, [])
 
+  const getAccountDetailsConstructor = useCallback(({ taxid, countryCode }: {taxid: string, countryCode: string}) => {
+    const datos: {
+      entity: {[key: string]: string}
+      user: {[key: string]: string}
+    } = {
+      entity: {
+        GT: '000000123456',
+        PA: '155704849-2-2021'
+      },
+      user: {
+        GT: 'admon',
+        PA: 'FRANK'
+      }
+    }
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction ${requestTransaction?.[countryCode]}>
+            <Requestor>d06a8f37-2d87-43d2-b977-04d503532786</Requestor>
+            <Transaction>SHARED_INFO_EFACE</Transaction>
+            <Country>${countryCode}</Country>
+            <Entity>${datos?.entity?.[countryCode]}</Entity>
+            <User>d06a8f37-2d87-43d2-b977-04d503532786</User>
+            <UserName>${countryCode}.${datos?.entity?.[countryCode]}.${datos?.user?.[countryCode]}</UserName>
+            <Data1>SHARED_NFRONT_GETACCGRAL</Data1>
+            <Data2>SCountryCode|${countryCode}|STAXIDTOSEEK|${taxid}</Data2>
+            <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
   return {
     getAllClientsXml: getAllClientsConstructor,
     addEditClientXml: addEditClientsConstructor,
     deleteClientXml: deleteClientXmlConstructor,
     getAllProductsXml: getAllProductsConstructor,
     deleteProductsXml: deleteProductsConstructor,
-    addEditProductsXml: addEditProductsConstructor
+    addEditProductsXml: addEditProductsConstructor,
+    getAccountDetailsXml: getAccountDetailsConstructor
   }
 }
