@@ -339,7 +339,10 @@ export const useApiService = () => {
       })
   }
 
-  const getCatalogPermissionsFatherServiceTS = useCallback(async ({ country }: {country: string}) => {
+  const getCatalogPermissionsFatherServiceTS = useCallback(async ({ country }: {country: string}): Promise<{
+    code: number
+    data: {[key: string]: {granted: boolean}}
+  }> => {
     // console.log('--------- FATHER CATALOG XML --------', getCatalogPermissionsFatherXml({ country }))
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       method: 'POST',
@@ -367,17 +370,24 @@ export const useApiService = () => {
             data: obj
           }
         }
+        return {
+          code: appCodes.dataVacio,
+          data: fatherAccessTemplate?.[country as keyof typeof fatherAccessTemplate]
+        }
       })
       .catch(err => {
         console.log(`ERROR GET CATALOG PERMISSIONS FATHER FOR ${country}`, err)
         return {
-          code: appCodes.ok,
+          code: appCodes.processError,
           data: fatherAccessTemplate?.[country as keyof typeof fatherAccessTemplate]
         }
       })
-  }, [])
+  }, [user?.country])
 
-  const getCatalogPermissionsActionsServiceTS = useCallback(async ({ country }: {country: string}) => {
+  const getCatalogPermissionsActionsServiceTS = useCallback(async ({ country }: {country: string}): Promise<{
+    code: number
+    data: any
+  }> => {
     // console.log('--------- ACTIONS CATALOG XML --------', getCatalogPermissionsActionsXml({ country }))
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       method: 'POST',
@@ -394,7 +404,7 @@ export const useApiService = () => {
           dataArr.push(dataPermisos)
           const obj: {[key: string]: {granted: boolean}} = {}
           dataArr.flat().forEach(element => {
-            console.log('ELEMENT', element)
+            // console.log('ELEMENT', element)
             obj[element?.page] = {
               ...obj[element?.page],
               [element?.actionRight]: {
@@ -409,24 +419,199 @@ export const useApiService = () => {
             data: obj
           }
         }
+        return {
+          code: appCodes.dataVacio,
+          data: actionsPermissionsTemplate?.[country as keyof typeof actionsPermissionsTemplate]
+        }
+      })
+      .catch(err => {
+        console.log(`ERROR GET CATALOG PERMISSIONS FATHER FOR ${country}`, err)
+        return {
+          code: appCodes.processError,
+          data: actionsPermissionsTemplate?.[country as keyof typeof actionsPermissionsTemplate]
+        }
+      })
+  }, [user?.country])
+
+  const getFatherPermissions = useCallback(async ({ country, requestor, userName, taxid }: {country: string, requestor: string, userName: string, taxid: string}): Promise<{
+    code: number
+    data: {[key: string]: {granted: boolean}}
+    key: string
+  }> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getUserFatherPermissionsXml({ country, requestor, taxid, userName })
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        if (rows > 0) {
+          const dataPermisos = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
+          const dataArr = []
+          dataArr.push(dataPermisos)
+          const obj: {[key: string]: {granted: boolean}} = {}
+          dataArr.flat().forEach(e => {
+            obj[e?.Descripcion] = {
+              granted: true
+            }
+          })
+          // console.log('--------- FATHER CATALOG DATA --------', obj)
+
+          return {
+            code: appCodes.ok,
+            data: obj,
+            key: ''
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: {},
+          key: ''
+        }
       })
       .catch(err => {
         console.log(`ERROR GET CATALOG PERMISSIONS FATHER FOR ${country}`, err)
         return {
           code: appCodes.ok,
-          data: actionsPermissionsTemplate?.[country as keyof typeof actionsPermissionsTemplate]
+          data: {},
+          key: ''
         }
       })
-  }, [])
+  }, [user?.country])
 
-  const getPermissionsServiceTS = useCallback(async ({ country, requestor, userName, taxid }: { country: string, requestor: string, userName: string, taxid: string }) => {
-    console.log('------------ father permissions user ---------', getUserFatherPermissionsXml({ country, requestor, userName, taxid }))
-    console.log('------------ actions permissions user ---------', getUserActionsPermissionsXml({ country, requestor, userName, taxid }))
-    return {
-      code: 1,
-      data: [],
-      key: 'AAAAAAAA'
+  const getActionsPermissions = useCallback(async ({ country, requestor, userName, taxid }: {country: string, requestor: string, userName: string, taxid: string}): Promise<{
+    code: number
+    data: {[key: string]: {granted: boolean}}
+    key: string
+  }> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getUserActionsPermissionsXml({ country, requestor, taxid, userName })
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
+        if (rows > 0) {
+          const dataPermisos = dataParsed.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
+          const dataArr = []
+          dataArr.push(dataPermisos)
+          const obj: {[key: string]: {granted: boolean}} = {}
+          dataArr.flat().forEach(element => {
+            // console.log('ELEMENT', element)
+            obj[element?.page] = {
+              ...obj[element?.page],
+              [element?.actionRight]: {
+                granted: true
+              }
+            }
+          })
+          // console.log('--------- ACTION CATALOG DATA --------', obj)
+
+          return {
+            code: appCodes.ok,
+            data: obj,
+            key: ''
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: {},
+          key: ''
+        }
+      })
+      .catch(err => {
+        console.log(`ERROR GET CATALOG PERMISSIONS FATHER FOR ${country}`, err)
+        return {
+          code: appCodes.processError,
+          data: {},
+          key: ''
+        }
+      })
+  }, [user?.country])
+
+  const getPermissionsServiceTS = useCallback(async ({ country, requestor, userName, taxid }: {country: string, requestor: string, userName: string, taxid: string}): Promise<{
+    code: number
+    data: {
+      [key: string]: {
+        [key: string]: {
+          granted: boolean
+        }
+      }
     }
+    key: string
+  }> => {
+    // console.log('------------ father permissions user ---------', await getFatherPermissions({ country, requestor, userName, taxid }))
+    // console.log('------------ actions permissions user ---------', JSON.stringify(await getActionsPermissions({ country, requestor, userName, taxid })))
+    return getCatalogPermissionsFatherServiceTS({ country })
+      .then(async (father: any) => {
+        return getCatalogPermissionsActionsServiceTS({ country })
+          .then(async (actions: any) => {
+            return getFatherPermissions({ country, requestor, userName, taxid })
+              .then(async (fatherRes: any) => {
+                return getActionsPermissions({ country, requestor, taxid, userName })
+                  .then(async (actionsRes: any) => {
+                    const result: any = {}
+                    const fatherObj: any = {
+                      ...father?.data,
+                      ...fatherRes?.data
+                    }
+                    const actionsObj: any = {
+                      ...actions?.data,
+                      ...actionsRes?.data
+                    }
+                    Object.keys(fatherObj)?.forEach(key => {
+                      result[key] = {
+                        ...fatherObj[key],
+                        ...actionsObj[key]
+                      }
+                    })
+                    return {
+                      code: appCodes.ok,
+                      data: result,
+                      key: 'permisos'
+                    }
+                  })
+                  .catch(err => {
+                    console.log(`ERROR GET PERMISSIONS FATHER BY USER FOR ${country}`, err)
+                    const result: any = {}
+                    const obj: any = {
+                      ...father?.data,
+                      ...fatherRes?.data
+                    }
+                    Object.keys(obj)?.forEach(key => {
+                      result[key] = {
+                        ...obj[key],
+                        ...actions?.data[key]
+                      }
+                    })
+                    return {
+                      code: appCodes.processError,
+                      data: result,
+                      key: 'permisos'
+                    }
+                  })
+              })
+              .catch(err => {
+                console.log(`ERROR GET PERMISSIONS FATHER BY USER FOR ${country}`, err)
+                const result: any = {}
+                Object.keys(father?.data)?.forEach(key => {
+                  result[key] = {
+                    ...father?.data[key],
+                    ...actions?.data[key]
+                  }
+                })
+                return {
+                  code: appCodes.processError,
+                  data: result,
+                  key: 'permisos'
+                }
+              })
+          })
+      })
   }, [])
 
   const loginServiceTS = async ({ Username = '', Password = '', taxid = '', user = '', country = '', nit = '' }): Promise<userInterface> => {
