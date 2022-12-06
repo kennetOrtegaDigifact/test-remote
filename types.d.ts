@@ -120,7 +120,8 @@ export type ConfiguracionApp={
 
 export type ConfiguracionGeneral={
     actionsInRealTime?: boolean,
-    windowsInRealTime?: boolean
+    windowsInRealTime?: boolean,
+    instaPrint?: boolean
 }
 
 export type MIPOS={
@@ -230,18 +231,17 @@ export type User={
 }
 
 export interface userInterface {
-    cleanTaxId: string
-    taxid: string,
-    country: string,
-    token: string,
-    fetchUser: string
-    userName: string,
-    APIMSTOKEN: string,
-    requestor: string,
-    tipoPersoneria?: string,
+    cleanTaxId?: string
+    taxid?: string,
+    country?: string,
+    token?: string,
+    userName?: string,
+    // APIMSTOKEN?: string,
+    requestor?: string,
+    // tipoPersoneria?: string,
     establecimientos?: Establecimiento[],
-    sharedData: SharedData,
-    infoFiscalUser: InfoFiscalUser,
+    sharedData?: SharedData,
+    infoFiscalUser?: InfoFiscalUser,
     configuracionApp?: ConfiguracionApp[],
     configuracionGeneral?: ConfiguracionGeneral,
     permisos?: any,
@@ -249,10 +249,10 @@ export interface userInterface {
     clientes?: Cliente[],
     productos?: Producto[],
     MIPOS?: MIPOS
-    decimales: number
-    logos: Logos,
-    urls: {[key: string]: string},
-    perfiles: PerfilFacturacionType[]
+    decimales?: number
+    logos?: Logos,
+    urls?: {[key: string]: string},
+    perfiles?: PerfilFacturacionType[]
 }
 
 export type formulario = {
@@ -478,7 +478,7 @@ export interface UTILSDB {
     familias?: Familia[]
     segmentos?: Segmento[]
     units?: UnidadDeMedida[]
-    talonarioContingencia: {[key: string]: string|number}
+    talonarioContingencia?: {[key: string]: string|number}
 }
 
 export type FELDocumentTypes={

@@ -23,7 +23,7 @@ import { useServiceBuilder } from '../../Hooks/useServiceBuilder'
 export const Login: React.FC = () => {
   const { control, handleSubmit, formState: { errors, isSubmitting }, setValue, getValues } = useForm({
     defaultValues: {
-      username: '',
+      userName: '',
       password: '',
       taxid: '',
       country: ''
@@ -35,47 +35,49 @@ export const Login: React.FC = () => {
   })
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const { loginServiceTS } = useApiService()
+  // const { loginServiceTS } = useApiService()
   const { loginBuilder } = useServiceBuilder()
   const toast = useToast()
-  const handleChangePicker = useCallback((fieldName: 'username' | 'password' | 'taxid' | 'country' = 'country', value: {[key: string]: any}, valueKey: string | number) => {
+  const handleChangePicker = useCallback((fieldName: 'userName' | 'password' | 'taxid' | 'country', value: {[key: string]: any}, valueKey: string | number) => {
     setValue(fieldName, (value[valueKey] || value))
   }, [setValue])
 
-  const onSubmit = async (values: {taxid: string, country: string, password: string, username: string}): Promise<void> => {
+  const onSubmit = async (values: {taxid: string, country: string, password: string, userName: string}): Promise<void> => {
     console.log('LOGIN VALUES', values)
-    const { country, password, taxid, username } = values
-    let TAXID: string = ''
-    if (country === 'GT') {
-      const nit = deletePadLeft(taxid)
-      TAXID = taxid.padStart(12, '0').replace(/[^0-9Kk]/g, '').replace('k', 'K').replace('-', '').replace('/', '').trim()
-      return loginServiceTS({
-        country,
-        nit,
-        taxid: TAXID,
-        Password: password,
-        Username: `${country}.${TAXID.trim()}.${username.trim()}`,
-        user: username.trim()
-      })
-        .then(res => {
-          // console.log('COMO', res)
-          if (res.code === appCodes.ok) {
-            toast.show('Verifcacion exitosa', { type: 'ok' })
-            dispatch(addUser(res))
+    const { country, password, taxid, userName } = values
+    return loginBuilder({ country, userName, taxid, password })
+      .then(res => {
+        console.log('LOGIN RESPONSE', res)
+        if (res?.code === appCodes.ok) {
+          toast.show('Verificacion exitosa', {
+            type: 'ok'
+          })
+          new Promise((resolve) => {
+            resolve(dispatch(addUser(res?.data)))
+          }).then(() => {
             navigate('/')
-            // console.log('USUARIO FINAL', res)
-          } else if (res.code === appCodes.invalidData) {
-            toast.show('Credenciales Incorrectas', { type: 'error' })
-          } else if (res.code === appCodes.processError) {
-            toast.show('Algo salio mal al iniciar sesion, porfavor verifique sus credenciales, conexion a internet o intentelo mas tarde', { type: 'error' })
-          }
+          })
+        } else if (res?.code === appCodes.unauthorized) {
+          toast.show('Credenciales Incorrectas (Error: 401)', {
+            type: 'error'
+          })
+        } else if (res?.code === appCodes.processError) {
+          toast.show('Algo salio mal al iniciar sesion, porfavor verifique sus credenciales, conexion a internet o intentelo mas tarde (Error: 9000)', {
+            type: 'error'
+          })
+        }
+      })
+      .catch(err => {
+        console.log('ERROR LOGIN BUILDER SERVICE IN LOGIN VIEW', err)
+        toast.show('Algo salio mal al iniciar sesion, porfavor verifique sus credenciales, conexion a internet o intentelo mas tarde (Error: 9001)', {
+          type: 'error'
         })
-    }
+      })
   }
 
   const handleRecoverPassword = useCallback(() => {
     const country = getValues('country')
-    const username = getValues('username')
+    const username = getValues('userName')
     let taxid = getValues('taxid')
     if (taxid && country && username) {
       if (country === 'GT') {
@@ -113,24 +115,25 @@ export const Login: React.FC = () => {
     }
   }, [])
 
-  useEffect(() => {
-    const taxid = '109162544'
-    const country = 'GT'
-    const userName = '109162544'
-    const password = 'Kq290302*'
+  // useEffect(() => {
+  //   // const taxid = '109162544'
+  //   // const country = 'GT'
+  //   // const userName = '109162544'
+  //   // const password = 'Kq290302*'
 
-    // const taxid = '123456'
-    // const country = 'GT'
-    // const userName = 'luis1234567'
-    // const password = 'fw?Uq3f+'
+  //   // const taxid = '123456'
+  //   // const country = 'GT'
+  //   // const userName = 'luis1234567'
+  //   // const password = 'fw?Uq3f+'
 
-    // const taxid = '155704849-2-2021'
-    // const country = 'PA'
-    // const userName = 'FRANK'
-    // const password = 'Digifact21*'
+  //   // const taxid = '155704849-2-2021'
+  //   // const country = 'PA'
+  //   // const userName = 'FRANK'
+  //   // const password = 'Digifact21*'
 
-    loginBuilder({ country, userName, taxid, password })
-  }, [])
+  //   loginBuilder({ country, userName, taxid, password })
+  // }, [])
+
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       <View style={[styles.container]}>
@@ -201,6 +204,7 @@ export const Login: React.FC = () => {
               <InputIcon
                 onBlur={onBlur}
                 onChangeText={onChange}
+                value={value}
                 keyboardType='default'
                 placeholderTextColor={theme.white}
                 placeholder='Identificador Tributario'
@@ -230,6 +234,7 @@ export const Login: React.FC = () => {
               <InputIcon
                 onBlur={onBlur}
                 onChangeText={onChange}
+                value={value}
                 keyboardType='default'
                 placeholderTextColor={theme.white}
                 placeholder='Nombre de Usuario'
@@ -250,15 +255,16 @@ export const Login: React.FC = () => {
                 }}
               />
             )}
-            name='username'
+            name='userName'
           />
-          {(errors?.username?.message) && (<ErrorLabel message={errors?.username?.message} />)}
+          {(errors?.userName?.message) && (<ErrorLabel message={errors?.userName?.message} />)}
           <Controller
             control={control}
             render={({ field: { onChange, onBlur, value } }) => (
               <InputIcon
                 onBlur={onBlur}
                 onChangeText={onChange}
+                value={value}
                 keyboardType='default'
                 placeholderTextColor={theme.white}
                 isSecureTextInput

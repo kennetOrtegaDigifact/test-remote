@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, PermisosPadre, PermisoPorAccion, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, userInterface, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps } from '../types'
+import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps } from '../types'
 import { XMLParser } from 'fast-xml-parser'
 import base64 from 'react-native-base64'
 import { urlApiMs, urlsByCountry, urlWsRest, urlWsRestV2, urlWsSoap, urlWsToken, urlXMLTransformation } from '../Config/api'
@@ -43,7 +43,8 @@ export const useApiService = () => {
     getCatalogPermissionsActionsXml,
     getUserFatherPermissionsXml,
     getUserActionsPermissionsXml,
-    getUsersByTaxIdXml
+    getUsersByTaxIdXml,
+    getDecimalesXml
   } = useXmlFetchConstructor()
   const { country } = useSelector((state: ReduxState) => state.userDB)
   const user = useSelector((state: ReduxState) => state.userDB)
@@ -751,7 +752,7 @@ export const useApiService = () => {
               })
               return obj
             })
-            console.log('CLIENTES FINALES', data)
+            // console.log('CLIENTES FINALES', data)
             return {
               code: appCodes.ok,
               data,
@@ -937,502 +938,110 @@ export const useApiService = () => {
       })
   }, [])
 
-  const loginServiceTS = async ({ Username = '', Password = '', taxid = '', user = '', country = '', nit = '' }): Promise<userInterface> => {
-    console.log('BODY LOGIN JSON', JSON.stringify({ Username, Password, nit }))
-    return globalThis.fetch(urlWsToken, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ Username, Password })
-    }).then(res => res.json())
-      .then(response => {
-      // console.log('RESPONSE GET TOKEN', response)
-        if (response.code !== 2001) {
-          return globalThis.fetch(`${urlApiMs}/login/get_token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: Username, password: Password })
-          })
-            .then(r => r.json())
-            .then(responseMS => {
-            // console.log('RESPONSE API MS', responseMS)
-
-              return getTokenMIPOSService({ nit, Password, Username, user })
-                .then(responseMIPOSTOKEN => {
-                  const MIPOS = responseMIPOSTOKEN
-                  console.log('MIPOS TOKENS', MIPOS)
-                  if (responseMS?.Token) {
-                    const token = response.Token
-                    const APIMSTOKEN = responseMS.Token
-                    return globalThis.fetch(urlWsSoap, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'text/xml' },
-                      body: `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-      xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-        <soap:Body>
-          <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-            <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
-            <Transaction>EXEC_STORED_PROC</Transaction>
-            <Country>${country}</Country>
-            <Entity>000000123456</Entity>
-            <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-            <UserName>GT.0000001234565.RESTLET</UserName>
-            <Data1>Account_Status_1</Data1>
-            <Data2>${taxid}</Data2>
-            <Data3></Data3>
-          </RequestTransaction>
-        </soap:Body>
-      </soap:Envelope>`
-                    })
-                      .then(res => res.text())
-                      .then(requestorResponse => {
-                        const data = parser.parse(requestorResponse)
-                        // console.log('RESPONSE REQUESTOR', data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T.RequestorGUID)
-                        const count = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-                        if (count > 0) {
-                          const requestor = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T.RequestorGUID
-                          return globalThis.fetch(urlWsSoap, {
-                            method: 'post',
-                            headers: { 'Content-Type': 'text/xml' },
-                            body: `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                        xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-                            <soap:Body>
-                                <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-                                <Requestor>${requestor}</Requestor>
-                                <Transaction>SHARED_INFO_EFACE</Transaction>
-                                <Country>${country}</Country>
-                                <Entity>${taxid}</Entity>
-                                <User>${requestor}</User>
-                                <UserName>${country}.${taxid}.admon</UserName>
-                                <Data1>SHARED_NFRONT_GETINFOFISCALFELBYPARTNER_2</Data1>
-                                <Data2>SCountryCode|${country}</Data2>
-                                <Data3></Data3>
-                            </RequestTransaction>
-                            </soap:Body>
-                        </soap:Envelope>`
-                          })
-                            .then(res => res.text())
-                            .then(infoFiscal => {
-                              const info = parser.parse(infoFiscal)
-                              // console.log('INFO FISCAL RESPONSE', info.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T)
-                              const infoCount = info.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-                              if (infoCount > 0) {
-                                const rinf = info.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-                                const infoFiscalUser: InfoFiscalUser = {
-                                  nombre: '',
-                                  calle: '',
-                                  ciudad: '',
-                                  zona: '',
-                                  frases: '',
-                                  afiliacion: '',
-                                  postalEstablecimientos: 1010,
-                                  establecimientos: establecimientosSpliter({ establecimientos: '' }),
-                                  dirEstablecimientos: '',
-                                  cm: '',
-                                  tipoPersoneria: '',
-                                  nit
-                                }
-                                infoFiscalUser.nombre = rinf.Nom
-                                infoFiscalUser.calle = rinf.Ca
-                                infoFiscalUser.ciudad = rinf.cd
-                                infoFiscalUser.zona = rinf.zon
-                                infoFiscalUser.frases = rinf.FRASES
-                                infoFiscalUser.afiliacion = rinf.AfiliacionIVA
-                                infoFiscalUser.postalEstablecimientos = rinf.ESTCODPOSTAL
-                                infoFiscalUser.establecimientos = establecimientosSpliter({ establecimientos: rinf.EST })
-                                infoFiscalUser.dirEstablecimientos = rinf.ESTDIR
-                                infoFiscalUser.cm = rinf.cm
-                                infoFiscalUser.tipoPersoneria = rinf.TipoPersoneria
-                                infoFiscalUser.nit = nit
-                                return globalThis.fetch(urlWsSoap, {
-                                  method: 'post',
-                                  headers: { 'Content-Type': 'text/xml' },
-                                  body: `<?xml version="1.0" encoding="utf-8"?>
-                        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-                        <soap:Body>
-                            <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-                            <Requestor>${requestor}</Requestor>
-                            <Transaction>SHARED_INFO_EFACE</Transaction>
-                            <Country>${country}</Country>
-                            <Entity>${taxid}</Entity>
-                            <User>${requestor}</User>
-                            <UserName>${country}.${taxid}.admon</UserName>
-                            <Data1>SHARED_NFRONT_GETACC</Data1>
-                            <Data2>SCountryCode|${country}</Data2>
-                            <Data3></Data3>
-                            </RequestTransaction>
-                        </soap:Body>
-                        </soap:Envelope>`
-                                }).then(res => res.text())
-                                  .then(sharedResponse => {
-                                    const shared = parser.parse(sharedResponse)
-                                    // console.log('RESPONSE SHARED INFO', shared.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1)
-                                    const sharedCount = shared.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-                                    if (sharedCount > 0) {
-                                      const sh = shared.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-                                      // console.log('RESPONSE SHARED INFO T ', sh)
-                                      const sharedData: SharedData = {
-                                        nombre: '',
-                                        creada: new Date(),
-                                        expira: new Date(),
-                                        estado: '',
-                                        paquete: ''
-                                      }
-                                      sharedData.nombre = sh.Name
-                                      sharedData.paquete = sh.Paquete
-                                      sharedData.creada = sh.CreationDate
-                                      sharedData.expira = sh.Expira
-                                      sharedData.estado = sh.BundleExpired
-
-                                      // ESTABLECIMIENTOS
-                                      return globalThis.fetch(urlWsSoap, {
-                                        method: 'post',
-                                        headers: { 'Content-Type': 'text/xml' },
-                                        body: `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-                                <soap:Body>
-                                    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-                                    <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
-                                    <Transaction>EXEC_STORED_PROC</Transaction>
-                                    <Country>${country}</Country>
-                                    <Entity>000000123456</Entity>
-                                    <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-                                    <UserName>${country}.000000123456.Admon</UserName>
-                                    <Data1>SHARED_NFRONT_GETINFOESTABLECIMIENTOSBYUSER</Data1>
-                                    <Data2>SCountryCode|${country}|Staxid|${taxid}|Username|${user}</Data2>
-                                    <Data3></Data3>
-                                    </RequestTransaction>
-                                </soap:Body>
-                                </soap:Envelope>`
-                                      })
-                                        .then(res => res.text())
-                                        .then(est => {
-                                          const estData = parser.parse(est)
-                                          // console.log('ESTABLECIMIENTOS CONTEO', estData.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1)
-                                          const estCount = estData.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-                                          if (estCount) {
-                                            const estRows = estData.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-                                            // console.log('ESTABLECIMIENTOS RESPONSE', estRows)
-                                            const establecimientos = []
-                                            establecimientos.push(estRows)
-                                            // console.log('ESTABLECIMIENTOS RESPONSE', establecimientos)
-                                            const Establecimientos: Establecimiento[] = establecimientos.flat().map(e => {
-                                              const obj: Establecimiento = {
-                                                id: '',
-                                                numero: 0,
-                                                nombre: '',
-                                                direccion: '',
-                                                municipio: '',
-                                                departamento: '',
-                                                codPostal: '',
-                                                pais: '',
-                                                estado: '',
-                                                granted: true,
-                                                taxid: nit
-                                              }
-                                              obj.id = e.idEstablecimiento || ''
-                                              obj.numero = e.ne || ''
-                                              obj.nombre = e.nombre || ''
-                                              obj.direccion = e.direccion || ''
-                                              obj.municipio = e.municipio || ''
-                                              obj.departamento = e.departamento || ''
-                                              obj.codPostal = e.codPostal || ''
-                                              obj.pais = e.pais || ''
-                                              obj.estado = e.Estado || ''
-                                              return obj
-                                            })
-                                            return globalThis.fetch(urlWsSoap, {
-                                              method: 'post',
-                                              headers: { 'Content-Type': 'text/xml' },
-                                              body: `<soap:Envelope
-                                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                                        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                                        xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-                                        <soap:Body>
-                                            <RequestTransaction
-                                                xmlns="http://www.fact.com.mx/schema/ws">
-                                                <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
-                                                <Transaction>EXEC_STORED_PROC</Transaction>
-                                                <Country>${country}</Country>
-                                                <Entity>000000123456</Entity>
-                                                <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-                                                <UserName>${country}.000000123456.admon</UserName>
-                                                <Data1>PLANILLACC_GetConfiguracionApp</Data1>
-                                                <Data2>staxid|${taxid}</Data2>
-                                                <Data3></Data3>
-                                            </RequestTransaction>
-                                        </soap:Body>
-                                    </soap:Envelope>`
-                                            })
-                                              .then(res => res.text())
-                                              .then(resConfig => {
-                                                const configDATA = parser.parse(resConfig)
-                                                const configCount = configDATA.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-                                                if (configCount > 0) {
-                                                  const configRows = configDATA.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-                                                  const arrayConfig: ConfiguracionApp[] = []
-                                                  arrayConfig.push(configRows)
-                                                  // console.log('COMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO --------------------', arrayConfig)
-                                                  const urlsConfig = arrayConfig?.flat()?.filter(e => e.idTipoConfiguracion === 8)
-                                                  const urls: {[key: string]: string } = {}
-                                                  urlsConfig?.flat()?.forEach((e: ConfiguracionApp) => {
-                                                    urls[`url${e?.tipoOperacion || ''}`] = e?.valor?.toString() || ''
-                                                  })
-                                                  console.log('URLS OBJECT', urls)
-
-                                                  return getPermissionsCatalog({ requestor, taxid, country, userName: Username })
-                                                    .then(resCatalogoPermisos => {
-                                                      if (resCatalogoPermisos?.code === appCodes.ok) {
-                                                        return getUserPermissions({ requestor, taxid, country, userName: Username, usuario: user })
-                                                          .then(resUserPermissions => {
-                                                            if (resUserPermissions.code === appCodes.ok) {
-                                                              const permisos: {[key:string]: {[key: string]: {granted: boolean}}} = {}
-                                                              return getUserActions({ requestor, taxid, country, userName: Username, usuario: user })
-                                                                .then(resA => {
-                                                                  if (resA?.code === appCodes.ok) {
-                                                                    resUserPermissions?.data?.forEach(e => {
-                                                                      const permiso: {[key: string]: {granted: boolean}} = {}
-                                                                      resA?.data?.flat()?.forEach(a => {
-                                                                        if (a.idRight === e.idRight) {
-                                                                          permiso[a?.description] = {
-                                                                            granted: a?.granted
-                                                                          }
-                                                                        }
-                                                                      })
-                                                                      permisos[e.description] = permiso
-                                                                    })
-                                                                  } if (resA.code === appCodes.dataVacio) {
-                                                                    resUserPermissions?.data?.forEach(e => {
-                                                                      const permiso: {[key: string]: {granted: boolean}} = {}
-                                                                      resCatalogoPermisos?.data?.find(p => p?.idRight === e?.idRight)?.actions?.forEach(
-                                                                        a => {
-                                                                          permiso[a.description] = {
-                                                                            granted: true
-                                                                          }
-                                                                        }
-                                                                      )
-                                                                      permisos[e.description] = permiso
-                                                                    })
-                                                                  }
-                                                                  // Obtener la cantidad  de numeros de acceso a consultar global
-                                                                  const globalRequestAccesos = arrayConfig.flat().find(e => e.idTipoConfiguracion === 1 && e.tipoOperacion === 'TODOS')?.valor || 0
-                                                                  /// Obtener la cantidad  de numeros de acceso a consultar individual
-                                                                  const personalRequestAccesos = arrayConfig.flat().find(e => e.idTipoConfiguracion === 1 && e.tipoOperacion === 'INDIVIDUAL')?.valor || 0
-                                                                  // Obtener la cantidad minima de numeros de acceso predeterminada global
-                                                                  const globalMinAccesos = arrayConfig.flat().find(e => e.idTipoConfiguracion === 3 && e.tipoOperacion === 'TODOS')
-                                                                  // Obtener la cantidad minima de numeros de acceso por usuario si llegase a existir
-                                                                  const personalMinAccesos = arrayConfig.flat().find(e => e.idTipoConfiguracion === 3 && e.tipoOperacion === 'INDIVIDUAL')
-                                                                  // Obtener si tiene acceso global a contingencia
-                                                                  const globalAccesoContingencia = arrayConfig.flat().find(e => e.idTipoConfiguracion === 5 && e.tipoOperacion === 'TODOS')?.valor || 0
-                                                                  // Obtener si tiene acceso global a contingencia
-                                                                  const personalAccesoContingencia = arrayConfig.flat().find(e => e.idTipoConfiguracion === 5 && e.tipoOperacion === 'INDIVIDUAL')?.valor || 0
-                                                                  return getUsersByTaxid({ country, requestor, taxid, userName: user })
-                                                                    .then(res => {
-                                                                      if (res.code === appCodes.ok) {
-                                                                        return getAllClientsServiceTS({ country, xml: '' })
-                                                                          .then(resClients => {
-                                                                            return getAllProductsServiceTS({ country, xml: '' })
-                                                                              .then((resProducts) => {
-                                                                                if (globalAccesoContingencia || personalAccesoContingencia) {
-                                                                                  let contingenciaDocsRequest = 0
-                                                                                  if (globalRequestAccesos) {
-                                                                                    console.log('CANTIDAD ACCCESOS GLOBAL', globalRequestAccesos)
-                                                                                    contingenciaDocsRequest = Number(globalRequestAccesos)
-                                                                                  }
-                                                                                  if (personalRequestAccesos) {
-                                                                                    console.log('CANTIDAD ACCESSOS PERSONAL', personalRequestAccesos)
-                                                                                    contingenciaDocsRequest = Number(personalRequestAccesos)
-                                                                                  }
-                                                                                  console.log('AL FINAL TIENE QUE PEDIR LA CANTIDAD DE: ', contingenciaDocsRequest)
-                                                                                  return getTalonarioContingencia({ batchId: 1, taxid, branches: infoFiscalUser.establecimientos, qtyRequested: contingenciaDocsRequest })
-                                                                                    .then(resTC => {
-                                                                                      const talonarioContingencia: {[key: string]: string|number} = {}
-                                                                                      infoFiscalUser.establecimientos.forEach((item, index) => {
-                                                                                        talonarioContingencia[item.numero] = resTC[index]
-                                                                                      })
-                                                                                      return getLogos({ taxid, establecimientos: infoFiscalUser?.establecimientos })
-                                                                                        .then(responseEstLogos => {
-                                                                                          return getDecimalsService({ taxid })
-                                                                                            .then(({ data }) => {
-                                                                                            // code: number
-                                                                                            // taxid: string,
-                                                                                            // country: string,
-                                                                                            // token: string,
-                                                                                            // userName: string,
-                                                                                            // APIMSTOKEN: string,
-                                                                                            // requestor: string,
-                                                                                            // tipoPersoneria?: string,
-                                                                                            // establecimientos?: Establecimiento[],
-                                                                                            // sharedData: SharedData,
-                                                                                            // infoFiscalUser: InfoFiscalUser,
-                                                                                            // configuracionApp?: ConfiguracionApp[],
-                                                                                            // configuracionGeneral?: ConfiguracionGeneral,
-                                                                                            // permisos?: any,
-                                                                                            // usuarios?: Usuario[],
-                                                                                            // clientes?: Cliente[],
-                                                                                            // productos?: Product[],
-                                                                                            // MIPOS?: MIPOS
-                                                                                            // talonarioContingencia: {[key: string]: string|number}
-                                                                                            // decimales: number
-                                                                                            // logos: Logos
-                                                                                              return {
-                                                                                                code: appCodes.ok,
-                                                                                                country,
-                                                                                                taxid,
-                                                                                                requestor,
-                                                                                                userName: user,
-                                                                                                token,
-                                                                                                infoFiscalUser,
-                                                                                                sharedData,
-                                                                                                establecimientos: Establecimientos,
-                                                                                                configuracionApp: arrayConfig.flat(),
-                                                                                                permisos,
-                                                                                                usuarios: res.data,
-                                                                                                clientes: resClients.data,
-                                                                                                productos: resProducts.data,
-                                                                                                talonarioContingencia,
-                                                                                                logos: responseEstLogos,
-                                                                                                decimales: data,
-                                                                                                APIMSTOKEN,
-                                                                                                MIPOS,
-                                                                                                urls
-                                                                                              }
-                                                                                            })
-                                                                                        })
-                                                                                    })
-                                                                                    .catch(resError => {
-                                                                                      console.log('ERROR EN GET TALONARIO LOGIN', resError)
-                                                                                      return {
-                                                                                        code: appCodes.processError
-                                                                                      }
-                                                                                    })
-                                                                                } else {
-                                                                                  return getLogos({ taxid, establecimientos: infoFiscalUser?.establecimientos })
-                                                                                    .then(async responseEstLogos => {
-                                                                                      return getDecimalsService({ taxid })
-                                                                                        .then(({ data }) => {
-                                                                                        // code: number
-                                                                                        // taxid: string,
-                                                                                        // country: string,
-                                                                                        // token: string,
-                                                                                        // userName: string,
-                                                                                        // APIMSTOKEN: string,
-                                                                                        // requestor: string,
-                                                                                        // tipoPersoneria?: string,
-                                                                                        // establecimientos?: Establecimiento[],
-                                                                                        // sharedData: SharedData,
-                                                                                        // infoFiscalUser: InfoFiscalUser,
-                                                                                        // configuracionApp?: ConfiguracionApp[],
-                                                                                        // configuracionGeneral?: ConfiguracionGeneral,
-                                                                                        // permisos?: any,
-                                                                                        // usuarios?: Usuario[],
-                                                                                        // clientes?: Cliente[],
-                                                                                        // productos?: Product[],
-                                                                                        // MIPOS?: MIPOS
-                                                                                        // talonarioContingencia: {[key: string]: string|number}
-                                                                                        // decimales: number
-                                                                                        // logos: Logos
-                                                                                          return {
-                                                                                            code: appCodes.ok,
-                                                                                            country,
-                                                                                            taxid,
-                                                                                            requestor,
-                                                                                            userName: user,
-                                                                                            token,
-                                                                                            infoFiscalUser,
-                                                                                            sharedData,
-                                                                                            establecimientos: Establecimientos,
-                                                                                            configuracionApp: arrayConfig.flat(),
-                                                                                            permisos,
-                                                                                            usuarios: res.data,
-                                                                                            clientes: resClients.data,
-                                                                                            productos: resProducts.data,
-                                                                                            logos: responseEstLogos,
-                                                                                            decimales: data,
-                                                                                            APIMSTOKEN,
-                                                                                            MIPOS,
-                                                                                            urls
-                                                                                          }
-                                                                                        })
-                                                                                    })
-                                                                                }
-                                                                              })
-                                                                          // }
-                                                                          // return resClients
-                                                                          })
-                                                                          .catch(err => {
-                                                                            return err
-                                                                          })
-                                                                      }
-                                                                      return res
-                                                                    })
-                                                                    .catch(err => {
-                                                                      return err
-                                                                    })
-                                                                })
-                                                            }
-                                                            return {
-                                                              code: appCodes.dataVacio
-                                                            }
-                                                          })
-                                                      } else {
-                                                        return {
-                                                          code: appCodes.processError
-                                                        }
-                                                      }
-                                                    })
-                                                }
-                                                return { code: appCodes.processError }
-                                              })
-                                              .catch(err => {
-                                                console.log('ERROR GET CONFIGURACION APP', err)
-                                                return { code: appCodes.processError }
-                                              })
-                                          }
-                                          return { code: appCodes.processError }
-                                        }).catch(err => {
-                                          console.log('ERROR GET ESTABLECIMIENTOS LOGIN', err)
-                                          return { code: appCodes.processError }
-                                        })
-                                    }
-                                    return { code: appCodes.processError }
-                                  }).catch(err => {
-                                    console.log('ERROR CATCH SHARED INFO RESPONSE', err)
-                                    return { code: appCodes.processError }
-                                  })
-                              }
-                              return { code: appCodes.processError }
-                            })
-                            .catch(err => {
-                              console.log('ERROR GET INFO FISCAL SERVICE', err)
-                              return { code: appCodes.processError }
-                            })
-                        }
-                        return { code: appCodes.processError }
-                      }).catch(err => {
-                        console.log('ERROR CATCH GET REQUESTOR ', err)
-                        return { code: appCodes.processError }
-                      })
-                  }
-                  return { code: appCodes.invalidData }
-                })
-                .catch(err => {
-                  console.log('ERROR LOGIN SERVICE API TOKEN MIPOS', err)
-                  return { code: appCodes.processError }
-                })
-            })
-            .catch(err => {
-              console.log('ERROR LOGIN SERVICE API TOKEN MS', err)
-              return { code: appCodes.processError }
+  const getLogosServiceTS = useCallback(async ({
+    taxid = '',
+    establecimientos,
+    country = ''
+  }: {
+    taxid: string
+    establecimientos: Establecimiento[]
+    country?: string
+    }): Promise<{
+      code: number
+      data: Logos
+      key: string
+}> => {
+    const URL_BASE: string = `https://digifact-logo.s3.amazonaws.com/${user?.country || country}/logo/${taxid}.jpg`
+    return ReactNativeBlobUtil
+      .fetch('GET', URL_BASE)
+      .then(res => res.base64())
+      .then(async response => {
+      // console.log('RESPONSE IMAGE', response)
+        const obj: Logos = {
+          logoGeneral: '',
+          logoPorEstablecimiento: { '-1': '' }
+        }
+        obj.logoGeneral = response?.length > 1000 ? response : ''
+        // obj.logoPorEstablecimiento = {}
+        let est: Establecimiento
+        for (est of establecimientos) {
+          const URL_BASE_EST = `https://digifact-logo.s3.amazonaws.com/${user?.country || country}/logo/${taxid}_${est?.numero}_APP.jpg`
+          await ReactNativeBlobUtil.fetch('GET', URL_BASE_EST)
+            .then(res => res.base64())
+            .then(responseEst => {
+              obj.logoPorEstablecimiento[est?.numero!] = responseEst?.length > 1000 ? responseEst : ''
             })
         }
-        return { code: appCodes.invalidData }
+        return {
+          code: appCodes.ok,
+          data: obj,
+          key: 'logos'
+        }
       })
       .catch(err => {
-        console.log('ERROR LOGIN SERVICE', err)
-        return { code: appCodes.processError }
+        console.log(`ERROR GET LOGOS SERVICE FOR ${country}`, err)
+        return {
+          code: appCodes.processError,
+          data: {
+            logoGeneral: '',
+            logoPorEstablecimiento: {}
+          },
+          key: 'logos'
+        }
       })
-  }
+  }, [user?.country])
+
+  const getDecimalesServiceTS = useCallback(async ({ country = '', requestor = '', taxid = '', userName = '' }: XmlProps): Promise<{
+    code: number
+    data: number
+    key: string
+  }> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getDecimalesXml({ country, requestor, taxid, userName })
+    })
+      .then(res => res.text())
+      .then(response => {
+        try {
+          const data = parser.parse(response)
+          console.log(JSON.stringify(data))
+          const responseData = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData
+          const rows = responseData?.ResponseData1 || 0
+          // console.log('DECIMALES', responseData)
+          // console.log('ROWS', rows)
+          if (rows > 0) {
+            const decimals = responseData?.ResponseDataSet?.diffgram?.NewDataSet?.T?.FELCONFIG_DECIMALES_CANTIDAD || 6
+            // console.log('DECIMALS CONFIG', decimals)
+            return {
+              code: appCodes.ok,
+              data: decimals,
+              key: 'decimales'
+            }
+          }
+          return {
+            code: appCodes.ok,
+            data: 2,
+            key: 'decimales'
+          }
+        } catch (err) {
+          console.log('ERROR EXCEPTION GET DECIMALS SERVICE', err)
+          return {
+            code: appCodes.ok,
+            data: 2,
+            key: 'decimales'
+          }
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET DECIMALES SERVICE', err)
+        return {
+          code: appCodes.ok,
+          data: 2,
+          key: 'decimales'
+        }
+      })
+  }, [])
 
   const getTokenMIPOSServiceTS = async ({
     country,
@@ -1945,88 +1554,6 @@ export const useApiService = () => {
             data: []
           }
         }
-        return {
-          code: appCodes.processError,
-          data: []
-        }
-      })
-  }
-
-  const getUsersByTaxid = async ({
-    taxid,
-    requestor,
-    country,
-    userName
-  }: FetchProps): Promise<{
-  code: number
-  data?: Usuario[]
-}> => {
-    const xml: string = `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>EXEC_STORED_PROC</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${userName}</UserName>
-      <Data1>GetUsersByTaxID</Data1>
-      <Data2>${country}|${taxid}</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-  </soap:Envelope>`
-
-    console.log('QUERY USER', xml)
-    return globalThis.fetch(urlWsSoap, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/xml' },
-      body: xml
-    })
-      .then(res => res.text())
-      .then(response => {
-        try {
-          const dataParser = parser.parse(response)
-          const rows =
-          dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-          if (rows > 0) {
-            const data =
-            dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-            const array = []
-            array.push(data)
-            const arrData: Usuario[] = array?.flat()?.map(e => {
-              const obj: Usuario = {
-                taxid: e.TID,
-                country: e.CC,
-                userName: e.UN,
-                firstNames: e.FN,
-                lastNames: e.LN,
-                nombre: `${e.FN} ${e.LN} `,
-                email: e.EM,
-                telefono: e.PH,
-                GR: e.GR
-              }
-              return obj
-            })
-            return {
-              code: appCodes.ok,
-              data: arrData
-            }
-          }
-          return {
-            code: appCodes.dataVacio,
-            data: []
-          }
-        } catch (ex) {
-          console.log('EXCEPTION GET USERS BY TAXID', ex)
-          return {
-            code: appCodes.processError,
-            data: []
-          }
-        }
-      })
-      .catch(err => {
-        console.log('CATCH ERROR GET USERS BY TAXID', err)
         return {
           code: appCodes.processError,
           data: []
@@ -2886,360 +2413,6 @@ export const useApiService = () => {
       })
   }
 
-  const getPermissionsCatalog = async ({
-    requestor,
-    taxid,
-    country,
-    userName
-  }: FetchProps): Promise<{
-  code: number;
-  data?: PermisosPadre[] | never[]
-} | undefined> => {
-    const bodyPermisos = `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>EXEC_STORED_PROC</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${country}.${taxid}.${userName}</UserName>
-      <Data1>SHARED_NFRONT_GETRIGHTSBYTIPO</Data1>
-      <Data2>TIPO|ADMIN</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-    </soap:Envelope>`
-
-    const bodyAcciones = `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
-xmlns:xsd= "http://www.w3.org/2001/XMLSchema"
-xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>SHARED_INFO_EFACE</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${country}.${taxid}.${userName}</UserName>
-      <Data1>SHARED_NFRONT_CATALOGO_ACTIONRIGHTS</Data1>
-      <Data2>STAXID|</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-</soap:Envelope>`
-
-    return globalThis.fetch(urlWsSoap, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/xml' },
-      body: bodyPermisos
-    }).then(res => res.text())
-      .then(response => {
-        try {
-          const dataParser = parser.parse(response)
-          const rows = dataParser?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
-          if (rows > 0) {
-            const data = dataParser?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T
-            const dataArr: any[] = []
-            dataArr.push(data)
-            return globalThis.fetch(urlWsSoap, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/xml' },
-              body: bodyAcciones
-            }).then(res => res.text())
-              .then(responseActions => {
-                const dataParserActions = parser.parse(responseActions)
-                const rowsActions = dataParserActions?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1
-                if (rowsActions > 0) {
-                  const dataActions = dataParserActions?.Envelope.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T
-                  const dataArrActions: any[] = []
-                  dataArrActions.push(dataActions)
-                  const acciones: PermisoPorAccion[] = dataArrActions?.flat()?.map(a => {
-                    const action: PermisoPorAccion = {
-                      idActionRight: a?.idActionRight,
-                      description: a?.actionRight,
-                      idRight: a?.idRight,
-                      page: a?.page,
-                      granted: false
-                    }
-                    return action
-                  }) || []
-                  const permisos: PermisosPadre[] = dataArr?.flat()?.map(e => {
-                    const obj: PermisosPadre = {
-                      idRight: e?.IDRight,
-                      description: e?.Descripcion,
-                      granted: false,
-                      actions: [acciones?.filter(a => a?.idRight === obj?.idRight)]?.flat()
-                    }
-                    return obj
-                  }) || []
-                  return {
-                    code: appCodes.ok,
-                    data: permisos
-                  }
-                }
-              }).catch(err => {
-                console.log('ERROR CATCH GET PERMISOS POR ACCION', err)
-                return {
-                  code: appCodes.processError,
-                  data: []
-                }
-              })
-          }
-          console.error('GET ALL PRODUCTS SERVICE DATA EMPTY')
-          return {
-            code: appCodes.dataVacio,
-            data: []
-          }
-        } catch (ex) {
-          console.error('EXCEPTION GET ALL PRODUCTS SERVICE', ex)
-          return {
-            code: appCodes.processError,
-            data: []
-          }
-        }
-      })
-      .catch(err => {
-        console.log('ERROR CATCH GET PERMISOS', err)
-        return {
-          code: appCodes.processError,
-          data: []
-        }
-      })
-  }
-
-  const getAllEstablecimientos = async ({ requestor, taxid, country, userName, usuario, signal }: FetchProps): Promise<{
-    code: number,
-    data?: Establecimiento[]
-}> => {
-    const bd = `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>EXEC_STORED_PROC</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${country}.${taxid}.${userName}</UserName>
-      <Data1>SHARED_NFRONT_GETINFOESTABLECIMIENTOSBYUSER</Data1>
-      <Data2>SCountryCode|${country}|Staxid|${taxid}|Username|${usuario}</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-  </soap:Envelope>`
-    return globalThis.fetch(urlWsSoap, {
-      method: 'post',
-      headers: { 'Content-Type': 'text/xml' },
-      body: bd
-    })
-      .then(res => res.text())
-      .then(response => {
-        try {
-          const dataParser = parser.parse(response)
-          const rows = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-          if (rows > 0) {
-            const data = dataParser.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-            const dataArr = []
-            dataArr.push(data)
-
-            const establecimientos: Establecimiento[] = dataArr.flat().map(e => {
-              const obj: Establecimiento = {
-                id: '',
-                codPostal: '1010',
-                departamento: '',
-                direccion: '',
-                estado: '',
-                municipio: '',
-                nombre: '',
-                numero: 0,
-                pais: '',
-                nit: ''
-              }
-              obj.estado = e.Estado
-              obj.codPostal = e.codPostal
-              obj.departamento = e.departamento
-              obj.municipio = e.municipio
-              obj.direccion = e.direccion
-              obj.id = e.dirEstablecimiento
-              obj.numero = e.ne
-              obj.nombre = e.nombre
-              obj.nit = e.nit
-              return obj
-            })
-            return {
-              code: appCodes.ok,
-              data: establecimientos
-            }
-          }
-          console.error('GET ALL PRODUCTS SERVICE DATA EMPTY')
-          return {
-            code: appCodes.dataVacio,
-            data: []
-          }
-        } catch (ex) {
-          console.error('EXCEPTION GET ALL PRODUCTS SERVICE', ex)
-          return {
-            code: appCodes.processError,
-            data: []
-          }
-        }
-      })
-      .catch(err => {
-        console.log('ERROR CATCH GET ALL ESTABLECIMIENTOS', err)
-        return {
-          code: appCodes.processError
-        }
-      })
-  }
-
-  const getUserPermissions = async ({ requestor, taxid, country, userName, usuario }: FetchProps): Promise<{
-  code: number,
-  data?: PermisosPadre[]
-}> => {
-    const query = `<?xml version="1.0" encoding="utf-8"?>
-  <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-    <soap:Body>
-      <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>EXEC_STORED_PROC</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-      <UserName>${country}.${taxid}.${userName}</UserName>
-      <Data1>SHARED_NFRONT_GETINFORIGHTS</Data1>
-      <Data2>SCountryCode|${country}|Taxid|${taxid}|UserName|${usuario}</Data2>
-      <Data3></Data3>
-      </RequestTransaction>
-    </soap:Body>
-  </soap:Envelope>`
-    return globalThis.fetch(urlWsSoap, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/xml' },
-      body: query
-    })
-      .then(res => res.text())
-      .then(responseFatherAccess => {
-        try {
-          const father = parser.parse(responseFatherAccess)
-          const rowsFather = father.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-
-          if (rowsFather > 0) {
-            const fatherRows = []
-            const dataFather = father.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-            fatherRows.push(dataFather)
-            const fatherAccess: PermisosPadre[] = fatherRows?.flat()?.map(e => {
-              const obj: PermisosPadre = {
-                idRight: 0,
-                description: '',
-                granted: true
-              }
-              obj.idRight = e.IDRight
-              obj.description = e.Descripcion
-              obj.granted = e.Granted
-              return obj
-            })
-            return {
-              code: appCodes.ok,
-              data: fatherAccess
-            }
-          } else {
-            return {
-              code: appCodes.dataVacio
-            }
-          }
-        } catch (ex) {
-          console.log('ERROR TRY CATCH PERMISOS PADRE', ex)
-          return {
-            code: appCodes.processError
-          }
-        }
-      })
-      .catch(err => {
-        console.log('ERROR CATCH USER PERMISSIONS', err)
-        return {
-          code: appCodes.processError
-        }
-      })
-  }
-
-  const getUserActions = async ({
-    requestor,
-    taxid,
-    country,
-    userName,
-    usuario
-  }: FetchProps): Promise<{
-  code: number;
-  data?: PermisoPorAccion[]
-}> => {
-    const query = `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-      <Requestor>${requestor}</Requestor>
-      <Transaction>SHARED_INFO_EFACE</Transaction>
-      <Country>${country}</Country>
-      <Entity>${taxid}</Entity>
-      <User>${requestor}</User>
-      <UserName>${country}.${taxid}.${userName}</UserName>
-      <Data1>SHARED_NFRONT_GETACTIONRIGHTS</Data1>
-      <Data2>STAXID|${taxid}|Username|${usuario}</Data2>
-      <Data3></Data3>
-    </RequestTransaction>
-  </soap:Body>
-</soap:Envelope>`
-    console.log('QUERY ACCIONES', query)
-    return globalThis.fetch(urlWsSoap, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/xml' },
-      body: query
-    })
-      .then(res => res.text())
-      .then(dataActions => {
-        try {
-          const actions = parser.parse(dataActions)
-          const rowsActions = actions.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseData1
-          if (rowsActions > 0) {
-            const actionRows = []
-            const dataActions = actions.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData.ResponseDataSet.diffgram.NewDataSet.T
-            actionRows.push(dataActions)
-            const actionAccess: PermisoPorAccion[] = actionRows?.flat()?.map(a => {
-              const action: PermisoPorAccion = {
-                description: '',
-                granted: true,
-                idActionRight: '',
-                idRight: '',
-                page: ''
-              }
-              action.idActionRight = a.idActionRight
-              action.description = a.actionRight
-              action.idRight = a.idRight
-              action.page = a.page
-              action.granted = a.granted
-              return action
-            })
-            return {
-              code: appCodes.ok,
-              data: actionAccess
-            }
-          }
-          return {
-            code: appCodes.dataVacio
-          }
-        } catch (ex) {
-          console.log('ERROR TRY CATCH USER ACTIONS', ex)
-          return {
-            code: appCodes.processError
-          }
-        }
-      })
-      .catch(err => {
-        console.log('ERROR CATCH USER ACTIONS', err)
-        return {
-          code: appCodes.processError
-        }
-      })
-  }
-
   const addEditUserActionsRights = async ({
     requestor,
     taxid,
@@ -3757,100 +2930,6 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
       })
   }
 
-  const getLogosServiceTS = async ({
-    taxid = '',
-    establecimientos,
-    country = ''
-  }: {
-    taxid: string
-    establecimientos: Establecimiento[]
-    country?: string
-}): Promise<Logos> => {
-    const URL_BASE: string = `https://digifact-logo.s3.amazonaws.com/${user?.country || country}/logo/${taxid}.jpg`
-    return ReactNativeBlobUtil
-      .fetch('GET', URL_BASE)
-      .then(res => res.base64())
-      .then(async response => {
-      // console.log('RESPONSE IMAGE', response)
-        const obj: Logos = {
-          logoGeneral: '',
-          logoPorEstablecimiento: { '-1': '' }
-        }
-        obj.logoGeneral = response?.length > 1000 ? response : ''
-        // obj.logoPorEstablecimiento = {}
-        let est: Establecimiento
-        for (est of establecimientos) {
-          const URL_BASE_EST = `https://digifact-logo.s3.amazonaws.com/${user?.country || country}/logo/${taxid}_${est?.numero}_APP.jpg`
-          await ReactNativeBlobUtil.fetch('GET', URL_BASE_EST)
-            .then(res => res.base64())
-            .then(responseEst => {
-              obj.logoPorEstablecimiento[est?.numero!] = responseEst?.length > 1000 ? responseEst : ''
-            })
-        }
-        return obj
-      })
-  }
-
-  const getDecimalsService = async ({ taxid = '' }) => {
-    return globalThis.fetch(urlWsSoap, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/xml' },
-      body: `<soap:Envelope
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-    <soap:Body>
-      <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-        <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
-        <Transaction>SHARED_INFO_EFACE</Transaction>
-        <Country>GT</Country>
-        <Entity>000000123456</Entity>
-        <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-        <UserName>GT.000000123456.DIGIFACT</UserName>
-        <Data1>SHARED_GETINFO_CONFIG</Data1>
-        <Data2>STAXID|${taxid}</Data2>
-        <Data3></Data3>
-      </RequestTransaction>
-    </soap:Body>
-  </soap:Envelope>`
-    })
-      .then(res => res.text())
-      .then(response => {
-        try {
-          const data = parser.parse(response)
-          const responseData = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.ResponseData
-          const rows = responseData?.ResponseData1 || 0
-          // console.log('DECIMALES', responseData)
-          // console.log('ROWS', rows)
-          if (rows > 0) {
-            const decimals = responseData?.ResponseDataSet?.diffgram?.NewDataSet?.T?.FELCONFIG_DECIMALES_CANTIDAD || 6
-            // console.log('DECIMALS CONFIG', decimals)
-            return {
-              code: appCodes.ok,
-              data: decimals
-            }
-          }
-          return {
-            code: appCodes.ok,
-            data: 6
-          }
-        } catch (err) {
-          console.log('ERROR EXCEPTION GET DECIMALS SERVICE', err)
-          return {
-            code: appCodes.ok,
-            data: 6
-          }
-        }
-      })
-      .catch(err => {
-        console.log('ERROR CATCH GET DECIMALES SERVICE', err)
-        return {
-          code: appCodes.ok,
-          data: 6
-        }
-      })
-  }
-
   const uploadLogoService = async ({ taxid = '', extension = 'jpg', codigoEstablecimiento = '', logobase64 = '', APIMSTOKEN = '' }) => {
     return globalThis.fetch(`${urlApiMs}/Logo/Upload`, {
       method: 'POST',
@@ -3884,6 +2963,7 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
         }
       })
   }
+
   const recoverPasswordService = async ({ recoverPassUser }: {recoverPassUser: string}): Promise<{code: number}> => {
     return globalThis.fetch(urlWsSoap, {
       method: 'post',
@@ -4061,7 +3141,6 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
   }
 
   return {
-    loginServiceTS,
     getCertTokenServiceTS,
     getAllClientsServiceTS,
     addEditClientServiceTS,
@@ -4081,6 +3160,8 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     getCatalogPermissionsFatherServiceTS,
     getCatalogPermissionsActionsServiceTS,
     getPermissionsServiceTS,
-    getAllUsersByTaxIdServiceTS
+    getAllUsersByTaxIdServiceTS,
+    getLogosServiceTS,
+    getDecimalesServiceTS
   }
 }

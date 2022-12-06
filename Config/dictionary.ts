@@ -1004,3 +1004,8 @@ export const DepartamentosGT: string[] = [
   'Totonicapán',
   'Zacapa'
 ]
+
+export const acceptedCountrys: {[key: string]: boolean} = {
+  GT: true,
+  PA: true
+}

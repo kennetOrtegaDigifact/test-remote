@@ -104,7 +104,7 @@ const NavigatorTabC: React.FC = () => {
               color: theme.gray25,
               size: 22
             }}
-            to={`/${user.country}/Consultas`}
+            to='/-/Consultas'
             label='Consultas'
           />
           <Tab

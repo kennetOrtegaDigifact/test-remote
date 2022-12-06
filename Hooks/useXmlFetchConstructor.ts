@@ -359,6 +359,28 @@ export const useXmlFetchConstructor = () => {
         </soap:Envelope>`
   }, [])
 
+  const getDecimalesXmlConstructor = useCallback(({ country = '', requestor = '', taxid = '', userName = '' }: XmlProps) => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+    <soap:Envelope
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+      xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+      <soap:Body>
+        <RequestTransaction ${requestTransaction?.[user?.country || country]}>
+          <Requestor>${user?.requestor || requestor}</Requestor>
+          <Transaction>SHARED_INFO_EFACE</Transaction>
+          <Country>${user?.country || country}</Country>
+          <Entity>${user?.taxid || taxid}</Entity>
+          <User>${user?.requestor || requestor}</User>
+          <UserName>${user?.country || country}.${user?.taxid || taxid}.${user?.userName || userName}</UserName>
+          <Data1>SHARED_GETINFO_CONFIG</Data1>
+          <Data2>STAXID|${user?.taxid || taxid}</Data2>
+          <Data3></Data3>
+        </RequestTransaction>
+      </soap:Body>
+    </soap:Envelope>`
+  }, [])
+
   return {
     getAllClientsXml: getAllClientsConstructor,
     addEditClientXml: addEditClientsConstructor,
@@ -374,6 +396,7 @@ export const useXmlFetchConstructor = () => {
     getCatalogPermissionsActionsXml: getCatalogPermissionsActionsXmlConstructor,
     getUserFatherPermissionsXml: getUserFatherPermissionsXmlConstructor,
     getUserActionsPermissionsXml: getUserActionsPermissionsXmlConstructor,
-    getUsersByTaxIdXml: getUsersByTaxIdXmlConstructor
+    getUsersByTaxIdXml: getUsersByTaxIdXmlConstructor,
+    getDecimalesXml: getDecimalesXmlConstructor
   }
 }

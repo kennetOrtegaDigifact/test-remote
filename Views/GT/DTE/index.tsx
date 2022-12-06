@@ -1,9 +1,9 @@
 import React from 'react'
 import { View, Text } from 'react-native'
-export const Dte: React.FC = () => {
+export const DteGT: React.FC = () => {
   return (
     <View>
-      <Text>DTE</Text>
+      <Text>DTE GUATEMALA</Text>
     </View>
   )
 }

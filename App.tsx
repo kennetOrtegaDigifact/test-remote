@@ -38,6 +38,8 @@ import { ToastProvider } from 'react-native-toast-notifications'
 import Icon from './Components/Icon'
 import { ToastProps } from 'react-native-toast-notifications/lib/typescript/toast'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
+import { DteGT } from './Views/GT/DTE'
+import { DtePA } from './Views/PA/DTE'
 
 const App = () => {
   LogBox.ignoreAllLogs()
@@ -220,10 +222,13 @@ const App = () => {
                     <Route path='/' element={<VerifyScreen />} />
                     <Route path='/Login' element={<Login />} />
                     <Route path='/GT' element={<SideMenu drawerRef={drawerRef}><Layout drawerRef={drawerRef}><Outlet /></Layout></SideMenu>}>
-                      <Route path='Consultas' element={<Consultas key={2} />} />
-                      <Route path='DTE' element={<Dte key={3} />} />
+                      <Route path='DTE' element={<DteGT key={3} />} />
+                    </Route>
+                    <Route path='/PA' element={<SideMenu drawerRef={drawerRef}><Layout drawerRef={drawerRef}><Outlet /></Layout></SideMenu>}>
+                      <Route path='DTE' element={<DtePA key={3} />} />
                     </Route>
                     <Route path='/-' element={<SideMenu drawerRef={drawerRef}><Layout drawerRef={drawerRef}><Outlet /></Layout></SideMenu>}>
+                      <Route path='Consultas' element={<Consultas key={2} />} />
                       <Route path='Dashboard' element={<Dashboard key={1} />} />
                       <Route path='Clientes' element={<Clientes key={5} />} />
                       <Route path='Productos' element={<Productos key={4} />} />
