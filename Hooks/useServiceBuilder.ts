@@ -53,6 +53,7 @@ export const useServiceBuilder = () => {
       taxid = taxid.padStart(12, '0').replace(/[^0-9Kk]/g, '').replace('k', 'K').replace('-', '').replace('/', '').trim()
     }
     const userInfo: userInterface = {
+      userName,
       country,
       taxid,
       cleanTaxId,
