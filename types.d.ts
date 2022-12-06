@@ -249,7 +249,6 @@ export interface userInterface {
     clientes?: Cliente[],
     productos?: Producto[],
     MIPOS?: MIPOS
-    talonarioContingencia: {[key: string]: string|number}
     decimales: number
     logos: Logos,
     urls: {[key: string]: string},
@@ -479,6 +478,7 @@ export interface UTILSDB {
     familias?: Familia[]
     segmentos?: Segmento[]
     units?: UnidadDeMedida[]
+    talonarioContingencia: {[key: string]: string|number}
 }
 
 export type FELDocumentTypes={
@@ -486,3 +486,5 @@ export type FELDocumentTypes={
     name: string
     no: number|string
 }
+
+export type XmlProps = { requestor?: string, taxid?: string, country?: string, userName?: string }

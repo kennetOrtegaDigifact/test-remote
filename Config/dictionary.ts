@@ -493,6 +493,81 @@ export const establecimientosFetchProps: ServiceFetchProps = {
   }
 }
 
+export const usersFetchProps: ServiceFetchProps = {
+  GT: {
+    // --------- GT MODEL ----------------------
+    // <CC>GT</CC>
+    // <TID>000000123456</TID>
+    // <UN>Avalos20</UN>
+    // <FN>Avalos</FN>
+    // <LN>Avalos</LN>
+    // <EM>carlos.casia@digifact.com.gt</EM>
+    // <PH>12345678</PH>
+    // <EXT>--</EXT>
+    // <FAX>--</FAX>
+    // <DR>0</DR>
+    // <GR>274877906927</GR>
+    keys: [
+      'taxid',
+      'country',
+      'userName',
+      'firstNames',
+      'lastNames',
+      'nombre',
+      'email',
+      'telefono',
+      'GR'
+    ],
+    props: {
+      taxid: 'TID',
+      country: 'CC',
+      userName: 'UN',
+      firstNames: 'FN',
+      lastNames: 'LN',
+      nombre: '',
+      email: 'EM',
+      telefono: 'PH',
+      GR: 'GR'
+    }
+  },
+  PA: {
+    // --------------- PA MODEL ----------------
+    // <CC>PA</CC>
+    // <TID>155704849-2-2021</TID>
+    // <UN>CGonzales</UN>
+    // <FN>Carlos</FN>
+    // <LN>Gonzales</LN>
+    // <EM>test@test.com</EM>
+    // <PH>123456</PH>
+    // <EXT />
+    // <FAX />
+    // <DR>0</DR>
+    // <GR>274877906943</GR>
+    keys: [
+      'taxid',
+      'country',
+      'userName',
+      'firstNames',
+      'lastNames',
+      'nombre',
+      'email',
+      'telefono',
+      'GR'
+    ],
+    props: {
+      taxid: 'TID',
+      country: 'CC',
+      userName: 'UN',
+      firstNames: 'FN',
+      lastNames: 'LN',
+      nombre: '',
+      email: 'EM',
+      telefono: 'PH',
+      GR: 'GR'
+    }
+  }
+}
+
 export const ITBMSDictionary: Array<{label: string, value: string, rate?: number}> = [
   {
     label: '-- Selecccione Tasa ITBMS  --',

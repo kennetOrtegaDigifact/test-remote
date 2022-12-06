@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { Cliente, Producto } from '../types'
+import { Cliente, Producto, XmlProps } from '../types'
 const requestTransaction: {[key: string]: string} = {
   GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
   PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
@@ -26,9 +26,8 @@ const Body: {
     }
 
 export const useXmlFetchConstructor = () => {
-  const { country, requestor, taxid, userName } = useSelector((state: ReduxState) => state.userDB)
   const user = useSelector((state: ReduxState) => state.userDB)
-  const getAllProductsConstructor = useCallback(() => {
+  const getAllProductsConstructor = useCallback(({ country = '', taxid = '', requestor = '', userName = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
             <soap:Envelope
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -36,15 +35,15 @@ export const useXmlFetchConstructor = () => {
                 xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
                 <soap:Body>
                     <RequestTransaction
-                        ${requestTransaction?.[country]}>
-                        <Requestor>${requestor}</Requestor>
+                        ${requestTransaction?.[user?.country || country]}>
+                        <Requestor>${user?.requestor || requestor}</Requestor>
                         <Transaction>EXEC_STORED_PROC</Transaction>
-                        <Country>${country}</Country>
-                        <Entity>${taxid}</Entity>
-                        <User>${requestor}</User>
-                        <UserName>${country}.${taxid}.${userName}</UserName>
+                        <Country>${user?.country || country}</Country>
+                        <Entity>${user?.taxid || taxid}</Entity>
+                        <User>${user?.requestor || requestor}</User>
+                        <UserName>${user?.country || country}.${user?.taxid || taxid}.${user?.userName || userName}</UserName>
                         <Data1>GetAllProductsAndServices</Data1>
-                        <Data2>${country}|${taxid}</Data2>
+                        <Data2>${user?.country || country}|${user?.taxid || taxid}</Data2>
                         <Data3></Data3>
                     </RequestTransaction>
                 </soap:Body>
@@ -54,6 +53,7 @@ export const useXmlFetchConstructor = () => {
   const deleteProductsConstructor = useCallback(({
     ean
   }: {ean: string|number}) => {
+    const { country, taxid, userName, requestor } = user
     return `<?xml version="1.0" encoding="utf-8"?>
             <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
                 <soap:Body>
@@ -74,6 +74,8 @@ export const useXmlFetchConstructor = () => {
 
   const addEditProductsConstructor = useCallback((item: Producto) => {
     const { name, price, unit, ean, familia, impuestos, segmento, tipo } = item
+    const { country, taxid, userName, requestor } = user
+
     const datos: {
       data: {[key: string]: string}
     } = {
@@ -104,7 +106,7 @@ export const useXmlFetchConstructor = () => {
             </soap:Envelope>`
   }, [])
 
-  const getAllClientsConstructor = useCallback(({ country = '', taxid = '', requestor = '', userName = '' }: {country?: string, taxid?: string, requestor?: string, userName?: string}) => {
+  const getAllClientsConstructor = useCallback(({ country = '', taxid = '', requestor = '', userName = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope
             xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
@@ -128,7 +130,9 @@ export const useXmlFetchConstructor = () => {
   }, [])
 
   const addEditClientsConstructor = useCallback((item: Cliente) => {
-    const { DV, cTaxId, cargo, corregimiento, correo, countryCode, departamento, direccion, distrito, municipio, nombreContacto, nombreOrga, provincia, telefono, tipoCliente } = item
+    const { DV, cTaxId, cargo, corregimiento, correo, countryCode, departamento, direccion, distrito, municipio, nombreContacto, provincia, telefono, tipoCliente } = item
+    const { country, taxid, userName, requestor } = user
+
     const datos: {
       data: {[key: string]: string}
     } = {
@@ -160,6 +164,8 @@ export const useXmlFetchConstructor = () => {
   }, [])
 
   const deleteClientXmlConstructor = useCallback((item: Cliente) => {
+    const { country, taxid, userName, requestor } = user
+
     const { cTaxId } = item
     return `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
               <soap:Body>
@@ -178,26 +184,26 @@ export const useXmlFetchConstructor = () => {
             </soap:Envelope>`
   }, [])
 
-  const getAccountDetailsConstructor = useCallback(({ taxid, countryCode }: {taxid: string, countryCode: string}) => {
+  const getAccountDetailsConstructor = useCallback(({ taxid = '', countryCode = '' }: {taxid?: string, countryCode?: string}) => {
     return `<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
           <soap:Body>
-            <RequestTransaction ${requestTransaction?.[countryCode]}>
+            <RequestTransaction ${requestTransaction?.[user?.country || countryCode]}>
             <Requestor>d06a8f37-2d87-43d2-b977-04d503532786</Requestor>
             <Transaction>SHARED_INFO_EFACE</Transaction>
-            <Country>${countryCode}</Country>
-            <Entity>${Body?.entity?.[countryCode]}</Entity>
+            <Country>${user?.country || countryCode}</Country>
+            <Entity>${Body?.entity?.[user?.country || countryCode]}</Entity>
             <User>d06a8f37-2d87-43d2-b977-04d503532786</User>
-            <UserName>${countryCode}.${Body?.entity?.[countryCode]}.${Body?.user?.[countryCode]}</UserName>
+            <UserName>${user?.country || countryCode}.${Body?.entity?.[user?.country || countryCode]}.${Body?.user?.[user?.country || countryCode]}</UserName>
             <Data1>SHARED_NFRONT_GETACCGRAL</Data1>
-            <Data2>SCountryCode|${countryCode}|STAXIDTOSEEK|${taxid}</Data2>
+            <Data2>SCountryCode|${user?.country || countryCode}|STAXIDTOSEEK|${user?.taxid || taxid}</Data2>
             <Data3></Data3>
             </RequestTransaction>
           </soap:Body>
         </soap:Envelope>`
   }, [])
 
-  const infoFiscalXMLConstructor = useCallback(({ requestor, userName, country = '', taxid }: { requestor: string, userName: string, country: string, taxid: string }) => {
+  const infoFiscalXMLConstructor = useCallback(({ requestor = '', userName = '', country = '', taxid = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
           <soap:Body>
@@ -216,7 +222,7 @@ export const useXmlFetchConstructor = () => {
         </soap:Envelope>`
   }, [])
 
-  const getAllEstablecimientosXmlConstructor = useCallback(({ requestor, userName, country = '', taxid }: { requestor?: string, userName?: string, country?: string, taxid?: string }) => {
+  const getAllEstablecimientosXmlConstructor = useCallback(({ requestor = '', userName = '', country = '', taxid = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
@@ -235,7 +241,7 @@ export const useXmlFetchConstructor = () => {
     </soap:Envelope>`
   }, [])
 
-  const getConfigAppXmlConstructor = useCallback(({ country = '', taxid = '' }: { country: string, taxid: string }) => {
+  const getConfigAppXmlConstructor = useCallback(({ country = '', taxid = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -258,7 +264,7 @@ export const useXmlFetchConstructor = () => {
     </soap:Envelope>`
   }, [])
 
-  const getCatalogPermissionsFatherXmlConstructor = useCallback(({ country = '' }: {country: string}) => {
+  const getCatalogPermissionsFatherXmlConstructor = useCallback(({ country = '' }: {country?: string}) => {
     return `<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
             <soap:Body>
@@ -277,7 +283,7 @@ export const useXmlFetchConstructor = () => {
         </soap:Envelope>`
   }, [])
 
-  const getCatalogPermissionsActionsXmlConstructor = useCallback(({ country = '' }: {country: string}) => {
+  const getCatalogPermissionsActionsXmlConstructor = useCallback(({ country = '' }: {country?: string}) => {
     return `<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
             <soap:Body>
@@ -296,7 +302,7 @@ export const useXmlFetchConstructor = () => {
         </soap:Envelope>`
   }, [])
 
-  const getUserFatherPermissionsXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: { requestor: string, taxid: string, country: string, userName: string }) => {
+  const getUserFatherPermissionsXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
@@ -315,7 +321,7 @@ export const useXmlFetchConstructor = () => {
   </soap:Envelope>`
   }, [])
 
-  const getUserActionsPermissionsXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: { requestor: string, taxid: string, country: string, userName: string }) => {
+  const getUserActionsPermissionsXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     <soap:Body>
@@ -334,6 +340,25 @@ export const useXmlFetchConstructor = () => {
   </soap:Envelope>`
   }, [])
 
+  const getUsersByTaxIdXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: XmlProps) => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction ${requestTransaction?.[user?.country || country]}>
+              <Requestor>${user?.requestor || requestor}</Requestor>
+              <Transaction>EXEC_STORED_PROC</Transaction>
+              <Country>${user?.country || country}</Country>
+              <Entity>${user?.taxid || taxid}</Entity>
+              <User>${user?.requestor || requestor}</User>
+              <UserName>${user?.country || country}.${user?.taxid || taxid}.${user?.userName || userName}</UserName>
+              <Data1>GetUsersByTaxID</Data1>
+              <Data2>${user?.country || country}|${user?.taxid || taxid}</Data2>
+              <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
   return {
     getAllClientsXml: getAllClientsConstructor,
     addEditClientXml: addEditClientsConstructor,
@@ -348,6 +373,7 @@ export const useXmlFetchConstructor = () => {
     getCatalogPermissionsFatherXml: getCatalogPermissionsFatherXmlConstructor,
     getCatalogPermissionsActionsXml: getCatalogPermissionsActionsXmlConstructor,
     getUserFatherPermissionsXml: getUserFatherPermissionsXmlConstructor,
-    getUserActionsPermissionsXml: getUserActionsPermissionsXmlConstructor
+    getUserActionsPermissionsXml: getUserActionsPermissionsXmlConstructor,
+    getUsersByTaxIdXml: getUsersByTaxIdXmlConstructor
   }
 }
