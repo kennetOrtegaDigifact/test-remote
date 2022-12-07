@@ -445,6 +445,25 @@ export type ComponentSchema = {
     }
 }
 
+export type ConsultasComponentSchema = {
+    [key: string]: {
+        labels: {
+            searchLabel: string,
+            [key: string]: string
+        },
+        searchKeys?: string[],
+        functions: {
+            print: (props: any) => Promise<any>
+            fetchData: (props: any) => Promise<any>
+            html: (props: any) => Promise<any>
+            anular: (props: any) => Promise<any>
+            pdf: (props: any) => Promise<any>
+            sendCorreo: (props: any) => Promise<any>
+            share: (props: any) => Promise<any>
+        }
+    }
+}
+
 type UnidadDeMedida = {
     label: string
     medida: string
