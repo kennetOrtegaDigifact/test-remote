@@ -118,7 +118,7 @@ export const useXmlFetchConstructor = () => {
                 <Requestor>${user?.requestor || requestor}</Requestor>
                 <Transaction>SHARED_INFO_EFACE</Transaction>
                 <Country>${user?.country || country}</Country>
-                <Entity>${taxid}</Entity>
+                <Entity>${user?.taxid || taxid}</Entity>
                 <User>${user?.requestor || requestor}</User>
                 <UserName>${user?.userName || userName}</UserName>
                 <Data1>SHARED_NFRONT_GETCUSTOMERBYSTAXID_2</Data1>
@@ -127,7 +127,7 @@ export const useXmlFetchConstructor = () => {
                 </RequestTransaction>
             </soap:Body>
         </soap:Envelope>`
-  }, [user?.country, user?.requestor, user?.userName])
+  }, [user?.country, user?.requestor, user?.userName, user?.taxid])
 
   const addEditClientsConstructor = useCallback((item: Cliente) => {
     const { DV, cTaxId, cargo, corregimiento, correo, countryCode, departamento, direccion, distrito, municipio, nombreContacto, provincia, telefono, tipoCliente } = item
@@ -552,6 +552,29 @@ export const useXmlFetchConstructor = () => {
     </soap:Envelope>`
   }, [])
 
+  const recoverPasswordXmlConstructor = useCallback((props: XmlProps) => {
+    const {
+      country = '',
+      taxid = '',
+      userName = ''
+    } = props
+    return `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Body>
+      <RequestTransaction ${requestTransaction?.[user?.country || country]}>
+        <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+        <Transaction>PASSWORD_FORGOT</Transaction>
+        <Country>${user?.country || country}</Country>
+        <Entity>${Body?.entity?.[user?.country || country]}</Entity>
+        <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+        <UserName>${country}.${taxid}.${userName}</UserName>
+         <Data1></Data1>
+        <Data2></Data2>
+        <Data3></Data3>
+      </RequestTransaction>
+    </soap:Body>
+  </soap:Envelope>`
+  }, [])
+
   return {
     getAllClientsXml: getAllClientsConstructor,
     addEditClientXml: addEditClientsConstructor,
@@ -577,6 +600,7 @@ export const useXmlFetchConstructor = () => {
     getIncoTermsXml: getIncoTermsXmlConstructor,
     getSegmentosXml: getSegmentosXmlConstructor,
     getFamiliasXml: getFamiliasXmlConstructor,
-    getUnitMeasurementXml: getUnitMeasurementXmlConstructor
+    getUnitMeasurementXml: getUnitMeasurementXmlConstructor,
+    recoverPasswordXml: recoverPasswordXmlConstructor
   }
 }

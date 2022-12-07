@@ -6,14 +6,13 @@ import { ReduxState } from '../Redux/store'
 import { formulario, FormularioPerCountry } from '../types'
 import { useValidator } from './useValidator'
 
-export const useFormSchema = ({
-  onBlur = (values) => { console.log('UNHANDLED ONBLUR', values) }
-}
+export const useFormSchema = (props
   : {
     onBlur?: (values?: any) => void
   }) => {
+  const { onBlur = (values) => { console.log('UNHANDLED ONBLUR', values) } } = props
   const { clientesValidatorSchema, selectProductoValidatorSchema } = useValidator()
-  const { country, establecimientos, infoFiscalUser, usuarios } = useSelector((state: ReduxState) => state.userDB)
+  const { country = '', establecimientos, infoFiscalUser, usuarios } = useSelector((state: ReduxState) => state.userDB)
   const { countryCodes, corregimientos, provincias, distritos, units, segmentos, familias } = useSelector((state: ReduxState) => state.utilsDB)
 
   const loginFormSchema: Array<formulario> = [

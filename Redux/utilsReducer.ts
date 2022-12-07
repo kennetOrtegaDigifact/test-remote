@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { State } from 'react-native-gesture-handler'
 import { UTILSDB } from '../types'
 
 const initialUtils: UTILSDB = {
@@ -17,7 +18,12 @@ export const utilsDB = createSlice({
   name: 'utils',
   initialState: initialUtils,
   reducers: {
-    setUtils: (state, action) => action.payload,
+    setUtils: (state, action) => {
+      return {
+        ...state,
+        ...action.payload
+      }
+    },
     deleteUtils: () => initialUtils
   }
 })

@@ -96,6 +96,7 @@ export const useServiceBuilder = () => {
         })
       }
     }
+    userInfo.requestor = requestor || ''
     const utilitiesDB: UTILSDB = {}
     for (const s of utilitiesServices?.[country]) {
       await s({ userName, cleanTaxId, country, password, taxid }).then(res => {

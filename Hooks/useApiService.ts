@@ -53,7 +53,8 @@ export const useApiService = () => {
     getIncoTermsXml,
     getFamiliasXml,
     getSegmentosXml,
-    getUnitMeasurementXml
+    getUnitMeasurementXml,
+    recoverPasswordXml
   } = useXmlFetchConstructor()
   const { country } = useSelector((state: ReduxState) => state.userDB)
   const user = useSelector((state: ReduxState) => state.userDB)
@@ -161,17 +162,19 @@ export const useApiService = () => {
       })
   }, [])
 
-  const getAccountDetailsServiceTS = useCallback(async ({
-    country,
-    taxid
-  }: {
-    country: string
-    taxid: string
+  const getAccountDetailsServiceTS = useCallback(async (props: {
+    country?: string
+    taxid?: string
   }): Promise<{
     code: number
     data: SharedData
     key: string
   }> => {
+    const {
+      country = '',
+      taxid = ''
+    } = props
+
     return globalThis.fetch(urlsByCountry?.[country]?.urlWsSoap || '', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
@@ -216,22 +219,23 @@ export const useApiService = () => {
       })
   }, [])
 
-  const getInfoFiscalServiceTS = useCallback(async ({
-    country,
-    taxid,
-    requestor,
-    userName
-  }: {
-    country: string
-    taxid: string
-    requestor: string
-    userName: string
+  const getInfoFiscalServiceTS = useCallback(async (props: {
+    country?: string
+    taxid?: string
+    requestor?: string
+    userName?: string
   }): Promise<{
     code: number
     data: InfoFiscalUser
     key: string
   }> => {
-    return globalThis.fetch(urlsByCountry?.[country]?.urlWsSoap || '', {
+    const {
+      country = '',
+      taxid = '',
+      requestor = '',
+      userName = ''
+    } = props
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
       body: infoFiscalXml({ country, taxid, requestor, userName })
@@ -283,12 +287,7 @@ export const useApiService = () => {
       })
   }, [])
 
-  const getAllEstablecimientosServiceTS = useCallback(async ({
-    country,
-    taxid,
-    requestor,
-    userName
-  }: {
+  const getAllEstablecimientosServiceTS = useCallback(async (props: {
       country?: string
       taxid?: string
       requestor?: string
@@ -297,9 +296,15 @@ export const useApiService = () => {
     code: number
     data: Establecimiento[]
     key: string
-  }> => {
+    }> => {
+    const {
+      country = '',
+      taxid = '',
+      requestor = '',
+      userName = ''
+    } = props
     // console.log('---------- XML ESTABLECIMIENTOS ------------', getAllEstablecimientosXml({ country, requestor, taxid, userName }))
-    return globalThis.fetch(urlsByCountry?.[user?.country || country || '']?.urlWsSoap || '', {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
       body: getAllEstablecimientosXml({ country, requestor, taxid, userName })
@@ -344,17 +349,18 @@ export const useApiService = () => {
       })
   }, [user?.country])
 
-  const getConfigAppServiceTS = useCallback(async ({
-    country = '',
-    taxid = ''
-  }: {
-    country: string
-    taxid: string
+  const getConfigAppServiceTS = useCallback(async (props: {
+    country?: string
+    taxid?: string
   }): Promise<{
     code: number
     data: ConfiguracionApp[]
     key: string
   }> => {
+    const {
+      country = '',
+      taxid = ''
+    } = props
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
@@ -699,13 +705,7 @@ export const useApiService = () => {
       })
   }, [])
 
-  const getAllClientsServiceTS = useCallback(async ({
-    country = '',
-    signal = new AbortController().signal,
-    taxid,
-    requestor,
-    userName
-  }: {
+  const getAllClientsServiceTS = useCallback(async (props: {
     country?: string
     signal?: AbortSignal
     taxid?: string
@@ -716,6 +716,14 @@ export const useApiService = () => {
     data: Cliente[]
     key: string
 }> => {
+    const {
+      country = '',
+      signal = new AbortController().signal,
+      taxid = '',
+      requestor = '',
+      userName = ''
+    } = props
+    // console.log('------------ GET ALL CLIENTS XML ------------------', getAllClientsXml({ country, requestor, taxid, userName }))
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       signal,
       headers: { 'Content-Type': 'text/xml' },
@@ -784,23 +792,24 @@ export const useApiService = () => {
       })
   }, [user?.country])
 
-  const getAllProductsServiceTS = useCallback(async ({
-    signal = new AbortController().signal,
-    taxid = '',
-    country = '',
-    userName = '',
-    requestor = ''
-  }: {
+  const getAllProductsServiceTS = useCallback(async (props: {
     signal?: AbortSignal,
-    taxid: string
-    country: string
-    userName: string
-    requestor: string
+    taxid?: string
+    country?: string
+    userName?: string
+    requestor?: string
 }): Promise<{
     code: number
     data: Producto[],
     key: string
 }> => {
+    const {
+      signal = new AbortController().signal,
+      taxid = '',
+      country = '',
+      userName = '',
+      requestor = ''
+    } = props
     const xml = getAllProductsXml({ country, requestor, taxid, userName })
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       signal,
@@ -1552,6 +1561,45 @@ export const useApiService = () => {
         }
       })
   }
+
+  const recoverPasswordServiceTS = useCallback(async (props: XmlProps): Promise<{code: number}> => {
+    const {
+      country = '',
+      taxid = '',
+      userName = ''
+    } = props
+    return globalThis.fetch(urlWsSoap, {
+      method: 'post',
+      headers: { 'Content-Type': 'text/xml' },
+      body: recoverPasswordXml({ country, taxid, userName })
+    })
+      .then(res => res.text())
+      .then(response => {
+        const data = parser.parse(response)
+        console.log('DATA RESPONSE RECOVER PASSWORD', data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response)
+        const responseCode = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response
+        if (responseCode?.Code === appCodes.ok) {
+          console.log('RECUPERAR CONTRASEÑA OK')
+          return {
+            code: appCodes.ok
+          }
+        } else if (responseCode?.Code === 3085) { // NO EXISTE EL USUARIO
+          return {
+            code: appCodes.invalidData
+          }
+        } else {
+          return {
+            code: appCodes.processError
+          }
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH RECOVER PASSWORD SERVICE ', err)
+        return {
+          code: appCodes.processError
+        }
+      })
+  }, [])
 
   const getDashboardService = async ({
     taxid,
@@ -3398,54 +3446,6 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
       })
   }
 
-  const recoverPasswordService = async ({ recoverPassUser }: {recoverPassUser: string}): Promise<{code: number}> => {
-    return globalThis.fetch(urlWsSoap, {
-      method: 'post',
-      headers: { 'Content-Type': 'text/xml' },
-      body: `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-    <soap:Body>
-      <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-        <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
-        <Transaction>PASSWORD_FORGOT</Transaction>
-        <Country>GT</Country>
-        <Entity>000000123456</Entity>
-        <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-        <UserName>${recoverPassUser}</UserName>
-         <Data1></Data1>
-        <Data2></Data2>
-        <Data3></Data3>
-      </RequestTransaction>
-    </soap:Body>
-  </soap:Envelope>`
-    })
-      .then(res => res.text())
-      .then(response => {
-        const data = parser.parse(response)
-        console.log('DATA RESPONSE RECOVER PASSWORD', data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response)
-        const responseCode = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response
-        if (responseCode?.Code === appCodes.ok) {
-          console.log('RECUPERAR CONTRASEÑA OK')
-          return {
-            code: appCodes.ok
-          }
-        } else if (responseCode?.Code === 3085) { // NO EXISTE EL USUARIO
-          return {
-            code: appCodes.invalidData
-          }
-        } else {
-          return {
-            code: appCodes.processError
-          }
-        }
-      })
-      .catch(err => {
-        console.log('ERROR CATCH RECOVER PASSWORD SERVICE ', err)
-        return {
-          code: appCodes.processError
-        }
-      })
-  }
-
   const getAllPerfilFacturacionServiceTS = async ({
     taxid = '',
     country = ''
@@ -3604,6 +3604,7 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     getIncoTermsServiceTS,
     getSegmentosServiceTS,
     getFamiliasServiceTS,
-    getUnitMeasurementServiceTS
+    getUnitMeasurementServiceTS,
+    recoverPasswordServiceTS
   }
 }

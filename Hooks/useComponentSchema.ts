@@ -276,7 +276,7 @@ export const useComponentSchema = () => {
     }
   }
   return {
-    productosComponentSchema: products[country],
-    clientesComponentSchema: clientes[country]
+    productosComponentSchema: products[country || ''],
+    clientesComponentSchema: clientes[country || '']
   }
 }
