@@ -73,6 +73,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
     )
     return () => subscription?.remove()
   }, [])
+
   return (
     <ScrollView nestedScrollEnabled style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
       <Text
@@ -82,7 +83,7 @@ export const Dashboard: React.FC = React.memo(function Dashboard () {
           margin: 7 / PixelRatio.getFontScale(),
           color: theme.gray75
         }}
-      >Bienvenido{user?.userName?.length ? `, ${user.infoFiscalUser.nombre}` : ''}
+      >Bienvenido{user?.userName?.length ? `, ${user?.infoFiscalUser?.nombre || user?.infoFiscalUser?.razonSocial}` : ''}
       </Text>
 
       {/** ------------- CARROUSELL ------------- */}

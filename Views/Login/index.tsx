@@ -55,7 +55,7 @@ export const Login: React.FC = () => {
           })
           new Promise((resolve) => {
             resolve(dispatch(addUser(res?.data?.user || {})))
-          }).then(() => {
+          }).then(async () => {
             return new Promise((resolve) => {
               resolve(setUtils(res?.data?.utilities || {}))
             })
@@ -119,24 +119,24 @@ export const Login: React.FC = () => {
     }
   }, [])
 
-  useEffect(() => {
-    // const taxid = '109162544'
-    // const country = 'GT'
-    // const userName = '109162544'
-    // const password = 'Kq290302*'
+  // useEffect(() => {
+  //   // const taxid = '109162544'
+  //   // const country = 'GT'
+  //   // const userName = '109162544'
+  //   // const password = 'Kq290302*'
 
-    // const taxid = '123456'
-    // const country = 'GT'
-    // const userName = 'luis1234567'
-    // const password = 'fw?Uq3f+'
+  //   // const taxid = '123456'
+  //   // const country = 'GT'
+  //   // const userName = 'luis1234567'
+  //   // const password = 'fw?Uq3f+'
 
-    const taxid = '155704849-2-2021'
-    const country = 'PA'
-    const userName = 'FRANK'
-    const password = 'Digifact21*'
+  //   // const taxid = '155704849-2-2021'
+  //   // const country = 'PA'
+  //   // const userName = 'FRANK'
+  //   // const password = 'Digifact21*'
 
-    loginBuilder({ country, userName, taxid, password })
-  }, [])
+  //   loginBuilder({ country, userName, taxid, password })
+  // }, [])
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
