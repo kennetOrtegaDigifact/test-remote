@@ -1,4 +1,4 @@
-import { userInterface } from '../types'
+import { Producto, userInterface } from '../types'
 
 export const userTemplate: userInterface = {
   taxid: '',
@@ -292,4 +292,20 @@ export const actionsPermissionsTemplate = {
       }
     }
   }
+}
+
+export const productTemplate: Producto = {
+  country: '',
+  taxid: '',
+  name: '',
+  price: 0,
+  unit: '',
+  impuestos: {},
+  ean: '',
+  segmento: 0,
+  familia: 0,
+  quantity: 1,
+  discount: 0,
+  tipo: '',
+  selected: false
 }

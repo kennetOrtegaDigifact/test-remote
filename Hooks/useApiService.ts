@@ -742,12 +742,12 @@ export const useApiService = () => {
             const data: Cliente[] = container?.flat()?.map((e: Cliente) => {
               const obj: Cliente|any = {}
               // Primero creamos el objeto base con sus key por pais ya que el tipo Cliente lleva mas props dependendiendo del pais
-              clientFetchProps?.[country]?.keys?.forEach((key: string) => {
+              clientFetchProps?.[user?.country || country]?.keys?.forEach((key: string) => {
                 // console.log('--------- KEY -------------', key, country)
                 // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
-                obj[key as keyof typeof obj] = regexSpecialChars(e?.[clientFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+                obj[key as keyof typeof obj] = regexSpecialChars(e?.[clientFetchProps?.[user?.country || country]?.props?.[key] as keyof typeof e]?.toString() || '')
                 if (key === 'cargo' && country === 'PA') {
-                  const cargo: {Tipo?: string, Estado?: string} = JSON?.parse(e?.[clientFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString()?.replace(/\\/gi, '') || '{}') || {}
+                  const cargo: {Tipo?: string, Estado?: string} = JSON?.parse(e?.[clientFetchProps?.[user?.country || country]?.props?.[key] as keyof typeof e]?.toString()?.replace(/\\/gi, '') || '{}') || {}
                   obj.tipoContribuyente = cargo?.Tipo || ''
                   obj.estado = cargo?.Estado || ''
                 }
@@ -811,6 +811,7 @@ export const useApiService = () => {
       requestor = ''
     } = props
     const xml = getAllProductsXml({ country, requestor, taxid, userName })
+    console.log('-------------- GET ALL PRODUCTS XML -------------', xml)
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       signal,
       method: 'POST',
@@ -834,11 +835,11 @@ export const useApiService = () => {
                 selected: false
               }
               // Primero creamos el objeto base con sus key por pais ya que el tipo Producto lleva mas props dependendiendo del pais
-              productFetchProps?.[country]?.keys?.forEach((key: string) => {
+              productFetchProps?.[user?.country || country]?.keys?.forEach((key: string) => {
               // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
-                obj[key as keyof typeof obj] = e?.[productFetchProps?.[country]?.props?.[key]] || ''
-                if (key === 'impuestos') { // hay casos especiales donde hay que traducir un JSON. esto en GT no sucede
-                  obj[key] = JSON.parse(e?.[productFetchProps?.[country]?.props?.[key]] || '{}')
+                obj[key as keyof typeof obj] = e?.[productFetchProps?.[user?.country || country]?.props?.[key]] || ''
+                if (key === 'impuestos' && (user?.country || country) === 'PA') { // hay casos especiales donde hay que traducir un JSON. esto en GT no sucede
+                  obj[key] = JSON.parse(e?.[productFetchProps?.[user?.country || country]?.props?.[key]] || '{}')
                 }
               })
               // console.log('PRODUCTO FINAL', obj)
@@ -908,10 +909,10 @@ export const useApiService = () => {
           const data: Usuario[] = container?.flat()?.map((e: Usuario) => {
             const obj: Usuario|any = {}
             // Primero creamos el objeto base con sus key por pais ya que el tipo Usuario lleva mas props dependendiendo del pais
-            usersFetchProps?.[country]?.keys?.forEach((key: string) => {
+            usersFetchProps?.[user?.country || country]?.keys?.forEach((key: string) => {
               // console.log('--------- KEY -------------', key, country)
               // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
-              obj[key as keyof typeof obj] = regexSpecialChars(e?.[usersFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[usersFetchProps?.[user?.country || country]?.props?.[key] as keyof typeof e]?.toString() || '')
               // if (key === 'nombre') {
               //   obj[key as keyof typeof obj] = regexSpecialChars(`${e?.FN?.toString()} ${e?.LN?.toString()}`)
               // }
@@ -1430,16 +1431,17 @@ export const useApiService = () => {
       })
   }, [user?.country])
 
-  const getUnitMeasurementServiceTS = useCallback(async ({
-    country = ''
-  }: {
+  const getUnitMeasurementServiceTS = useCallback(async (props: {
     country?: string
   }): Promise<{
     code: number
     data: UnidadDeMedida[]
     key: string
-}> => {
-    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+  }> => {
+    const {
+      country = ''
+    } = props
+    return globalThis.fetch(urlsByCountry?.PA?.urlWsSoap || '', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
       body: getUnitMeasurementXml()
@@ -1457,9 +1459,12 @@ export const useApiService = () => {
             // console.log('------------- DISTRITOS ELEMENT --------------', e)
             const obj: UnidadDeMedida|any = {}
             // Primero creamos el objeto base con sus key por pais ya que el tipo UnidadDeMedida lleva mas props dependendiendo del pais
-            unitMeasurementFetchProps?.[country]?.keys?.forEach((key: string) => {
+            unitMeasurementFetchProps?.[user?.country || country]?.keys?.forEach((key: string) => {
               // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
-              obj[key as keyof typeof obj] = regexSpecialChars(e?.[unitMeasurementFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[unitMeasurementFetchProps?.[user?.country || country]?.props?.[key] as keyof typeof e]?.toString() || '')
+              if (key === 'label') {
+                obj[key as keyof typeof obj] = `${e?.Medida || ''} - ${e?.Nombre || ''}`
+              }
             })
             return obj
           })
@@ -2537,7 +2542,7 @@ export const useApiService = () => {
   code: number
 }> => {
     const xml = addEditProductsXml(item)
-    return globalThis.fetch(urlWsSoap, {
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
       method: 'post',
       headers: { 'Content-Type': 'text/xml; charset=UTF-8' },
       body: xml
@@ -2582,7 +2587,7 @@ export const useApiService = () => {
     }): Promise<{code: number}> => {
     const { ean } = item
     const xml = deleteProductsXml({ ean: ean || '' })
-    return globalThis.fetch(urlWsSoap, {
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
       method: 'post',
       headers: { 'Content-Type': 'text/xml' },
       body: xml
@@ -2825,7 +2830,7 @@ export const useApiService = () => {
   const addEditClientServiceTS = async ({ signal = new AbortController().signal, item }: { signal?: AbortSignal, item: Cliente}): Promise<{code: number}> => {
     const xml = addEditClientXml(item)
     console.log('XML A AGREGAR/EDITAR CLIENTE', xml)
-    return globalThis.fetch(urlWsSoap, {
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
       signal,
       method: 'POST',
       headers: {
@@ -2862,7 +2867,7 @@ export const useApiService = () => {
   const deleteClientServiceTS = async ({ item, signal = new AbortController().signal }: {item: Cliente, signal?: AbortSignal}): Promise<{code: number}> => {
     const xml = deleteClientXml(item)
     console.log('COMOOO', xml)
-    return globalThis.fetch(urlWsSoap, {
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
       signal,
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },

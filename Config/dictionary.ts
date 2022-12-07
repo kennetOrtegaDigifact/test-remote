@@ -1119,5 +1119,51 @@ export const unitMeasurementFetchProps: ServiceFetchProps = {
       simbolo: 'Simbolo',
       comentarios: 'Comentario'
     }
+  },
+  GT: {
+    keys: [
+      'label',
+      'medida',
+      'sistema',
+      'nombre',
+      'simbolo',
+      'comentarios'
+    ],
+    props: {
+      label: '',
+      medida: 'Medida',
+      sistema: 'Sistema',
+      nombre: 'Nombre',
+      simbolo: 'Simbolo',
+      comentarios: 'Comentario'
+    }
   }
 }
+
+export const unitDictionaryGT: string[] = [
+  'CJ',
+  'EA',
+  'GAL',
+  'HRS',
+  'KG',
+  'LTR',
+  'MTS',
+  'PCE',
+  'PZA',
+  'SER',
+  'UNO',
+  'CA',
+  'YD',
+  'FRD',
+  'LBS',
+  'PAR',
+  'PKG',
+  'UNI',
+  'QQ',
+  'DZ',
+  'DOC',
+  'PIE',
+  'MP',
+  'OZ',
+  'MT2'
+]

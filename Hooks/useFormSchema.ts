@@ -1,9 +1,13 @@
 import { yupResolver } from '@hookform/resolvers/yup'
-import { useSelector } from 'react-redux'
-import { DepartamentosGT, ITBMSDictionary, LoginCountries, MunicipiosGT, tiposDocumentoGT, tiposDocumentoPA } from '../Config/dictionary'
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { appCodes } from '../Config/appCodes'
+import { DepartamentosGT, ITBMSDictionary, LoginCountries, MunicipiosGT, tiposDocumentoGT, tiposDocumentoPA, unitDictionaryGT } from '../Config/dictionary'
 import { fonts, theme } from '../Config/theme'
 import { ReduxState } from '../Redux/store'
+import { setUtils } from '../Redux/utilsReducer'
 import { formulario, FormularioPerCountry } from '../types'
+import { useApiService } from './useApiService'
 import { useValidator } from './useValidator'
 
 export const useFormSchema = (props
@@ -11,9 +15,25 @@ export const useFormSchema = (props
     onBlur?: (values?: any) => void
   }) => {
   const { onBlur = (values) => { console.log('UNHANDLED ONBLUR', values) } } = props
+  const { getUnitMeasurementServiceTS } = useApiService()
+  const dispatch = useDispatch()
   const { clientesValidatorSchema, selectProductoValidatorSchema } = useValidator()
   const { country = '', establecimientos, infoFiscalUser, usuarios } = useSelector((state: ReduxState) => state.userDB)
   const { countryCodes, corregimientos, provincias, distritos, units, segmentos, familias } = useSelector((state: ReduxState) => state.utilsDB)
+
+  useEffect(() => {
+    if (!units?.length) {
+      getUnitMeasurementServiceTS({ country })
+        .then(res => {
+          console.log(res)
+          if (res?.code === appCodes.ok) {
+            dispatch(setUtils({
+              units: res?.data || {}
+            }))
+          }
+        })
+    }
+  }, [])
 
   const loginFormSchema: Array<formulario> = [
     {
@@ -1086,10 +1106,351 @@ export const useFormSchema = (props
       observables: ['countryCode']
     }
   }
+
+  const productos: FormularioPerCountry = {
+    PA: {
+      schema: [
+        {
+          name: 'name',
+          placeholder: 'Descripcion',
+          label: 'Descripcion del Producto:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'text-box',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'La descripcion del producto es obligatoria'
+          }
+        },
+        {
+          name: 'ean',
+          placeholder: 'Codigo',
+          label: 'Codigo del Producto:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'barcode',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El codigo del producto es obligatorio'
+          }
+        },
+        {
+          name: 'price',
+          placeholder: 'Precio Base',
+          label: 'Precio del Producto:',
+          required: true,
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'pricetag',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El precio del producto es obligatorio'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Tasa ITBMS: ',
+          required: true,
+          name: 'ITBMS',
+          icon: {
+            name: 'scale-balance',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: ITBMSDictionary,
+            labelKey: 'label',
+            valueKey: 'value',
+            defaultValue: '-- Selecccione Tasa ITBMS  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          },
+          rules: {
+            required: 'Seleccione una tasa de ITBMS valida o seleccione excento (0%)',
+            validate: value => value !== '-1'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Unidad de Medida: ',
+          required: true,
+          name: 'unit',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: units,
+            labelKey: 'label',
+            valueKey: 'nombre',
+            defaultValue: '-- Selecccione Unidade de Medida  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Unidad de Medida'
+          },
+          rules: {
+            required: 'Seleccione una Unidad de Medida Valida'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Codigo de Bienes y Servicios: ',
+          required: true,
+          name: 'segmento',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: segmentos,
+            labelKey: 'nombreSegmento',
+            valueKey: 'codSegmento',
+            defaultValue: '-- Selecccione Un Segmento  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Segmento'
+          },
+          rules: {
+            required: 'Seleccione un Segmento Valido'
+          }
+        },
+        {
+          type: 'picker',
+          name: 'familia',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: familias,
+            labelKey: 'nombreFamilia',
+            valueKey: 'codFamilia',
+            defaultValue: '-- Selecccione Una Familia  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Familia'
+          },
+          rules: {
+            required: 'Seleccione una Familia Valido'
+          }
+        },
+        {
+          name: 'ISC',
+          placeholder: 'Tasa (%)',
+          label: 'Impuesto Selectivo al Consumo (ISC):',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'scale-unbalanced',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          }
+        },
+        {
+          name: 'SUME911',
+          label: 'Otras Tasas o Impuesto (OTI):',
+          placeholder: 'SUME 911 (%)',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'calculator',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          }
+        },
+        {
+          name: 'TasaPortabilidadNumerica',
+          placeholder: 'Tasa Portabilidad Numerica (%)',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'calculator',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          }
+        },
+        {
+          name: 'ImpuestoSobreSeguro',
+          placeholder: 'Impuesto Sobre Seguro (%)',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'calculator',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          name: '',
+          ean: '',
+          price: '',
+          ITBMS: '',
+          ISC: '',
+          SUME911: '',
+          unit: '',
+          TasaPortabilidadNumerica: '',
+          ImpuestoSobreSeguro: '',
+          segmento: '',
+          familia: ''
+        },
+        reValidateMode: 'onChange',
+        mode: 'onSubmit',
+        shouldFocusError: true
+
+      }
+    },
+    GT: {
+      schema: [
+        {
+          name: 'name',
+          placeholder: 'Descripcion',
+          label: 'Descripcion del Producto:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'text-box',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'La descripcion del producto es obligatoria'
+          }
+        },
+        {
+          name: 'ean',
+          placeholder: 'Codigo',
+          label: 'Codigo del Producto:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'barcode',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El codigo del producto es obligatorio'
+          }
+        },
+        {
+          name: 'price',
+          placeholder: 'Precio Base',
+          label: 'Precio del Producto:',
+          required: true,
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'pricetag',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El precio del producto es obligatorio'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Unidad de Medida: ',
+          required: true,
+          name: 'unit',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: unitDictionaryGT,
+            labelKey: 'label',
+            valueKey: 'nombre',
+            defaultValue: '-- Selecccione Unidade de Medida  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Unidad de Medida'
+          },
+          rules: {
+            required: 'Seleccione una Unidad de Medida Valida'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Tipo de Producto: ',
+          required: true,
+          name: 'tipo',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: ['BIEN', 'SERVICIO'],
+            defaultValue: '-- Selecccione un Tipo de Producto  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          },
+          rules: {
+            required: 'Seleccione un Tipo de Producto Valido'
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          name: '',
+          ean: '',
+          price: '',
+          unit: '',
+          tipo: ''
+        },
+        reValidateMode: 'onChange',
+        mode: 'onSubmit',
+        shouldFocusError: true
+      }
+    }
+  }
+
   return {
     loginFormSchema,
     clientsFormSchema: (customCountry?: string) => clientes[customCountry || country],
-    consultasFiltroFormSchema: consultasFiltroFormSchema[country]
+    consultasFiltroFormSchema: consultasFiltroFormSchema[country],
+    productsSchema: productos[country]
     // selectProductFormSchema: selectProduct[country]
   }
 }
