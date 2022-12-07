@@ -110,7 +110,7 @@ export const Login: React.FC = () => {
           })
         })
     } else {
-      toast.show('Porfavor Indique su: Pais, Identificador Tributario y Nombre de Usuario; para recuperar su contraseña', {
+      toast.show('Porfavor Indique su: Pais, Identificador Tributario y Nombre de Usuario para recuperar su contraseña', {
         type: 'warning'
       })
     }
