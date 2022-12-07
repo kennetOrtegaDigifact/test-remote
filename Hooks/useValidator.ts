@@ -10,7 +10,7 @@ import { validarNIT } from '../Config/utilities'
  */
 
 export const useValidator = () => {
-  const { country } = useSelector((state: ReduxState) => state.userDB)
+  const { country = '' } = useSelector((state: ReduxState) => state.userDB)
   const productos: ValidatorSchema = {
     GT: ({ array, item }: {array: Producto[], item: Producto}) => yup.object().shape({
       name: yup
@@ -304,6 +304,9 @@ export const useValidator = () => {
           'Seleccione una tasa de ITBMS valida o seleccione excento (0%)',
           (value) => value !== '-1'
         )
+    }),
+    GT: () => yup.object().shape({
+
     })
   }
 
