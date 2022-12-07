@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps, Provincia, Distrito, Corregimiento } from '../types'
+import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps, Provincia, Distrito, Corregimiento, Currencie, IncoTerm, Segmento, Familia, UnidadDeMedida } from '../types'
 import { XMLParser } from 'fast-xml-parser'
 import base64 from 'react-native-base64'
 import { urlApiMs, urlsByCountry, urlWsRest, urlWsRestV2, urlWsSoap, urlWsToken, urlXMLTransformation } from '../Config/api'
@@ -10,7 +10,7 @@ import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
 
-import { clientFetchProps, corregimientosFetchProps, distritosFetchProps, establecimientosFetchProps, infoFiscalFetchProps, productFetchProps, provinciasFetchProps, sharedDataFetchProps, usersFetchProps } from '../Config/dictionary'
+import { clientFetchProps, corregimientosFetchProps, currenciesFetchProps, distritosFetchProps, establecimientosFetchProps, familiasFetchProps, incoTermsFetchProps, infoFiscalFetchProps, productFetchProps, provinciasFetchProps, segmentosFetchProps, sharedDataFetchProps, unitMeasurementFetchProps, usersFetchProps } from '../Config/dictionary'
 import { useXmlFetchConstructor } from './useXmlFetchConstructor'
 import { useCallback } from 'react'
 import { actionsPermissionsTemplate, fatherAccessTemplate } from '../Config/templates'
@@ -48,7 +48,12 @@ export const useApiService = () => {
     getCountryCodesXml,
     getProvinciasXml,
     getDistritosXml,
-    getCorregimientosXml
+    getCorregimientosXml,
+    getCurrenciesXml,
+    getIncoTermsXml,
+    getFamiliasXml,
+    getSegmentosXml,
+    getUnitMeasurementXml
   } = useXmlFetchConstructor()
   const { country } = useSelector((state: ReduxState) => state.userDB)
   const user = useSelector((state: ReduxState) => state.userDB)
@@ -1147,7 +1152,7 @@ export const useApiService = () => {
     country?: string
   }): Promise<{
     code: number
-    data: Distrito[]
+    data: Corregimiento[]
     key: string
 }> => {
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
@@ -1187,11 +1192,287 @@ export const useApiService = () => {
         }
       })
       .catch(err => {
-        console.log('ERROR CATCH GET DISTRITOS SERVICE TS', err)
+        console.log('ERROR CATCH GET Corregimiento SERVICE TS', err)
         return {
           code: appCodes.processError,
           data: [],
           key: 'corregimientos'
+        }
+      })
+  }, [user?.country])
+
+  const getCurrenciesServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: Currencie[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getCurrenciesXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Currencie[] = container?.flat()?.map((e: Currencie) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: Currencie|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Currencie lleva mas props dependendiendo del pais
+            currenciesFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[currenciesFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'currencies'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'currencies'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET CURRENCIE SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'currencies'
+        }
+      })
+  }, [user?.country])
+
+  const getIncoTermsServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: IncoTerm[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getIncoTermsXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: IncoTerm[] = container?.flat()?.map((e: IncoTerm) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: IncoTerm|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo IncoTerm lleva mas props dependendiendo del pais
+            incoTermsFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[incoTermsFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'incoterms'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'incoterms'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET INCOTERMS SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'incoterms'
+        }
+      })
+  }, [user?.country])
+
+  const getSegmentosServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: Segmento[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getSegmentosXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Segmento[] = container?.flat()?.map((e: Segmento) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: Segmento|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Segmento lleva mas props dependendiendo del pais
+            segmentosFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[segmentosFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'segmentos'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'segmentos'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET SEGMENTOS SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'segmentos'
+        }
+      })
+  }, [user?.country])
+
+  const getFamiliasServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: Familia[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getFamiliasXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Familia[] = container?.flat()?.map((e: Familia) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: Familia|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Familia lleva mas props dependendiendo del pais
+            familiasFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[familiasFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'familias'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'familias'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET FAMILIAS SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'familias'
+        }
+      })
+  }, [user?.country])
+
+  const getUnitMeasurementServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: UnidadDeMedida[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getUnitMeasurementXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: UnidadDeMedida[] = container?.flat()?.map((e: UnidadDeMedida) => {
+            console.log('------------ UNIT MEASUREMENT ELEMENT ----------------', e)
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: UnidadDeMedida|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo UnidadDeMedida lleva mas props dependendiendo del pais
+            unitMeasurementFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[unitMeasurementFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'units'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'units'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET UnidadDeMedida SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'units'
         }
       })
   }, [user?.country])
@@ -3318,6 +3599,11 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     getDecimalesServiceTS,
     getProvinciasServiceTS,
     getDistritosServiceTS,
-    getCorregimientosServiceTS
+    getCorregimientosServiceTS,
+    getCurrenciesServiceTS,
+    getIncoTermsServiceTS,
+    getSegmentosServiceTS,
+    getFamiliasServiceTS,
+    getUnitMeasurementServiceTS
   }
 }

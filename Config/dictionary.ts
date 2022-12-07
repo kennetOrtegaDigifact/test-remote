@@ -1048,3 +1048,76 @@ export const corregimientosFetchProps: ServiceFetchProps = {
     }
   }
 }
+
+export const currenciesFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'CC',
+      'CN'
+    ],
+    props: {
+      CC: 'CC',
+      CN: 'CN'
+    }
+  }
+}
+
+export const incoTermsFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'condicion',
+      'texto'
+    ],
+    props: {
+      condicion: 'Condicion',
+      texto: 'Texto'
+    }
+  }
+}
+
+export const segmentosFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codSegmento',
+      'nombreSegmento'
+    ],
+    props: {
+      codSegmento: 'CodSegmento',
+      nombreSegmento: 'NombreSegmento'
+    }
+  }
+}
+
+export const familiasFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codFamilia',
+      'nombreFamilia'
+    ],
+    props: {
+      codFamilia: 'CodFamilia',
+      nombreFamilia: 'NombreFamilia'
+    }
+  }
+}
+
+export const unitMeasurementFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'label',
+      'medida',
+      'sistema',
+      'nombre',
+      'simbolo',
+      'comentarios'
+    ],
+    props: {
+      label: '',
+      medida: 'Medida',
+      sistema: 'Sistema',
+      nombre: 'Nombre',
+      simbolo: 'Simbolo',
+      comentarios: 'Comentario'
+    }
+  }
+}

@@ -28,7 +28,12 @@ export const useServiceBuilder = () => {
     getDecimalesServiceTS,
     getProvinciasServiceTS,
     getDistritosServiceTS,
-    getCorregimientosServiceTS
+    getCorregimientosServiceTS,
+    getCurrenciesServiceTS,
+    getIncoTermsServiceTS,
+    getSegmentosServiceTS,
+    getFamiliasServiceTS,
+    getUnitMeasurementServiceTS
   } = useApiService()
   //   const { country } = useSelector((state: ReduxState) => state.userDB)
   const loginBuilder = useCallback(async ({ userName, country, password, taxid }: loginProps): Promise<{
@@ -47,8 +52,8 @@ export const useServiceBuilder = () => {
       PA: [getInfoFiscalServiceTS, getAllEstablecimientosServiceTS, getAllPerfilFacturacionServiceTS, getPermissionsServiceTS, getAllClientsServiceTS, getAllProductsServiceTS, getAllUsersByTaxIdServiceTS, getLogosServiceTS, getDecimalesServiceTS]
     }
     const utilitiesServices: {[key: string]: Array<(props: any) => Promise<{code: number, data: any, key: string}>>} = {
-      GT: [getCountryCodesServiceTS],
-      PA: [getCountryCodesServiceTS, getProvinciasServiceTS, getDistritosServiceTS, getCorregimientosServiceTS]
+      GT: [getCountryCodesServiceTS, getUnitMeasurementServiceTS],
+      PA: [getCountryCodesServiceTS, getProvinciasServiceTS, getDistritosServiceTS, getCorregimientosServiceTS, getCurrenciesServiceTS, getIncoTermsServiceTS, getSegmentosServiceTS, getFamiliasServiceTS, getUnitMeasurementServiceTS]
     }
 
     let cleanTaxId = ''
