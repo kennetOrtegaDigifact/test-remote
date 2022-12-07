@@ -76,11 +76,11 @@ const ListEmpty = () => (
   </View>
 )
 export const Consultas: React.FC = () => {
-  const { } = useApiService()
+  const { getDtesServiceTS } = useApiService()
   const toast = useToast()
   const { country, taxid, requestor, userName } = useSelector((state: ReduxState) => state.userDB)
-  const { consultasFiltroFormSchema } = useFormSchema()
-  const { consultasComponentSchema } = useComponentSchema()
+  // const { consultasFiltroFormSchema } = useFormSchema()
+  // const { consultasComponentSchema } = useComponentSchema()
   const [dtes, setDtes] = useState<Array<any>>([])
   const [loading, setLoading] = useState<boolean>(false)
   // ref
@@ -105,6 +105,10 @@ export const Consultas: React.FC = () => {
     const controller = new AbortController()
     const { signal } = controller
     setLoading(true)
+    getDtesServiceTS({})
+      .then(res => {
+        console.log('CONSULTAS RES', res)
+      })
     // Services.getDTESService?.[country]({ userName, taxid, country, requestor, signal })
     //   .then((res: {code: number, data?: Array<any>}) => {
     //     setLoading(false)
@@ -137,7 +141,7 @@ export const Consultas: React.FC = () => {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <InputIcon
             keyboardType='default'
-            placeholder={consultasComponentSchema?.labels?.searchLabel || 'Buscar...'}
+            placeholder='Buscar...'
             icon={{
               name: 'search1',
               color: theme.graygreen,
@@ -198,7 +202,7 @@ export const Consultas: React.FC = () => {
               }}
             >Filtros
             </Text>
-            <Form
+            {/* <Form
               form={consultasFiltroFormSchema.schema}
               settings={consultasFiltroFormSchema.settings}
               onSubmit={onSubmit}
@@ -209,7 +213,7 @@ export const Consultas: React.FC = () => {
                 type: 'm',
                 size: 24
               }}
-            />
+            /> */}
           </BottomSheetScrollView>
         </BottomSheetModal>
       </View>

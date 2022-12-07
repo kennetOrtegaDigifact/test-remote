@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps, Provincia, Distrito, Corregimiento, Currencie, IncoTerm, Segmento, Familia, UnidadDeMedida } from '../types'
+import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps, Provincia, Distrito, Corregimiento, Currencie, IncoTerm, Segmento, Familia, UnidadDeMedida, Consultas } from '../types'
 import { XMLParser } from 'fast-xml-parser'
 import base64 from 'react-native-base64'
 import { urlApiMs, urlsByCountry, urlWsRest, urlWsRestV2, urlWsSoap, urlWsToken, urlXMLTransformation } from '../Config/api'
@@ -10,7 +10,7 @@ import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
 
-import { clientFetchProps, corregimientosFetchProps, currenciesFetchProps, distritosFetchProps, establecimientosFetchProps, familiasFetchProps, incoTermsFetchProps, infoFiscalFetchProps, productFetchProps, provinciasFetchProps, segmentosFetchProps, sharedDataFetchProps, unitMeasurementFetchProps, usersFetchProps } from '../Config/dictionary'
+import { clientFetchProps, consultasFetchProps, corregimientosFetchProps, currenciesFetchProps, distritosFetchProps, establecimientosFetchProps, familiasFetchProps, incoTermsFetchProps, infoFiscalFetchProps, productFetchProps, provinciasFetchProps, segmentosFetchProps, sharedDataFetchProps, unitMeasurementFetchProps, usersFetchProps } from '../Config/dictionary'
 import { useXmlFetchConstructor } from './useXmlFetchConstructor'
 import { useCallback } from 'react'
 import { actionsPermissionsTemplate, fatherAccessTemplate } from '../Config/templates'
@@ -54,7 +54,8 @@ export const useApiService = () => {
     getFamiliasXml,
     getSegmentosXml,
     getUnitMeasurementXml,
-    recoverPasswordXml
+    recoverPasswordXml,
+    getDtesXml
   } = useXmlFetchConstructor()
   const { country } = useSelector((state: ReduxState) => state.userDB)
   const user = useSelector((state: ReduxState) => state.userDB)
@@ -1573,7 +1574,7 @@ export const useApiService = () => {
       taxid = '',
       userName = ''
     } = props
-    return globalThis.fetch(urlWsSoap, {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       method: 'post',
       headers: { 'Content-Type': 'text/xml' },
       body: recoverPasswordXml({ country, taxid, userName })
@@ -1602,6 +1603,75 @@ export const useApiService = () => {
         console.log('ERROR CATCH RECOVER PASSWORD SERVICE ', err)
         return {
           code: appCodes.processError
+        }
+      })
+  }, [])
+
+  const getDtesServiceTS = useCallback(async (props?: Filter): Promise<{
+    code: number
+    data: Consultas[]
+    key: string
+  }> => {
+    console.log('------------ DTES XML ------------------', getDtesXml())
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getDtesXml(props)
+    })
+      .then(res => res.text())
+      .then(response => {
+        try {
+          const dataParsed = parser.parse(response)
+          const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+          if (rows > 0) {
+            const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.B || []
+            const container: any[] = []
+            container.push(dataResponse)
+            const data: Consultas[] = container?.flat()?.map((e: Consultas) => {
+              console.log('------ CONSULTAS ELEMENT ------', e)
+              const obj: Consultas|any = {}
+              // Primero creamos el objeto base con sus key por pais ya que el tipo Consultas lleva mas props dependendiendo del pais
+              consultasFetchProps?.[user?.country || '']?.keys?.forEach((key: string) => {
+                // console.log('--------- KEY -------------', key, country)
+                // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+                obj[key as keyof typeof obj] = regexSpecialChars(e?.[consultasFetchProps?.[user?.country || '']?.props?.[key] as keyof typeof e]?.toString() || '')
+              })
+              return obj
+            })
+            // console.log('CLIENTES FINALES', data)
+            return {
+              code: appCodes.ok,
+              data,
+              key: 'consultas'
+            }
+          }
+          return {
+            code: appCodes.dataVacio,
+            data: [],
+            key: 'consultas'
+          }
+        } catch (ex) {
+          console.log('ERROR EXCEPTION GET ALL DTES SERVICE TS', ex)
+          return {
+            code: appCodes.processError,
+            data: [],
+            key: 'consultas'
+          }
+        }
+      })
+      .catch((err: Error) => {
+        console.log('ERROR EXCEPTION GET ALL DTES SERVICE TS', err)
+        if (err.message === 'Aborted') {
+          return {
+            code: appCodes.ok,
+            data: [],
+            key: 'consultas'
+          }
+        }
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'consultas'
         }
       })
   }, [])
@@ -1885,165 +1955,6 @@ export const useApiService = () => {
             nombreContacto: '',
             cTaxId: ''
           }
-        }
-      })
-  }
-
-  const getDTESService = async ({
-    country = 'GT',
-    taxid,
-    requestor,
-    userName,
-    nitReceptor,
-    numeroSerie,
-    establecimientos,
-    allDTESorUsername,
-    tipoDocumento,
-    fechaInicio,
-    fechaFin,
-    amountFrom,
-    amountTo,
-    paymentType,
-    porAnulados,
-    limit,
-    signal
-  }: FetchProps&Filter): Promise<{
-  code: number
-  data?: ConsultaDTE[]
-}> => {
-    const xml = `<?xml version = "1.0" encoding = "utf-8" ?>
-                <soap:Envelope
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-                  <soap:Body>
-                    <RequestTransaction
-                      xmlns="http://www.fact.com.mx/schema/ws">
-                      <Requestor>${requestor}</Requestor>
-                      <Transaction>SEARCH_BASIC</Transaction>
-                      <Country>${country}</Country>
-                      <Entity>${taxid}</Entity>
-                      <User>${requestor}</User>
-                      <UserName>${country}.${taxid}.${userName}</UserName>
-                      <Data1>
-                        <![CDATA[
-                        <SearchCriteria
-                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                          xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-                          <ApplySearchCriteria>true</ApplySearchCriteria>
-                          <SCountryCode>${country}</SCountryCode>
-                          <STaxIdOrName>${taxid}</STaxIdOrName>
-                          <Branch>${establecimientos}|${allDTESorUsername}|</Branch>
-                          <CurrencyCode>GTQ</CurrencyCode>
-                          <RCountryCode>${country}</RCountryCode>
-                          <RTaxIdOrName>${nitReceptor}</RTaxIdOrName>
-                          <SKind>${tipoDocumento}</SKind>
-                          <ReturnBatchAsLike>${Boolean(numeroSerie?.length)}</ReturnBatchAsLike>
-                          <Batch>${numeroSerie}</Batch>
-                          <UseSerialFrom>false</UseSerialFrom>
-                          <UseSerialTo>false</UseSerialTo>
-                          <SerialFrom>0</SerialFrom>
-                          <SerialTo>0</SerialTo>
-                          <UseInternalIDFrom>false</UseInternalIDFrom>
-                          <UseInternalIDTo>false</UseInternalIDTo>
-                          <InternalIDFrom>0</InternalIDFrom>
-                          <InternalIDTo>0</InternalIDTo>
-                          <UseDateFrom>${Boolean(fechaInicio?.length)}</UseDateFrom>
-                          <UseDateTo>${Boolean(fechaFin?.length)}</UseDateTo>
-                          <DateFrom>${fechaInicio || '2000-01-01'}T00:00:00</DateFrom>
-                          <DateTo>${fechaFin || new Date().toISOString().slice(0, 10)}T23:59:59.999</DateTo>
-                          <UseAmountFrom>${(amountFrom || 0) >= 0}</UseAmountFrom>
-                          <UseAmountTo>${(amountTo || 0) > 0}</UseAmountTo>
-                          <AmountFrom>${amountFrom}</AmountFrom>
-                          <AmountTo>${amountTo}</AmountTo>
-                          <Paid>${paymentType}</Paid>
-                          <Cancelled>${porAnulados}</Cancelled>
-                          <Distributed>2</Distributed>
-                          <QueryTop>${limit}</QueryTop>
-                          <OrderBy>0</OrderBy>
-                          <Descending>true</Descending>
-                        </SearchCriteria>]]>
-                      </Data1>
-                      <Data2></Data2>
-                      <Data3></Data3>
-                    </RequestTransaction>
-                  </soap:Body>
-                </soap:Envelope>`
-    // console.log(xml)
-    return globalThis
-      .fetch(urlWsSoap, {
-        signal,
-        method: 'POST',
-        headers: { 'Content-Type': 'text/xml' },
-        body: xml
-      })
-      .then((res) => res.text())
-      .then((response) => {
-        try {
-          const dataParser = parser.parse(response)
-          // console.log('FETCH DTES', dataParser)
-          const rows =
-          dataParser.Envelope.Body.RequestTransactionResponse
-            .RequestTransactionResult.ResponseData.ResponseData1
-          if (rows > 0) {
-            const data =
-            dataParser.Envelope.Body.RequestTransactionResponse
-              .RequestTransactionResult.ResponseData.ResponseDataSet.diffgram
-              .NewDataSet.B
-            const arrayDTES = []
-            arrayDTES.push(data)
-            if (arrayDTES.length) {
-              const dataDTES: ConsultaDTE[] = arrayDTES.flat().map((dte) => {
-                const obj: ConsultaDTE = {
-                  documentType: dte.A,
-                  countryCode: dte.W,
-                  clientTaxid: dte.B,
-                  clientName: dte.C,
-                  userCountryCode: dte.X,
-                  userTaxId: dte.Y,
-                  razonSocial: dte.Z,
-                  numeroSerie: dte.D,
-                  numeroDocumento: dte.E,
-                  establecimiento: dte.S,
-                  fechaEmision: dte.F,
-                  monto: dte.G,
-                  paidTime: dte.H,
-                  cancelled: dte.I,
-                  numeroAuth: dte.DG,
-                  internalID: dte.IntID,
-                  userName: dte.userName
-                }
-                return obj
-              })
-              return {
-                code: appCodes.ok,
-                data: dataDTES
-              }
-            }
-          }
-          return {
-            code: appCodes.dataVacio,
-            data: []
-          }
-        } catch (ex) {
-          console.log('EXCEPTION GET DTES SERVICE', ex)
-          return {
-            code: appCodes.processError,
-            data: []
-          }
-        }
-      })
-      .catch((err) => {
-        console.log('ERROR FECTH DTES', err)
-        if (err.message === 'Aborted') {
-          return {
-            code: appCodes.ok,
-            data: []
-          }
-        }
-        return {
-          code: appCodes.processError,
-          data: []
         }
       })
   }
@@ -3610,6 +3521,7 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     getSegmentosServiceTS,
     getFamiliasServiceTS,
     getUnitMeasurementServiceTS,
-    recoverPasswordServiceTS
+    recoverPasswordServiceTS,
+    getDtesServiceTS
   }
 }

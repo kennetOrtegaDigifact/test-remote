@@ -316,18 +316,19 @@ export type ProductoResumen={
 }
 
 export type Filter={
-    fechaInicio?: string
-    fechaFin?: string
+    dateFrom?: string
+    dateTo?: string
     establecimientos?: Establecimiento
-    nitReceptor?: string
-    porAnulados?: { value: number | string }
-    tipoDocumento?: {no?: number|string}
+    taxidReceptor?: string
+    cancelled?: number
+    documentType?: number
     numeroSerie?: string
     allDTESorUsername?: string
     amountFrom?: number
     amountTo?: number
     paymentType?: string
     limit?: number
+    CUFE?: string
 }
 
 export type Invoice = {
@@ -510,4 +511,25 @@ export type FELDocumentTypes={
     no: number|string
 }
 
-export type XmlProps = { requestor?: string, taxid?: string, country?: string, userName?: string }
+export type XmlProps={requestor?: string, taxid?: string, country?: string, userName?: string}
+
+export interface Consultas {
+    documentType?: string,
+    clientTaxid?: string,
+    clientName?: string,
+    numeroSerie?: string,
+    numeroDocumento?: string,
+    fechaEmision?: string,
+    monto?: string,
+    paidTime?: string,
+    cancelled?: string,
+    establecimiento?: string,
+    countryCode?: string,
+    userCountryCode?: string,
+    userTaxId?: string,
+    razonSocial?: string,
+    CUFE?: string,
+    numeroAuth?: string,
+    internalID?: string,
+    userName?: string
+}

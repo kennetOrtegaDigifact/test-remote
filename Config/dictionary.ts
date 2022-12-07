@@ -1167,3 +1167,125 @@ export const unitDictionaryGT: string[] = [
   'OZ',
   'MT2'
 ]
+
+export const consultasFetchProps: ServiceFetchProps = {
+  PA: {
+    // ----------- MODELO PA-
+    // obj.documentType = dte.A
+    // obj.clientTaxid = dte.B
+    // obj.clientName = dte.C
+    // obj.numeroSerie = dte.D
+    // obj.numeroDocumento = dte.E
+    // obj.fechaEmision = dte.F
+    // obj.monto = dte.G
+    // obj.paidTime = dte.H
+    // obj.cancelled = dte.I
+    // obj.establecimiento = dte.S
+    // obj.countryCode = dte.W
+    // obj.userCountryCode = dte.X
+    // obj.userTaxId = dte.Y
+    // obj.razonSocial = dte.Z
+    // obj.CUFE = dte.CUFE
+    // obj.numeroAuth = dte.DG
+    // obj.internalID = dte.IntID
+    // obj.userName = dte.userName
+    keys: [
+      'documentType',
+      'clientTaxid',
+      'clientName',
+      'numeroSerie',
+      'numeroDocumento',
+      'fechaEmision',
+      'monto',
+      'paidTime',
+      'cancelled',
+      'establecimiento',
+      'countryCode',
+      'userCountryCode',
+      'userTaxId',
+      'razonSocial',
+      'CUFE',
+      'numeroAuth',
+      'internalID',
+      'userName'
+    ],
+    props: {
+      documentType: 'A',
+      clientTaxid: 'B',
+      clientName: 'C',
+      numeroSerie: 'D',
+      numeroDocumento: 'E',
+      fechaEmision: 'F',
+      monto: 'G',
+      paidTime: 'H',
+      cancelled: 'I',
+      establecimiento: 'S',
+      countryCode: 'W',
+      userCountryCode: 'X',
+      userTaxId: 'Y',
+      razonSocial: 'Z',
+      CUFE: 'CUFE',
+      numeroAuth: 'DG',
+      internalID: 'IntID',
+      userName: 'userName'
+    }
+  },
+  GT: {
+    // --------- MODELO GT
+    // obj.documentType = dte.A
+    // obj.countryCode = dte.W
+    // obj.clientTaxid = dte.B
+    // obj.clientName = dte.C
+    // obj.userCountryCode = dte.X
+    // obj.userTaxId = dte.Y
+    // obj.razonSocial = dte.Z
+    // obj.numeroSerie = dte.D
+    // obj.numeroDocumento = dte.E
+    // obj.establecimiento = dte.S
+    // obj.fechaEmision = dte.F
+    // obj.monto = dte.G
+    // obj.paidTime = dte.H
+    // obj.cancelled = dte.I
+    // obj.numeroAuth = dte.DG
+    // obj.internalID = dte.IntID
+    // obj.userName = dte.userName
+    keys: [
+      'documentType',
+      'clientTaxid',
+      'clientName',
+      'numeroSerie',
+      'numeroDocumento',
+      'fechaEmision',
+      'monto',
+      'paidTime',
+      'cancelled',
+      'establecimiento',
+      'countryCode',
+      'userCountryCode',
+      'userTaxId',
+      'razonSocial',
+      'numeroAuth',
+      'internalID',
+      'userName'
+    ],
+    props: {
+      documentType: 'A',
+      clientTaxid: 'B',
+      clientName: 'C',
+      numeroSerie: 'D',
+      numeroDocumento: 'E',
+      fechaEmision: 'F',
+      monto: 'G',
+      paidTime: 'H',
+      cancelled: 'I',
+      establecimiento: 'S',
+      countryCode: 'W',
+      userCountryCode: 'X',
+      userTaxId: 'Y',
+      razonSocial: 'Z',
+      numeroAuth: 'DG',
+      internalID: 'IntID',
+      userName: 'userName'
+    }
+  }
+}

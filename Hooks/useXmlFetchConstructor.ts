@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { Cliente, Producto, XmlProps } from '../types'
+import { Cliente, Filter, Producto, XmlProps } from '../types'
 const requestTransaction: {[key: string]: string} = {
   GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
   PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
@@ -575,6 +575,77 @@ export const useXmlFetchConstructor = () => {
   </soap:Envelope>`
   }, [])
 
+  const getDtesXmlConstructor = useCallback((props?: Filter) => {
+    const { country = '', taxid = '', userName, requestor = '' } = user
+    const {
+      CUFE = '',
+      allDTESorUsername = 'n',
+      amountFrom = 0,
+      amountTo = 0,
+      cancelled = 0,
+      dateFrom = '',
+      dateTo = '',
+      documentType = '0',
+      establecimientos = '',
+      limit = '10',
+      numeroSerie = '',
+      taxidReceptor = ''
+    } = props || {}
+    return `<?xml version="1.0" encoding="utf-8"?>
+    <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Body>
+            <RequestTransaction ${requestTransaction?.[country]}>
+                <Requestor>${requestor}</Requestor>
+                <Transaction>SEARCH_BASIC</Transaction>
+                <Country>${country}</Country>
+                <Entity>${taxid}</Entity>
+                <User>${requestor}</User>
+                <UserName>${country}.${taxid}.${userName}</UserName>
+                <Data1>
+                    <![CDATA[
+                        <?xml version="1.0" encoding="utf-8"?>
+                        <SearchCriteria xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                        <ApplySearchCriteria>true</ApplySearchCriteria>
+                        <SCountryCode>${country}</SCountryCode>
+                        <STaxIdOrName>${taxid}</STaxIdOrName>
+                        <Branch>${establecimientos}|${allDTESorUsername}|${CUFE?.length ? `${CUFE}|` : ''}</Branch>
+                        <CurrencyCode />
+                        <RCountryCode>${country}</RCountryCode>
+                        <RTaxIdOrName>${taxidReceptor}</RTaxIdOrName>
+                        <SKind>${documentType}</SKind>
+                        <ReturnBatchAsLike>${Boolean(numeroSerie.length)}</ReturnBatchAsLike>
+                        <Batch>${numeroSerie}</Batch>
+                        <UseSerialFrom>false</UseSerialFrom>
+                        <UseSerialTo>false</UseSerialTo>
+                        <SerialFrom>0</SerialFrom>
+                        <SerialTo>0</SerialTo>
+                        <UseInternalIDFrom>false</UseInternalIDFrom>
+                        <UseInternalIDTo>false</UseInternalIDTo>
+                        <InternalIDFrom>0</InternalIDFrom>
+                        <InternalIDTo>0</InternalIDTo>
+                        <UseDateFrom>${Boolean(dateFrom.length)}</UseDateFrom>
+                        <UseDateTo>${Boolean(dateTo.length)}</UseDateTo>
+                        <DateFrom>${dateFrom || '2000-01-01'}T00:00:00</DateFrom>
+                        <DateTo>${dateTo || new Date().toISOString().slice(0, 10)}T23:59:59.999</DateTo>
+                        <UseAmountFrom>${amountFrom >= 0}</UseAmountFrom>
+                        <UseAmountTo>${amountTo > 0}</UseAmountTo>
+                        <AmountFrom>${amountFrom}</AmountFrom>
+                        <AmountTo>${amountTo}</AmountTo>
+                        <Paid>2</Paid>
+                        <Cancelled>${cancelled}</Cancelled>
+                        <Distributed>2</Distributed>
+                        <QueryTop>${limit}</QueryTop>
+                        <OrderBy>0</OrderBy>
+                        <Descending>true</Descending>
+                        </SearchCriteria>
+                    ]]>
+                </Data1>
+                <Data2></Data2>
+                <Data3></Data3>
+            </RequestTransaction>
+        </soap:Body>
+    </soap:Envelope>`
+  }, [user])
   return {
     getAllClientsXml: getAllClientsConstructor,
     addEditClientXml: addEditClientsConstructor,
@@ -601,6 +672,7 @@ export const useXmlFetchConstructor = () => {
     getSegmentosXml: getSegmentosXmlConstructor,
     getFamiliasXml: getFamiliasXmlConstructor,
     getUnitMeasurementXml: getUnitMeasurementXmlConstructor,
-    recoverPasswordXml: recoverPasswordXmlConstructor
+    recoverPasswordXml: recoverPasswordXmlConstructor,
+    getDtesXml: getDtesXmlConstructor
   }
 }

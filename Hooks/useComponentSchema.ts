@@ -44,7 +44,7 @@ export const useComponentSchema = () => {
         if (res.code === appCodes.dataVacio) {
           setTimeout(() => {
             toast.update(t, `No fue posible eliminar el producto${name ? ` "${name}"` : ''}`, {
-              type: 'advertise',
+              type: 'warning',
               duration: 5000
             })
           }, 500)
@@ -126,7 +126,7 @@ export const useComponentSchema = () => {
         if (res?.code === appCodes.dataVacio) {
           setTimeout(() => {
             toast.update(t, `No fue posible Crear o Editar el producto${props?.name ? ` "${props?.name}"` : ''}`, {
-              type: 'advertise',
+              type: 'warning',
               duration: 5000
             })
           }, 500)
@@ -198,7 +198,7 @@ export const useComponentSchema = () => {
         if (res.code === appCodes.dataVacio) {
           setTimeout(() => {
             toast.update(t, `No fue posible eliminar el cliente${item?.nombreContacto ? ` "${item?.nombreContacto}"` : ''}`, {
-              type: 'advertise',
+              type: 'warning',
               duration: 5000
             })
           }, 500)
