@@ -75,7 +75,7 @@ export const useComponentSchema = () => {
       }
       if (dictionaryTaxes?.[key]) {
         obj.Codigo = dictionaryTaxes?.[key]
-        obj.Tasa = (parseFloat(props?.[key]) / 100) || 0
+        obj.Tasa = (parseFloat(props?.[key])) || 0
         obj.Valor = ((parseFloat(props?.[key]) / 100) || 0) * parseFloat((props?.precio || 0))
       }
       return obj
@@ -83,7 +83,7 @@ export const useComponentSchema = () => {
 
     const impuestos: Impuestos = {
       ISC: {
-        Tasa: (parseFloat(props?.ISC || 0) / 100),
+        Tasa: (parseFloat(props?.ISC || 0)),
         Valor: (parseFloat(props?.ISC || 0) / 100) * parseFloat(props?.precio || 0)
       },
       ITBMS: props?.ITBMS || '00',

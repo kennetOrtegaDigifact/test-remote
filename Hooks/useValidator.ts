@@ -14,7 +14,7 @@ export const useValidator = () => {
     GT: (props: any) => yup.object().shape({
 
     }),
-    PA: ({ array, item }: { array: Producto[], item: Producto }) => yup.object().shape({
+    PA: ({ array, item }: {array: Producto[], item: Producto}) => yup.object().shape({
       name: yup
         .string()
         .required('La descripcion del producto es obligatoria'),
@@ -57,26 +57,44 @@ export const useValidator = () => {
         .string()
         .typeError('Algo salio mal al seleccionar la unidad de medida')
         .required('La unidad de medida es obligatoria'),
-      segmento: yup
-        .string()
-        .typeError('Algo salio mal al seleccionar el segmento')
-        .required('Seleccione un segmento valido'),
-      familia: yup
-        .string()
-        .typeError('Algo salio mal al seleccionar la familia')
-        .required('Seleccione una familia valida'),
+      // segmento: yup
+      //   .string()
+      //   .typeError('Algo salio mal al seleccionar el segmento')
+      //   .required('Seleccione un segmento valido'),
+      // familia: yup
+      //   .string()
+      //   .typeError('Algo salio mal al seleccionar la familia')
+      //   .required('Seleccione una familia valida'),
       SUME911: yup
-        .number()
-        .min(0, 'El porcentaje de SUME911 minimo es 0%')
-        .typeError('El porcentaje de SUME911 debe ser un numero valido o coloque 0'),
+        .string()
+        .test('NaN', 'La tasa de SUME911 debe ser un numero valido o coloque 0', (value) => {
+          const val = Number(value || 0)
+          return !isNaN(val)
+        })
+        .test('EqualsToZero', 'La tasa de SUME911 minima es de 0%', (value) => {
+          const val = Number(value || 0)
+          return val >= 0
+        }),
       TasaPortabilidadNumerica: yup
-        .number()
-        .min(0, 'El porcentaje de Tasa de Portabilidad Numerica minimo es 0%')
-        .typeError('El porcentaje de Tasa de Portabilidad Numerica debe ser un numero valido o coloque 0'),
+        .string()
+        .test('NaN', 'El porcentaje de Tasa de Portabilidad Numerica debe ser un numero valido o coloque 0', (value) => {
+          const val = Number(value || 0)
+          return !isNaN(val)
+        })
+        .test('EqualsToZero', 'El porcentaje de Tasa de Portabilidad Numerica minimo es 0%', (value) => {
+          const val = Number(value || 0)
+          return val >= 0
+        }),
       ImpuestoSobreSeguro: yup
-        .number()
-        .min(0, 'El porcentaje de Impuesto Sobre Seguro minimo es 0%')
-        .typeError('El porcentaje de Impuesto Sobre Seguro debe ser un numero valido o coloque 0')
+        .string()
+        .test('NaN', 'El porcentaje de Impuesto Sobre Seguro debe ser un numero valido o coloque 0', (value) => {
+          const val = Number(value || 0)
+          return !isNaN(val)
+        })
+        .test('EqualsToZero', 'El porcentaje de Impuesto Sobre Seguro minimo es 0%', (value) => {
+          const val = Number(value || 0)
+          return val >= 0
+        })
     })
   }
   const clientes: ValidatorSchema = {
