@@ -48,7 +48,7 @@ export const useXmlFetchConstructor = () => {
                     </RequestTransaction>
                 </soap:Body>
             </soap:Envelope>`
-  }, [])
+  }, [user?.country, user?.requestor, user?.taxid, user?.userName])
 
   const deleteProductsConstructor = useCallback(({
     ean
@@ -57,7 +57,7 @@ export const useXmlFetchConstructor = () => {
     return `<?xml version="1.0" encoding="utf-8"?>
             <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
                 <soap:Body>
-                    <RequestTransaction ${requestTransaction?.[country]}>
+                    <RequestTransaction ${requestTransaction?.[country as keyof typeof requestTransaction]}>
                         <Requestor>${requestor}</Requestor>
                         <Transaction>EXEC_STORED_PROC</Transaction>
                         <Country>${country}</Country>
@@ -70,7 +70,7 @@ export const useXmlFetchConstructor = () => {
                     </RequestTransaction>
                 </soap:Body>
             </soap:Envelope>`
-  }, [])
+  }, [user])
 
   const addEditProductsConstructor = useCallback((item: Producto) => {
     const { name, price, unit, ean, familia, impuestos, segmento, tipo } = item
@@ -91,7 +91,7 @@ export const useXmlFetchConstructor = () => {
               xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
               <soap:Body>
                 <RequestTransaction
-                  ${requestTransaction?.[country]}>
+                  ${requestTransaction?.[country as keyof typeof requestTransaction]}>
                   <Requestor>${requestor}</Requestor>
                   <Transaction>EXEC_STORED_PROC</Transaction>
                   <Country>${country}</Country>
@@ -99,12 +99,12 @@ export const useXmlFetchConstructor = () => {
                   <User>${requestor}</User>
                   <UserName>${country}.${taxid}.${userName}</UserName>
                   <Data1>UpsertProductsAndServices</Data1>
-                  <Data2>${datos?.data?.[country]}</Data2>
+                  <Data2>${datos?.data?.[country as keyof typeof datos]}</Data2>
                   <Data3></Data3>
                 </RequestTransaction>
               </soap:Body>
             </soap:Envelope>`
-  }, [])
+  }, [user])
 
   const getAllClientsConstructor = useCallback(({ country = '', taxid = '', requestor = '', userName = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -127,7 +127,7 @@ export const useXmlFetchConstructor = () => {
                 </RequestTransaction>
             </soap:Body>
         </soap:Envelope>`
-  }, [])
+  }, [user?.country, user?.requestor, user?.userName])
 
   const addEditClientsConstructor = useCallback((item: Cliente) => {
     const { DV, cTaxId, cargo, corregimiento, correo, countryCode, departamento, direccion, distrito, municipio, nombreContacto, provincia, telefono, tipoCliente } = item
@@ -148,7 +148,7 @@ export const useXmlFetchConstructor = () => {
                 xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/"
               >
                 <soap:Body>
-                  <RequestTransaction ${requestTransaction?.[country]}>
+                  <RequestTransaction ${requestTransaction?.[country as keyof typeof requestTransaction]}>
                     <Requestor>${requestor}</Requestor>
                     <Transaction>SHARED_INFO_EFACE</Transaction>
                     <Country>${country}</Country>
@@ -156,12 +156,12 @@ export const useXmlFetchConstructor = () => {
                     <User>${requestor}</User>
                     <UserName>${userName}</UserName>
                     <Data1>SHARED_NFRONT_ADDCUSTOMER_2</Data1>
-                    <Data2>${datos?.data?.[country]}</Data2>
+                    <Data2>${datos?.data?.[country as keyof typeof datos]}</Data2>
                     <Data3></Data3>
                   </RequestTransaction>
                 </soap:Body>
               </soap:Envelope>`
-  }, [])
+  }, [user])
 
   const deleteClientXmlConstructor = useCallback((item: Cliente) => {
     const { country, taxid, userName, requestor } = user
@@ -169,7 +169,7 @@ export const useXmlFetchConstructor = () => {
     const { cTaxId } = item
     return `<soap:Envelope xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd= "http://www.w3.org/2001/XMLSchema" xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
               <soap:Body>
-                <RequestTransaction ${requestTransaction?.[country]}>
+                <RequestTransaction ${requestTransaction?.[country as keyof typeof requestTransaction]}>
                   <Requestor>${requestor}</Requestor>
                   <Transaction>SHARED_INFO_EFACE</Transaction>
                   <Country>${country}</Country>
@@ -177,12 +177,12 @@ export const useXmlFetchConstructor = () => {
                   <User>${requestor}</User>
                   <UserName>${userName}</UserName>
                   <Data1>SHARED_NFRONT_DELETECUSTOMERBYSTAXIDBYNIT</Data1>
-                  <Data2>ScountryCode|${country}|STAXID|${taxid}|${Body?.tag?.[country]}|${cTaxId}</Data2>
+                  <Data2>ScountryCode|${country}|STAXID|${taxid}|${Body?.tag?.[country as keyof typeof Body.tag]}|${cTaxId}</Data2>
                   <Data3></Data3>
                 </RequestTransaction>
               </soap:Body>
             </soap:Envelope>`
-  }, [])
+  }, [user])
 
   const getAccountDetailsConstructor = useCallback(({ taxid = '', countryCode = '' }: {taxid?: string, countryCode?: string}) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -201,7 +201,7 @@ export const useXmlFetchConstructor = () => {
             </RequestTransaction>
           </soap:Body>
         </soap:Envelope>`
-  }, [])
+  }, [user?.country, user?.taxid])
 
   const infoFiscalXMLConstructor = useCallback(({ requestor = '', userName = '', country = '', taxid = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -220,7 +220,7 @@ export const useXmlFetchConstructor = () => {
             </RequestTransaction>
           </soap:Body>
         </soap:Envelope>`
-  }, [])
+  }, [user?.country, user?.requestor, user?.taxid, user?.userName])
 
   const getAllEstablecimientosXmlConstructor = useCallback(({ requestor = '', userName = '', country = '', taxid = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -239,7 +239,7 @@ export const useXmlFetchConstructor = () => {
       </RequestTransaction>
     </soap:Body>
     </soap:Envelope>`
-  }, [])
+  }, [user?.country, user?.requestor, user?.taxid, user?.userName])
 
   const getConfigAppXmlConstructor = useCallback(({ country = '', taxid = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -262,7 +262,7 @@ export const useXmlFetchConstructor = () => {
             </RequestTransaction>
         </soap:Body>
     </soap:Envelope>`
-  }, [])
+  }, [user?.country, user?.taxid])
 
   const getCatalogPermissionsFatherXmlConstructor = useCallback(({ country = '' }: {country?: string}) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -281,7 +281,7 @@ export const useXmlFetchConstructor = () => {
                 </RequestTransaction>
             </soap:Body>
         </soap:Envelope>`
-  }, [])
+  }, [user?.country])
 
   const getCatalogPermissionsActionsXmlConstructor = useCallback(({ country = '' }: {country?: string}) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -300,7 +300,7 @@ export const useXmlFetchConstructor = () => {
                 </RequestTransaction>
             </soap:Body>
         </soap:Envelope>`
-  }, [])
+  }, [user?.country])
 
   const getUserFatherPermissionsXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -319,7 +319,7 @@ export const useXmlFetchConstructor = () => {
       </RequestTransaction>
     </soap:Body>
   </soap:Envelope>`
-  }, [])
+  }, [user?.country, user?.requestor, user?.taxid, user?.userName])
 
   const getUserActionsPermissionsXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -338,7 +338,7 @@ export const useXmlFetchConstructor = () => {
       </RequestTransaction>
     </soap:Body>
   </soap:Envelope>`
-  }, [])
+  }, [user?.country, user?.requestor, user?.taxid, user?.userName])
 
   const getUsersByTaxIdXmlConstructor = useCallback(({ requestor = '', taxid = '', country = '', userName = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -357,7 +357,7 @@ export const useXmlFetchConstructor = () => {
             </RequestTransaction>
           </soap:Body>
         </soap:Envelope>`
-  }, [])
+  }, [user?.country, user?.requestor, user?.taxid, user?.userName])
 
   const getDecimalesXmlConstructor = useCallback(({ country = '', requestor = '', taxid = '', userName = '' }: XmlProps) => {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -375,6 +375,177 @@ export const useXmlFetchConstructor = () => {
           <UserName>${user?.country || country}.${user?.taxid || taxid}.${user?.userName || userName}</UserName>
           <Data1>SHARED_GETINFO_CONFIG</Data1>
           <Data2>STAXID|${user?.taxid || taxid}</Data2>
+          <Data3></Data3>
+        </RequestTransaction>
+      </soap:Body>
+    </soap:Envelope>`
+  }, [user?.country, user?.requestor, user?.taxid, user?.userName])
+
+  const getDistritosXmlConstructor = useCallback(() => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
+                <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                <Transaction>EXEC_STORED_PROC</Transaction>
+                <Country>PA</Country>
+                <Entity>155704849-2-2021</Entity>
+                <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                <UserName>PA.155704849-2-2021.FRANK</UserName>
+                <Data1>PLANILLACC_DistritoCodes</Data1>
+                <Data2>ProvinciaCode|</Data2>
+                <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getProvinciasXmlConstructor = useCallback(() => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
+                <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                <Transaction>EXEC_STORED_PROC</Transaction>
+                <Country>PA</Country>
+                <Entity>155704849-2-2021</Entity>
+                <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                <UserName>PA.155704849-2-2021.FRANK</UserName>
+                <Data1>PLANILLACC_ProvinciaCodes</Data1>
+                <Data2>ProvinciaCode|</Data2>
+                <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getCorregimientosXmlConstructor = useCallback(() => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
+                <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                <Transaction>EXEC_STORED_PROC</Transaction>
+                <Country>PA</Country>
+                <Entity>155704849-2-2021</Entity>
+                <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                <UserName>PA.155704849-2-2021.FRANK</UserName>
+                <Data1>PLANILLACC_CorregimientoCodes</Data1>
+                <Data2>DistritoCode|</Data2>
+                <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getCountryCodesXmlConstructor = useCallback(() => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
+              <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+              <Transaction>EXEC_STORED_PROC</Transaction>
+              <Country>PA</Country>
+              <Entity>155704849-2-2021</Entity>
+              <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+              <UserName>PA.155704849-2-2021.FRANK</UserName>
+              <Data1>PLANILLACC_GetAllCountryCodes</Data1>
+              <Data2>CountryCode|PA</Data2>
+              <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getCurrenciesXmlConstructor = useCallback(() => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
+              <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+              <Transaction>EXEC_STORED_PROC</Transaction>
+              <Country>PA</Country>
+              <Entity>155704849-2-2021</Entity>
+              <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+              <UserName>PA.155704849-2-2021.FRANK</UserName>
+              <Data1>PLANILLACC_GetAllCurrencyByCountry</Data1>
+              <Data2>CountryCode|PA</Data2>
+              <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getIncoTermsXmlConstructor = useCallback(() => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
+                <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                <Transaction>EXEC_STORED_PROC</Transaction>
+                <Country>PA</Country>
+                <Entity>155704849-2-2021</Entity>
+                <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                <UserName>PA.155704849-2-2021.FRANK</UserName>
+                <Data1>PLANILLACC_GetINCOTERMS</Data1>
+                <Data2>SCountryCode|PA}</Data2>
+                <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getSegmentosXmlConstructor = useCallback(() => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
+                <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                <Transaction>EXEC_STORED_PROC</Transaction>
+                <Country>PA</Country>
+                <Entity>155704849-2-2021</Entity>
+                <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                <UserName>PA.155704849-2-2021.FRANK</UserName>
+                <Data1>PLANILLACC_SegmentoCodes</Data1>
+                <Data2>SegmentoCode|</Data2>
+                <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getFamiliasXmlConstructor = useCallback(() => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
+                <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                <Transaction>EXEC_STORED_PROC</Transaction>
+                <Country>PA</Country>
+                <Entity>155704849-2-2021</Entity>
+                <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                <UserName>PA.155704849-2-2021.FRANK</UserName>
+                <Data1>PLANILLACC_BienServicioCodes</Data1>
+                <Data2>SegmentoCode|</Data2>
+                <Data3></Data3>
+            </RequestTransaction>
+          </soap:Body>
+        </soap:Envelope>`
+  }, [])
+
+  const getUnitMeasurementXmlConstructor = useCallback(() => {
+    return `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
+                <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
+                <Transaction>EXEC_STORED_PROC</Transaction>
+                <Country>PA</Country>
+                <Entity>155704849-2-2021</Entity>
+                <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
+                <UserName>PA.155704849-2-2021.FRANK</UserName>
+          <Data1>PLANILLACC_CATALOGO_UNIDADMEDIDA</Data1>
+          <Data2>CountryCode|PA</Data2>
           <Data3></Data3>
         </RequestTransaction>
       </soap:Body>
@@ -397,6 +568,15 @@ export const useXmlFetchConstructor = () => {
     getUserFatherPermissionsXml: getUserFatherPermissionsXmlConstructor,
     getUserActionsPermissionsXml: getUserActionsPermissionsXmlConstructor,
     getUsersByTaxIdXml: getUsersByTaxIdXmlConstructor,
-    getDecimalesXml: getDecimalesXmlConstructor
+    getDecimalesXml: getDecimalesXmlConstructor,
+    getDistritosXml: getDistritosXmlConstructor,
+    getProvinciasXml: getProvinciasXmlConstructor,
+    getCorregimientosXml: getCorregimientosXmlConstructor,
+    getCountryCodesXml: getCountryCodesXmlConstructor,
+    getCurrenciesXml: getCurrenciesXmlConstructor,
+    getIncoTermsXml: getIncoTermsXmlConstructor,
+    getSegmentosXml: getSegmentosXmlConstructor,
+    getFamiliasXml: getFamiliasXmlConstructor,
+    getUnitMeasurementXml: getUnitMeasurementXmlConstructor
   }
 }

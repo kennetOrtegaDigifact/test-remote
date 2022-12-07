@@ -468,17 +468,40 @@ type CountryCodes = {
     countryCode: string | number
 }
 
+export type Provincia={
+    codProvincia?: string
+    nombre?: string
+}
+export type Distrito={
+    codDistrito?: string
+    nombre?: string
+}
+
+export type Corregimiento={
+    codCorregimiento?: string
+    nombre?: string
+}
+
+export type Currencie={
+    CC?: string
+    CN?: string
+}
+
+export type IncoTerm={
+    condicion?: string
+    texto?: string
+}
 export interface UTILSDB {
-    corregimientos?: any[]
-    distritos?: any[]
-    provincias?: any[]
+    corregimientos?: Corregimiento[]
+    distritos?: Distrito[]
+    provincias?: Provincia[]
     countryCodes?: CountryCodes[]
-    currencies?: any[]
-    incoterms?: any[]
+    currencies?: Currencie[]
+    incoterms?: IncoTerm[]
     familias?: Familia[]
     segmentos?: Segmento[]
     units?: UnidadDeMedida[]
-    talonarioContingencia?: {[key: string]: string|number}
+    talonarioContingencia?: number[]
 }
 
 export type FELDocumentTypes={

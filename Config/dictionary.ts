@@ -1009,3 +1009,42 @@ export const acceptedCountrys: {[key: string]: boolean} = {
   GT: true,
   PA: true
 }
+
+export const provinciasFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codProvincia',
+      'nombre'
+    ],
+    props: {
+      codProvincia: 'CodProvincia',
+      nombre: 'Nombre'
+    }
+  }
+}
+
+export const distritosFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codDistrito',
+      'nombre'
+    ],
+    props: {
+      codDistrito: 'CodDistrito',
+      nombre: 'Nombre'
+    }
+  }
+}
+
+export const corregimientosFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codCorregimiento',
+      'nombre'
+    ],
+    props: {
+      codCorregimiento: 'CodCorregimiento',
+      nombre: 'Nombre'
+    }
+  }
+}

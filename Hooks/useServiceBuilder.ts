@@ -4,7 +4,6 @@ import { acceptedCountrys } from '../Config/dictionary'
 import { deletePadLeft } from '../Config/utilities'
 import { userInterface, UTILSDB } from '../types'
 import { useApiService } from './useApiService'
-import { useURLS } from './useUrls'
 type loginProps={
     userName: string
     password: string
@@ -12,7 +11,6 @@ type loginProps={
     country: string
 }
 export const useServiceBuilder = () => {
-  const { urls } = useURLS()
   const {
     getCertTokenServiceTS,
     getAccountDetailsServiceTS,
@@ -27,12 +25,18 @@ export const useServiceBuilder = () => {
     getCountryCodesServiceTS,
     getAllUsersByTaxIdServiceTS,
     getLogosServiceTS,
-    getDecimalesServiceTS
+    getDecimalesServiceTS,
+    getProvinciasServiceTS,
+    getDistritosServiceTS,
+    getCorregimientosServiceTS
   } = useApiService()
   //   const { country } = useSelector((state: ReduxState) => state.userDB)
   const loginBuilder = useCallback(async ({ userName, country, password, taxid }: loginProps): Promise<{
     code: number
-    data: userInterface
+    data: {
+      user: userInterface,
+      utilities: UTILSDB
+    }
   }> => {
     const tokenServices: {[key: string]: Array<(props: any) => Promise<{code: number, data: any, key: string}>>} = {
       GT: [getCertTokenServiceTS, getAccountDetailsServiceTS, getTokenMIPOSServiceTS],
@@ -42,10 +46,10 @@ export const useServiceBuilder = () => {
       GT: [getInfoFiscalServiceTS, getAllEstablecimientosServiceTS, getConfigAppServiceTS, getPermissionsServiceTS, getAllClientsServiceTS, getAllProductsServiceTS, getAllUsersByTaxIdServiceTS, getLogosServiceTS, getDecimalesServiceTS],
       PA: [getInfoFiscalServiceTS, getAllEstablecimientosServiceTS, getAllPerfilFacturacionServiceTS, getPermissionsServiceTS, getAllClientsServiceTS, getAllProductsServiceTS, getAllUsersByTaxIdServiceTS, getLogosServiceTS, getDecimalesServiceTS]
     }
-    // const utilitiesServices: {[key: string]: Array<(props: any) => Promise<{code: number, data: any, key: string}>>} = {
-    //   GT: [getCountryCodesServiceTS],
-    //   PA: [getCountryCodesServiceTS]
-    // }
+    const utilitiesServices: {[key: string]: Array<(props: any) => Promise<{code: number, data: any, key: string}>>} = {
+      GT: [getCountryCodesServiceTS],
+      PA: [getCountryCodesServiceTS, getProvinciasServiceTS, getDistritosServiceTS, getCorregimientosServiceTS]
+    }
 
     let cleanTaxId = ''
     if (country === 'GT') {
@@ -87,30 +91,41 @@ export const useServiceBuilder = () => {
         })
       }
     }
-    console.log('RESPONSE LOGIN BUILDER', JSON.stringify(userInfo))
-    // let code = (userInfo?.token?.length) ? appCodes.ok : appCodes.unauthorized
-    // code = (userInfo?.taxid?.length && acceptedCountrys?.[userInfo?.country || ''] && userInfo?.token?.length) ? appCodes.ok : appCodes.processError
-    // return new Promise((resolve) => resolve({
-    //   code,
-    //   data: userInfo
-    // }))
+    const utilitiesDB: UTILSDB = {}
+    for (const s of utilitiesServices?.[country]) {
+      await s({ userName, cleanTaxId, country, password, taxid }).then(res => {
+        utilitiesDB[res.key as keyof typeof utilitiesDB] = res.data
+      })
+    }
+
+    console.log('RESPONSE LOGIN BUILDER USER', JSON.stringify(userInfo))
+    console.log('RESPONSE LOGIN BUILDER UTILITIES', JSON.stringify(utilitiesDB))
 
     if (userInfo?.token?.length) {
       if (userInfo?.taxid?.length && acceptedCountrys?.[userInfo?.country || '']) {
         return new Promise((resolve) => resolve({
           code: appCodes.ok,
-          data: userInfo
+          data: {
+            user: userInfo,
+            utilities: utilitiesDB
+          }
         }))
       } else {
         return new Promise((resolve) => resolve({
           code: appCodes.processError,
-          data: {}
+          data: {
+            user: {},
+            utilities: {}
+          }
         }))
       }
     } else {
       return new Promise((resolve) => resolve({
         code: appCodes.unauthorized,
-        data: {}
+        data: {
+          user: {},
+          utilities: {}
+        }
       }))
     }
   }, [])

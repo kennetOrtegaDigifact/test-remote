@@ -151,7 +151,6 @@ export const PickerTS: React.FC<pickerProps> = React.memo(function Picke ({
           />
         </View>
       </TouchableOpacity>
-      {/* <BottomSheetModalProvider> */}
       <BottomSheetModal
         ref={bottomSheetModalRef}
         index={1}
@@ -200,22 +199,6 @@ export const PickerTS: React.FC<pickerProps> = React.memo(function Picke ({
               />
             </View>
           )}
-
-          {/* <FlashList
-            data={items?.filter(e => {
-              if (typeof e === 'string' || typeof e === 'number') {
-                return e.toString().toLowerCase().includes(search.toLowerCase())
-              }
-              if (typeof e === 'object') {
-                return e?.[labelKey || '']?.toString().toLowerCase().includes(search.toLowerCase()) || e?.[valueKey || '']?.toString()?.toLowerCase()?.includes(search.toLowerCase())
-              }
-              return false
-            }) || []}
-            renderItem={renderItem}
-            estimatedItemSize={43}
-            ListEmptyComponent={() => <EmptyList />}
-            extraData={items}
-          /> */}
           <BottomSheetFlatList
             data={items?.filter(e => {
               if (typeof e === 'string' || typeof e === 'number') {
@@ -234,66 +217,6 @@ export const PickerTS: React.FC<pickerProps> = React.memo(function Picke ({
           />
         </View>
       </BottomSheetModal>
-
-      {/* </BottomSheetModalProvider> */}
-      {/* <Modal
-        animationType='fade'
-        onRequestClose={() => setVisible(false)}
-        visible={visible}
-        transparent
-      >
-        <TouchableOpacity
-          onPressOut={() => setVisible(false)}
-          activeOpacity={1}
-          style={{
-            flex: 1,
-            justifyContent: 'center'
-          }}
-        >
-          <TouchableWithoutFeedback>
-
-            <View
-              style={[styles.modalView]}
-            >
-              {withSearch && (
-                <InputIcon
-                  icon={{
-                    name: 'search',
-                    color: theme.gray,
-                    size: 20,
-                    type: 'i'
-                  }}
-                  style={{
-                    flex: 1,
-                    color: theme.gray
-                  }}
-                  containerStyle={{
-                    borderColor: theme.graygreen
-                  }}
-                  placeholder={searchlabel}
-                  onChangeText={setSearch}
-                />
-              )}
-              <FlashList
-                data={items?.filter(e => {
-                  if (typeof e === 'string' || typeof e === 'number') {
-                    return e.toString().toLowerCase().includes(search.toLowerCase())
-                  }
-                  if (typeof e === 'object') {
-                    return e?.[labelKey || '']?.toString().toLowerCase().includes(search.toLowerCase()) || e?.[valueKey || '']?.toString()?.toLowerCase()?.includes(search.toLowerCase())
-                  }
-                  return false
-                }) || []}
-                renderItem={renderItem}
-                estimatedItemSize={35}
-                ListEmptyComponent={() => <EmptyList />}
-                extraData={items}
-              />
-            </View>
-
-          </TouchableWithoutFeedback>
-        </TouchableOpacity>
-      </Modal> */}
     </>
   )
 }, (prev, next) => JSON.stringify(prev) === JSON.stringify(next))

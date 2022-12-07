@@ -19,6 +19,7 @@ import { PickerTS } from '../../Components/Picker'
 import { LoginCountries } from '../../Config/dictionary'
 import { useApiService } from '../../Hooks/useApiService'
 import { useServiceBuilder } from '../../Hooks/useServiceBuilder'
+import { setUtils } from '../../Redux/utilsReducer'
 
 export const Login: React.FC = () => {
   const { control, handleSubmit, formState: { errors, isSubmitting }, setValue, getValues } = useForm({
@@ -53,9 +54,12 @@ export const Login: React.FC = () => {
             type: 'ok'
           })
           new Promise((resolve) => {
-            resolve(dispatch(addUser(res?.data)))
+            resolve(dispatch(addUser(res?.data?.user || {})))
           }).then(() => {
-            navigate('/')
+            return new Promise((resolve) => {
+              resolve(setUtils(res?.data?.utilities || {}))
+            })
+              .then(() => navigate('/'))
           })
         } else if (res?.code === appCodes.unauthorized) {
           toast.show('Credenciales Incorrectas (Error: 401)', {
@@ -115,24 +119,24 @@ export const Login: React.FC = () => {
     }
   }, [])
 
-  // useEffect(() => {
-  //   // const taxid = '109162544'
-  //   // const country = 'GT'
-  //   // const userName = '109162544'
-  //   // const password = 'Kq290302*'
+  useEffect(() => {
+    // const taxid = '109162544'
+    // const country = 'GT'
+    // const userName = '109162544'
+    // const password = 'Kq290302*'
 
-  //   // const taxid = '123456'
-  //   // const country = 'GT'
-  //   // const userName = 'luis1234567'
-  //   // const password = 'fw?Uq3f+'
+    // const taxid = '123456'
+    // const country = 'GT'
+    // const userName = 'luis1234567'
+    // const password = 'fw?Uq3f+'
 
-  //   // const taxid = '155704849-2-2021'
-  //   // const country = 'PA'
-  //   // const userName = 'FRANK'
-  //   // const password = 'Digifact21*'
+    const taxid = '155704849-2-2021'
+    const country = 'PA'
+    const userName = 'FRANK'
+    const password = 'Digifact21*'
 
-  //   loginBuilder({ country, userName, taxid, password })
-  // }, [])
+    loginBuilder({ country, userName, taxid, password })
+  }, [])
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
