@@ -18,7 +18,7 @@ export const useFormSchema = (props
   const { getUnitMeasurementServiceTS } = useApiService()
   const dispatch = useDispatch()
   const { clientesValidatorSchema, selectProductoValidatorSchema } = useValidator()
-  const { country = '', establecimientos, infoFiscalUser, usuarios } = useSelector((state: ReduxState) => state.userDB)
+  const { country = '', establecimientos, infoFiscalUser, usuarios, clientes } = useSelector((state: ReduxState) => state.userDB)
   const { countryCodes, corregimientos, provincias, distritos, units, segmentos, familias } = useSelector((state: ReduxState) => state.utilsDB)
 
   useEffect(() => {
@@ -549,7 +549,7 @@ export const useFormSchema = (props
   //   }
   // }
 
-  const clientes: FormularioPerCountry = {
+  const clientesSchema: FormularioPerCountry = {
     GT: {
       schema: [
         {
@@ -677,7 +677,7 @@ export const useFormSchema = (props
         },
         {
           name: 'telefono',
-          placeholder: 'Telefono (####-####;####-####...etc)',
+          placeholder: 'Telefono (########;########...etc)',
           label: 'Telefono del Cliente :',
           type: 'inputText',
           keyboardType: 'phone-pad',
@@ -712,7 +712,8 @@ export const useFormSchema = (props
           municipio: '',
           telefono: '',
           correo: ''
-        }
+        },
+        resolver: yupResolver(clientesValidatorSchema()({ array: clientes }))
       },
       observables: ['departamento'],
       onBlurValues: ['cTaxId']
@@ -1448,7 +1449,7 @@ export const useFormSchema = (props
 
   return {
     loginFormSchema,
-    clientsFormSchema: (customCountry?: string) => clientes[customCountry || country],
+    clientsFormSchema: (customCountry?: string) => clientesSchema[customCountry || country],
     consultasFiltroFormSchema: consultasFiltroFormSchema[country],
     productsSchema: productos[country]
     // selectProductFormSchema: selectProduct[country]

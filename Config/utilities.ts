@@ -132,3 +132,49 @@ export const invertRegexSpecialChars = (string2clean?: string): string => {
   }
   return ''
 }
+
+export const regexNIT = ({ nit = '' }): string => {
+  try {
+    const regexNit = /[^0-9KkCcFf]/g
+    return nit?.toString().replace(regexNit, '').replace('k', 'K').replace('-', '').replace('/', '')
+  } catch (ex) {
+    console.log('REGEX NIT UTILITIE EXCEPTION', ex)
+    return ''
+  }
+}
+
+export const validarNIT = (nit2?: string): boolean => {
+  const nit = regexNIT({ nit: nit2 })
+  if (nit.toUpperCase() === 'CF' || nit === '123456') {
+    return true
+  }
+  try {
+    if (nit.length && nit?.toString() !== '0') {
+      let pos = nit.indexOf('-')
+      pos = nit.length - 1
+      const Correlativo = nit.substring(0, pos)
+      const DigitoVerificador = nit.substring(pos, nit.length)
+      let Factor = Correlativo.length + 1
+      let Suma = 0
+      let Valor = 0
+      let cont = 1
+      for (let x = 0; x <= pos - 1; x++) {
+        Valor = parseInt(nit.substring(x, cont))
+        Suma = Suma + (Valor * Factor)
+        Factor = Factor - 1
+        cont++
+      }
+      const xMOd11 = (11 - (Suma % 11)) % 11
+      const s = xMOd11 + ''
+      if ((xMOd11 === 10 && DigitoVerificador.toUpperCase() === 'K') || (s.trim() === DigitoVerificador)) {
+        console.log('Nit valido')
+        return true
+      }
+    }
+    console.log('Nit invalido')
+  } catch (e) {
+    console.log(e)
+    return false
+  }
+  return false
+}

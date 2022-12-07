@@ -1,7 +1,8 @@
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
 import * as yup from 'yup'
-import { Producto, ValidatorSchema } from '../types'
+import { Cliente, Producto, ValidatorSchema } from '../types'
+import { validarNIT } from '../Config/utilities'
 /**
  * It returns an object with a property called productosValidatorSchema, which is a function that
  * returns a yup object for forms validations
@@ -11,8 +12,38 @@ import { Producto, ValidatorSchema } from '../types'
 export const useValidator = () => {
   const { country } = useSelector((state: ReduxState) => state.userDB)
   const productos: ValidatorSchema = {
-    GT: (props: any) => yup.object().shape({
-
+    GT: ({ array, item }: {array: Producto[], item: Producto}) => yup.object().shape({
+      name: yup
+        .string()
+        .required('La descripcion del producto es obligatoria'),
+      ean: yup
+        .string()
+        .required('El codigo del producto es obligatorio')
+        .test(
+          'codigos repetidos',
+          'Codigo de producto no disponible, ingrese un codigo no repetido',
+          (value) => {
+            const firstFilter = array?.filter(p => p?.ean?.toString() === value?.toString())
+            return firstFilter
+              ?.filter(p =>
+                p?.ean?.toString() !== item?.ean?.toString() &&
+                p?.name?.toString() !== item?.name?.toString()
+              )?.length === 0
+          }
+        ),
+      price: yup
+        .number()
+        .typeError('El precio debe ser un numero valido')
+        .min(0.0001, 'El precio debe ser mayor a cero')
+        .required('El precio del producto es obligatorio'),
+      unit: yup
+        .string()
+        .typeError('Algo salio mal al seleccionar la unidad de medida')
+        .required('La unidad de medida es obligatoria'),
+      tipo: yup
+        .string()
+        .typeError('Algo salio mal al seleccionar el tipo de producto')
+        .required('El tipo de producto es obligatorio')
     }),
     PA: ({ array, item }: {array: Producto[], item: Producto}) => yup.object().shape({
       name: yup
@@ -163,8 +194,62 @@ export const useValidator = () => {
           }
         )
     }),
-    GT: () => yup.object().shape({
-
+    GT: (props:{array?: Cliente[]}) => yup.object().shape({
+      countryCode: yup
+        .string()
+        .typeError('Algo salio mal al seleccionar el pais')
+        .required('Seleccione un Pais Valido')
+        .test(
+          'default',
+          'Seleccione un Pais Valido',
+          value => value !== '-1'
+        ),
+      cTaxId: yup.string().required('El NIT es obligatorio').test('validar-nit', 'Ingrese un nit valido', (value) => {
+        console.log('VALOR DE ARRAY', props)
+        if (typeof value !== 'undefined') {
+          if (value.length > 1) {
+            return validarNIT(value)
+          }
+          return false
+        }
+        return false
+      }),
+      nombreContacto: yup
+        .string()
+        .required('El Nombre de Contacto del Cliente es obligatorio'),
+      direccion: yup
+        .string()
+        .required('La Direccion del Cliente es obligatoria'),
+      departamento: yup
+        .string()
+        .required('El Departamento del Cliente es obligatorio'),
+      municipio: yup
+        .string()
+        .required('El Departamento del Cliente es obligatorio'),
+      telefono: yup
+        .string()
+        .test(
+          'phone regex',
+          'Ingrese un numero de telefono valido',
+          value => {
+            const regex = /^(\d{3,4})(\d{4})$/ // FORMATO ###-#### O ####-####
+            const cleanArray = value?.trim()?.split(';')?.map(e => e?.trim()) || []
+            const result = cleanArray.every(e => regex.test(e))
+            return result
+          }
+        ),
+      correo: yup
+        .string()
+        .test(
+          'email',
+          'Ingrese una direccion de correo valida',
+          value => {
+            const regex = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i
+            const cleanArray = value?.trim()?.split(';')?.map(e => e?.trim()) || []
+            const result = cleanArray.every(e => regex.test(e))
+            return result
+          }
+        )
     }),
     generico: () => yup.object().shape({
       countryCode: yup
