@@ -76,7 +76,7 @@ const ListEmpty = () => (
   </View>
 )
 export const Consultas: React.FC = () => {
-  const { Services } = useApiService()
+  const { } = useApiService()
   const toast = useToast()
   const { country, taxid, requestor, userName } = useSelector((state: ReduxState) => state.userDB)
   const { consultasFiltroFormSchema } = useFormSchema()
@@ -105,27 +105,27 @@ export const Consultas: React.FC = () => {
     const controller = new AbortController()
     const { signal } = controller
     setLoading(true)
-    Services.getDTESService?.[country]({ userName, taxid, country, requestor, signal })
-      .then((res: {code: number, data?: Array<any>}) => {
-        setLoading(false)
-        if (res.code === appCodes.ok) {
-          if (res?.data) {
-            console.log('CONSULTAS RESPONSE', res.data)
-            setDtes(res?.data)
-          }
-        } else {
-          toast.show('Parece que no posees ningun documento, de ser esto incorrecto porfavor revisa tu conexion a internet', {
-            type: 'warning'
-          })
-        }
-      })
-      .catch((err: Error) => {
-        setLoading(false)
-        console.log('ERROR GET CONSULTAS', err)
-        toast.show('Algo salio mal al tratar de obtener tus documentos, porfavor revisa tu conexion a internet o intentalo mas tarde, si el error persite porfavor reportalo.', {
-          type: 'error'
-        })
-      })
+    // Services.getDTESService?.[country]({ userName, taxid, country, requestor, signal })
+    //   .then((res: {code: number, data?: Array<any>}) => {
+    //     setLoading(false)
+    //     if (res.code === appCodes.ok) {
+    //       if (res?.data) {
+    //         console.log('CONSULTAS RESPONSE', res.data)
+    //         setDtes(res?.data)
+    //       }
+    //     } else {
+    //       toast.show('Parece que no posees ningun documento, de ser esto incorrecto porfavor revisa tu conexion a internet', {
+    //         type: 'warning'
+    //       })
+    //     }
+    //   })
+    //   .catch((err: Error) => {
+    //     setLoading(false)
+    //     console.log('ERROR GET CONSULTAS', err)
+    //     toast.show('Algo salio mal al tratar de obtener tus documentos, porfavor revisa tu conexion a internet o intentalo mas tarde, si el error persite porfavor reportalo.', {
+    //       type: 'error'
+    //     })
+    //   })
 
     return () => controller.abort()
   }, [])
