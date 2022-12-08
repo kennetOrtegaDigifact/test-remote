@@ -180,3 +180,16 @@ export const validarNIT = (nit2?: string): boolean => {
   }
   return false
 }
+
+export const calculateLength = ({ string = '' }:{string?: string}): string => {
+  let result = string || ''
+  if (result.length > 32) {
+    const carriage = Math.round(string?.length / 32)
+    for (let i = 0; i < Math.round(carriage); i++) {
+      result += '\x0D'
+    }
+    return `${result}\x20`
+  } else {
+    return string
+  }
+}
