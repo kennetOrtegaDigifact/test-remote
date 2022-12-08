@@ -111,7 +111,7 @@ export const useFormSchema = (props?: {
         {
           type: 'inputText',
           label: 'NIT:',
-          name: 'nit',
+          name: 'taxidReceptor',
           icon: {
             name: 'idcard',
             color: theme.gray,
@@ -136,7 +136,7 @@ export const useFormSchema = (props?: {
           type: 'inputText',
           keyboardType: 'decimal-pad',
           label: 'Monto Inicial:',
-          name: 'montoInicial',
+          name: 'amountFrom',
           icon: {
             name: 'cash',
             color: theme.gray,
@@ -149,7 +149,7 @@ export const useFormSchema = (props?: {
           type: 'inputText',
           keyboardType: 'decimal-pad',
           label: 'Monto Final:',
-          name: 'montoFinal',
+          name: 'amountTo',
           icon: {
             name: 'cash',
             color: theme.gray,
@@ -160,7 +160,7 @@ export const useFormSchema = (props?: {
         },
         {
           type: 'picker',
-          name: 'establecimiento',
+          name: 'establecimientos',
           label: 'Establecimiento: ',
           icon: {
             name: 'office-building-marker',
@@ -183,7 +183,7 @@ export const useFormSchema = (props?: {
         {
           type: 'picker',
           label: 'Tipo de Documento: ',
-          name: 'tipoDocumento',
+          name: 'documentType',
           icon: {
             name: 'receipt',
             color: theme.gray,
@@ -191,7 +191,7 @@ export const useFormSchema = (props?: {
             type: 'i'
           },
           picker: {
-            data: [{ name: '-- Selecccione un Tipo de Documento  --', code: '', no: '' }, ...(tiposDocumentoGT?.[infoFiscalUser?.afiliacion] || [])],
+            data: [{ name: '-- Selecccione un Tipo de Documento  --', code: '', no: '' }, ...(tiposDocumentoGT?.[infoFiscalUser?.afiliacion || ''] || [])],
             defaultValue: '-- Filtrar por Tipo de Documento  --',
             labelKey: 'name',
             valueKey: 'no',
@@ -227,7 +227,7 @@ export const useFormSchema = (props?: {
         {
           type: 'picker',
           label: 'Cantidad de Documentos: ',
-          name: 'cantidadDocumentos',
+          name: 'limit',
           icon: {
             name: 'receipt',
             color: theme.gray,
@@ -245,7 +245,7 @@ export const useFormSchema = (props?: {
         {
           type: 'dateTime',
           label: 'Filtrar por fecha desde: ',
-          name: 'fechaInicio',
+          name: 'dateFrom',
           icon: {
             name: 'calendar',
             color: theme.gray,
@@ -257,7 +257,7 @@ export const useFormSchema = (props?: {
         {
           type: 'dateTime',
           label: 'Filtrar por fecha hasta: ',
-          name: 'fechaFin',
+          name: 'dateTo',
           icon: {
             name: 'calendar',
             color: theme.gray,
@@ -269,20 +269,30 @@ export const useFormSchema = (props?: {
       ],
       settings: {
         defaultValues: {
-          nit: '',
+          taxidReceptor: '',
           numeroSerie: '',
-          montoInicial: '',
-          montoFinal: '',
-          establecimiento: '',
-          tipoDocumento: '',
+          amountFrom: '',
+          amountTo: '',
+          establecimientos: '',
+          documentType: '',
           allDTESorUsername: '',
-          cantidadDocumentos: 30,
-          fechaInicio: '',
-          fechaFin: ''
+          limit: '10',
+          dateFrom: '',
+          dateTo: ''
         },
         reValidateMode: 'onChange',
         mode: 'onSubmit',
         shouldFocusError: true
+      },
+      resetButton: {
+        icon: {
+          name: 'trash',
+          color: theme.white,
+          size: 20,
+          type: 'i'
+        },
+        text: 'Limpiar Filtros',
+        visible: true
       }
     },
     PA: {
@@ -312,7 +322,7 @@ export const useFormSchema = (props?: {
           }
         },
         {
-          name: 'montoInicio',
+          name: 'amountFrom',
           type: 'inputText',
           keyboardType: 'decimal-pad',
           label: 'Filtrar por Monto Inicial :',
@@ -325,7 +335,7 @@ export const useFormSchema = (props?: {
           }
         },
         {
-          name: 'montoFin',
+          name: 'amountTo',
           type: 'inputText',
           keyboardType: 'decimal-pad',
           label: 'Filtrar por Monto Final :',
@@ -360,7 +370,7 @@ export const useFormSchema = (props?: {
         {
           type: 'picker',
           label: 'Filtrar por Tipo de Documento: ',
-          name: 'tipoDocumento',
+          name: 'documentType',
           icon: {
             name: 'receipt',
             color: theme.gray,
@@ -380,7 +390,7 @@ export const useFormSchema = (props?: {
         {
           type: 'picker',
           label: 'Filtrar por Usuario: ',
-          name: 'porUsuario',
+          name: 'allDTESorUsername',
           icon: {
             name: 'people',
             color: theme.gray,
@@ -401,7 +411,7 @@ export const useFormSchema = (props?: {
         {
           type: 'picker',
           label: 'Filtrar por Documentos Anulados: ',
-          name: 'porAnulados',
+          name: 'cancelled',
           icon: {
             name: 'cancel',
             color: theme.gray,
@@ -421,7 +431,7 @@ export const useFormSchema = (props?: {
         {
           type: 'picker',
           label: 'Filtrar por Cantidad de Documentos: ',
-          name: 'cantidadDocumentos',
+          name: 'limit',
           icon: {
             name: 'receipt',
             color: theme.gray,
@@ -437,7 +447,7 @@ export const useFormSchema = (props?: {
           }
         },
         {
-          name: 'fechaInicio',
+          name: 'dateFrom',
           type: 'dateTime',
           label: 'Filtrar por Fecha de Inicio :',
           placeholder: 'Filtrar por Fecha Desde',
@@ -449,7 +459,7 @@ export const useFormSchema = (props?: {
           }
         },
         {
-          name: 'fechaFin',
+          name: 'dateTo',
           type: 'dateTime',
           label: 'Filtrar por Fecha de Fin :',
           placeholder: 'Filtrar por Fecha Hasta',
@@ -465,22 +475,33 @@ export const useFormSchema = (props?: {
         defaultValues: {
           taxidReceptor: '',
           CUFE: '',
-          montoInicio: '',
-          montoFin: '',
+          amountFrom: '',
+          amountTo: '',
           establecimientos: '',
-          tipoDocumento: '',
-          porUsuario: '',
-          porAnulados: '',
-          cantidadDocumentos: '10',
-          fechaInicio: '',
-          fechaFin: ''
+          documentType: '',
+          allDTESorUsername: '',
+          cancelled: '',
+          limit: '10',
+          dateFrom: '',
+          dateTo: ''
         },
         mode: 'onSubmit',
         shouldFocusError: true,
         reValidateMode: 'onChange'
+      },
+      resetButton: {
+        icon: {
+          name: 'trash',
+          color: theme.white,
+          size: 20,
+          type: 'i'
+        },
+        text: 'Limpiar Filtros',
+        visible: true
       }
     }
   }
+
   const selectProduct: FormularioPerCountry = {
     PA: {
       schema: [

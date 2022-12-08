@@ -81,7 +81,7 @@ export const ConsultasV: React.FC = () => {
   const controller = new AbortController()
   const { signal } = controller
   const { country, taxid, requestor, userName } = useSelector((state: ReduxState) => state.userDB)
-  // const { consultasFiltroFormSchema } = useFormSchema()
+  const { consultasFiltroFormSchema } = useFormSchema()
   const { consultasComponentSchema } = useComponentSchema()
   const [dtes, setDtes] = useState<Array<Consultas>>([])
   const [search, setSearch] = useState<string>('')
@@ -140,6 +140,7 @@ export const ConsultasV: React.FC = () => {
             keyboardType='default'
             value={search}
             onChangeText={setSearch}
+            placeholderTextColor={theme.gray50}
             placeholder={consultasComponentSchema?.labels?.searchLabel || 'Buscar...'}
             icon={{
               name: 'search1',
@@ -216,10 +217,11 @@ export const ConsultasV: React.FC = () => {
               }}
             >Filtros
             </Text>
-            {/* <Form
+            <Form
               form={consultasFiltroFormSchema.schema}
               settings={consultasFiltroFormSchema.settings}
               onSubmit={onSubmit}
+              resetButton={consultasFiltroFormSchema?.resetButton}
               buttonText='Filtrar'
               buttonIcon={{
                 name: 'filter-check',
@@ -227,7 +229,7 @@ export const ConsultasV: React.FC = () => {
                 type: 'm',
                 size: 24
               }}
-            /> */}
+            />
           </BottomSheetScrollView>
         </BottomSheetModal>
       </View>

@@ -47,11 +47,11 @@ const cancelledKeys = (key: string, value: string) => {
 export const ConsultasItem: React.FC<{item: Consultas}> = React.memo(function ConsultasItem ({ item }) {
   const [cancelled, setCancelled] = useState<boolean>(false)
   useLayoutEffect(() => {
-    Object.keys(item).forEach(key => {
-      if (consultasComponentSchema?.labels?.[key]) {
-        console.log(`${consultasComponentSchema?.labels?.[key]}${item?.[key as keyof typeof item]}`)
-      }
-    })
+    // Object.keys(item).forEach(key => {
+    //   if (consultasComponentSchema?.labels?.[key]) {
+    //     console.log(`${consultasComponentSchema?.labels?.[key]}${item?.[key as keyof typeof item]}`)
+    //   }
+    // })
     const anulado = Object.keys(item).some(key => cancelledKeys(key, item?.[key as keyof typeof item] || ''))
     setCancelled(anulado)
   }, [])
@@ -114,7 +114,7 @@ export const ConsultasItem: React.FC<{item: Consultas}> = React.memo(function Co
                         fontSize: fonts.verySmall,
                         marginVertical: 2
                       }}
-                    >{especialCharacters(key.toLowerCase(), `${item?.[key]}`)}
+                    >{especialCharacters(key.toLowerCase(), `${item?.[key as keyof typeof item]}`)}
                     </Text>
                   </View>
                 )

@@ -75,7 +75,7 @@ export const numberFormater = ({
  * @returns The first element of the array.
  */
 export const cleanUserName = ({ usuario = '' }: {usuario: string}): string => {
-  const userRegex = usuario.trim().replace('_', '').replace('API', '').replace('INDIVIDUAL', '').replace('BATCH', '').split('.')
+  const userRegex = usuario.trim().replace('_', '').replace('API', '').replace('INDIVIDUAL', '').replace('BATCH', '').replace('TRANSFORMER', '').replace('_', '').split('.')
   const length: {[key: number]: number} = {
     1: 0,
     2: 0,

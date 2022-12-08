@@ -288,10 +288,16 @@ export type formulario = {
 
 export type FormularioPerCountry = {
     [key: string]: {
-        schema: Array<formulario>,
-        settings: UseFormProps,
-        observables?: string[],
+        schema: Array<formulario>
+        settings: UseFormProps
+        observables?: string[]
         onBlurValues?: string[]
+        resetButton?: {
+            visible?: boolean
+            text?: string
+            style?: ViewStyle
+            icon?: IconType
+        }
     }
 }
 

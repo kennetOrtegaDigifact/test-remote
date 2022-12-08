@@ -279,6 +279,7 @@ export const Productos: React.FC = () => {
             onChangeText={setSearch}
             keyboardType='default'
             placeholder={productosComponentSchema?.labels?.searchLabel || 'Buscar...'}
+            placeholderTextColor={theme.gray50}
             icon={{
               name: 'search1',
               color: theme.graygreen,

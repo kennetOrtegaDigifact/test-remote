@@ -413,6 +413,7 @@ const ClientesV = () => {
             onChangeText={setSearch}
             keyboardType='default'
             placeholder={clientesComponentSchema?.labels?.searchLabel || 'Buscar...'}
+            placeholderTextColor={theme.gray50}
             icon={{
               name: 'search1',
               color: theme.graygreen,

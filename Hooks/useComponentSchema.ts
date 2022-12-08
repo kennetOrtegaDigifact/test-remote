@@ -319,10 +319,21 @@ export const useComponentSchema = () => {
     PA: {
       labels: {
         documentType: 'Tipo de Documento: ',
+        CUFE: 'CUFE: ',
+        numeroAuth: 'Numero de Autorización: ',
+        numeroSerie: 'Numero de Serie: ',
+        numeroDocumento: 'Numero de Documento: ',
         razonSocial: 'Razon Social: ',
-        searchLabel: 'Buscar por CUFE/RUC'
+        fechaEmision: 'Fecha de Emision: ',
+        userName: 'Usuario que la Emitio: ',
+        establecimiento: 'Establecimiento Emisor: ',
+        monto: 'Monto: B/.',
+        cancelled: 'Documento Anulado: ',
+        clientTaxid: 'NIT del Cliente: ',
+        clientName: 'Nombre del Cliente: ',
+        searchLabel: 'Buscar por Numero de Autorizacion/Serie'
       },
-      searchKeys: ['clientTaxid', 'CUFE'],
+      searchKeys: ['numeroAuth', 'numeroSerie'],
       functions: {
         anular: () => {},
         fetchData: getDtes,
