@@ -76,7 +76,7 @@ export const useServiceBuilder = () => {
     for (const s of tokenServices?.[country]) {
       await s({ userName, cleanTaxId, country, password, taxid }).then(res => {
         if (res?.code === appCodes.ok) {
-          userInfo[res.key as keyof typeof userInfo] = res.data
+          userInfo[res.key] = res.data
         }
       })
     }
@@ -85,13 +85,13 @@ export const useServiceBuilder = () => {
       if (userInfo?.establecimientos?.length) {
         await s({ userName, cleanTaxId, country, password, taxid, requestor, establecimientos: (userInfo?.establecimientos || []) }).then(res => {
           // if (res?.code === appCodes.ok) {
-          userInfo[res.key as keyof typeof userInfo] = res.data
+          userInfo[res.key] = res.data
           //
         })
       } else {
         await s({ userName, cleanTaxId, country, password, taxid, requestor }).then(res => {
           // if (res?.code === appCodes.ok) {
-          userInfo[res.key as keyof typeof userInfo] = res.data
+          userInfo[res.key] = res.data
           //
         })
       }
@@ -134,6 +134,10 @@ export const useServiceBuilder = () => {
         }
       }))
     }
+  }, [])
+
+  const ticketBuilder = useCallback(() => {
+
   }, [])
   return {
     loginBuilder

@@ -559,3 +559,155 @@ export interface Consultas {
     internalID?: string,
     userName?: string
 }
+
+type AdditionalIssueDocInfo={
+    Name?: string
+    Data?: string
+    Value?: string
+}
+
+type TaxIDAdditionalInfo = AdditionalIssueDocInfo
+type AdditionlInfo = AdditionalIssueDocInfo
+type AdditionalBranchInfo=AdditionalIssueDocInfo
+type Codes=AdditionalIssueDocInfo
+type ContactNUC = {
+    PhoneList?: {
+        Phone?: string[]
+    }
+    EmailList?: {
+        Email?: string[]
+    }
+    Website?: string
+}
+type AddressInfo = {
+    Address?: string
+    City?: string // POSTAL CODE IN GT
+    District?: string // MUNICIPIO
+    State?: string // DEPARTAMENTO
+    Country?: string
+}
+type ThirdParties = {
+    TaxID?: string
+    TaxIDType?: string
+    TaxIDAdditionalInfo?: TaxIDAdditionalInfo[]
+}
+type Tax={
+    Code?: string
+    Description?: string
+    TaxableAmount?: number
+    ChargableAmount?: number
+    Rate?: number
+    Amount?: number
+}
+type Totals={
+    TotalBDiscount?: number
+    TotalWDiscount?: number
+    TotalBTaxes?: number
+    TotalWTaxes?: number
+    SpecificTotal?: number
+    ExplicitTotal?: number
+    TotalItem?: number
+    InvoiceTotal?: number
+}
+type ItemNUC={
+    Number?: string
+    Codes?: Codes[]
+    Type?: string
+    Description?: string
+    Qty?: number
+    UnitOfMeasure?: string
+    Price?: number
+    Discounts?: number
+    Taxes?: {
+        Tax: Tax[]
+    }
+    Charges?: any
+    Totals?: Totals
+    AdditionalInfo?: AdditionlInfo[]
+}
+
+type Payments={
+    Type?: string
+    Code?: string
+    Description?: string
+    Date?: string
+    Amount?: number
+    AditionalData?: any
+    nombreFormaPago?: string
+}
+type Info=AdditionlInfo
+type AditionalData={
+    Info?: Info[]
+    Name?: string
+    Id: number
+}
+
+type AdditionalInfoAdendas={
+    Code?: string
+    Type?: string
+    Description?: string
+    AddressInfo: AddressInfo
+    Texts?: any
+    AditionalData?: {
+        Data?: AditionalData[]
+    }
+}
+export interface NUC {
+    Version: string
+    CountryCode: string
+    Header: {
+        DocType?: string
+        GUID?: string
+        IssuedDateTime?: string
+        AdditionalIssueType?: number
+        ExchangeRate?: number
+        Currency?: string
+        Reference?: string
+        AdditionalIssueDocInfo?: AdditionalIssueDocInfo[]
+    }
+    Seller: {
+        TaxID?: string
+        TaxIDType?: string
+        TaxIDAdditionalInfo?: TaxIDAdditionalInfo[]
+        Name?: string
+        FiscalCategory?: string
+        Contact?: ContactNUC
+        AdditionlInfo?: AdditionlInfo[]
+        AddressInfo?: string
+        BranchInfo?: {
+            Code?: string
+            Name?: string
+            AddressInfo?: AddressInfo
+            Phone?: string
+            AdditionalBranchInfo?: AdditionalBranchInfo[]
+        }
+    }
+    Buyer: {
+        TaxID?: string
+        TaxIDType?: string
+        TaxIDAdditionalInfo?: TaxIDAdditionalInfo[]
+        Name?: string
+        Contact?: ContactNUC
+        AdditionlInfo?: AdditionlInfo[]
+        AddressInfo?: AddressInfo
+    }
+    ThirdParties: ThirdParties[]
+    Items: ItemNUC[]
+    Charges?: any
+    Totals: {
+        QtyItems?: number
+        TotalItems?: number
+        TotalTaxableAmount?: number
+        TotalTaxes?: number
+        TotalCharges?: number
+        TotalDiscounts?: number
+        GrandTotal: Totals
+        InWords?: string
+    }
+    Payments?: Payments[]
+    AdditionalDocumentInfo: {
+        DocTemplate?: any
+        AdditionalInfo?: AdditionalInfoAdendas
+        AditionalInfo?: AdditionlInfo[]
+    }
+}
