@@ -130,9 +130,9 @@ def reactNativeArchitectures() {
 }
 
 //VERSION MANAGE
-def versionMajor = 41
-def versionMinor = 4
-def versionPatch = 2
+def versionMajor = 50
+def versionMinor = 0
+def versionPatch = 0
 
 android {
     ndkVersion rootProject.ext.ndkVersion
