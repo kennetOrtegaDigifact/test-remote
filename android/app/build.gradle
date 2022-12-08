@@ -130,7 +130,7 @@ def reactNativeArchitectures() {
 }
 
 //VERSION MANAGE
-def versionMajor = 50
+def versionMajor = 42
 def versionMinor = 0
 def versionPatch = 0
 
