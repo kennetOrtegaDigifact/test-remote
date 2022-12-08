@@ -9,13 +9,16 @@ import { currenciePrefix } from '../../Config/dictionary'
 type ButtonBarProps={
   icon?: IconType
   title?: string
+  disabled?: boolean
 }
 const ButtonBar: React.FC<ButtonBarProps> = React.memo(function ButtonBar ({
   icon,
-  title = ''
+  title = '',
+  disabled = false
 }) {
   return (
     <TouchableOpacity
+      disabled={disabled}
       style={{
         justifyContent: 'center',
         alignItems: 'center'
@@ -217,6 +220,7 @@ export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = Reac
               type: 'm'
             }}
             title='Anular'
+            disabled={cancelled}
           />
         </View>
       </View>
