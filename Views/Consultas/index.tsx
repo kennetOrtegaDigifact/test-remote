@@ -18,6 +18,7 @@ import { useApiService } from '../../Hooks/useApiService'
 import { useComponentSchema } from '../../Hooks/useComponentSchema'
 import { ConsultasItem } from '../../Components/ConsultasItem'
 import { appCodes } from '../../Config/appCodes'
+import { Consultas } from '../../types'
 const renderItem = ({ item }: {item: any}) => <ConsultasItem item={item} />
 
 const ListLimit = ({ isEmpty = false }: {isEmpty: boolean}) => {
@@ -75,24 +76,23 @@ const ListEmpty = () => (
     </Text>
   </View>
 )
-export const Consultas: React.FC = () => {
-  const { getDtesServiceTS } = useApiService()
+export const ConsultasV: React.FC = () => {
   const toast = useToast()
+  const controller = new AbortController()
+  const { signal } = controller
   const { country, taxid, requestor, userName } = useSelector((state: ReduxState) => state.userDB)
   // const { consultasFiltroFormSchema } = useFormSchema()
-  // const { consultasComponentSchema } = useComponentSchema()
-  const [dtes, setDtes] = useState<Array<any>>([])
+  const { consultasComponentSchema } = useComponentSchema()
+  const [dtes, setDtes] = useState<Array<Consultas>>([])
+  const [search, setSearch] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   // ref
   const bottomSheetModalRef = useRef<BottomSheetModal>(null)
   // variables
-  const snapPoints = useMemo(() => ['25%', '50%', '80%'], [])
+  const snapPoints = useMemo(() => ['25%', '50%', '90%'], [])
   // callbacks
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present()
-  }, [])
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index)
   }, [])
 
   const onSubmit = useCallback((values: any) => {
@@ -102,37 +102,34 @@ export const Consultas: React.FC = () => {
 
   useLayoutEffect(() => {
     console.log('CONSULTAS RENDER')
-    const controller = new AbortController()
-    const { signal } = controller
-    setLoading(true)
-    getDtesServiceTS({})
-      .then(res => {
-        console.log('CONSULTAS RES', res)
-      })
-    // Services.getDTESService?.[country]({ userName, taxid, country, requestor, signal })
-    //   .then((res: {code: number, data?: Array<any>}) => {
-    //     setLoading(false)
-    //     if (res.code === appCodes.ok) {
-    //       if (res?.data) {
-    //         console.log('CONSULTAS RESPONSE', res.data)
-    //         setDtes(res?.data)
-    //       }
-    //     } else {
-    //       toast.show('Parece que no posees ningun documento, de ser esto incorrecto porfavor revisa tu conexion a internet', {
-    //         type: 'warning'
-    //       })
-    //     }
-    //   })
-    //   .catch((err: Error) => {
-    //     setLoading(false)
-    //     console.log('ERROR GET CONSULTAS', err)
-    //     toast.show('Algo salio mal al tratar de obtener tus documentos, porfavor revisa tu conexion a internet o intentalo mas tarde, si el error persite porfavor reportalo.', {
-    //       type: 'error'
-    //     })
-    //   })
-
+    fetchData()
     return () => controller.abort()
   }, [])
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    return consultasComponentSchema?.functions?.fetchData({ signal })
+      .then(res => {
+        setLoading(false)
+        if (res.code === appCodes.ok) {
+          if (res?.data) {
+            // console.log('CONSULTAS RESPONSE', res.data)
+            setDtes(res?.data)
+          }
+        } else {
+          toast.show('Parece que no posees ningun documento, de ser esto incorrecto porfavor revisa tu conexion a internet', {
+            type: 'warning'
+          })
+        }
+      })
+      .catch((err: Error) => {
+        setLoading(false)
+        console.log('ERROR GET CONSULTAS', err)
+        toast.show('Algo salio mal al tratar de obtener tus documentos, porfavor revisa tu conexion a internet o intentalo mas tarde, si el error persite porfavor reportalo.', {
+          type: 'error'
+        })
+      })
+  }, [signal])
 
   return (
 
@@ -141,7 +138,9 @@ export const Consultas: React.FC = () => {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <InputIcon
             keyboardType='default'
-            placeholder='Buscar...'
+            value={search}
+            onChangeText={setSearch}
+            placeholder={consultasComponentSchema?.labels?.searchLabel || 'Buscar...'}
             icon={{
               name: 'search1',
               color: theme.graygreen,
@@ -171,17 +170,33 @@ export const Consultas: React.FC = () => {
         >
           <FlashList
             renderItem={renderItem}
-            data={dtes}
-            estimatedItemSize={231}
+            data={dtes?.filter((p: Consultas) => {
+              if (p?.[(consultasComponentSchema?.searchKeys?.[0] || '') as keyof typeof p] || p?.[(consultasComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]) {
+                return p?.[(consultasComponentSchema?.searchKeys?.[0] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '') || p?.[(consultasComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '')
+              }
+              return null
+            }) || []}
+            estimatedItemSize={431}
             refreshControl={
               <RefreshControl
                 refreshing={loading}
+                onRefresh={fetchData}
                 colors={[theme.orange, theme.purple, theme.graygreen]}
                 tintColor={theme.graygreen}
               />
               }
             ListEmptyComponent={() => <ListEmpty />}
-            ListFooterComponent={() => <ListLimit isEmpty={Boolean(dtes.length)} />}
+            ListFooterComponent={() =>
+              <ListLimit
+                isEmpty={
+                    Boolean((dtes?.filter((p: Consultas) => {
+                      if (p?.[(consultasComponentSchema?.searchKeys?.[0] || '') as keyof typeof p] || p?.[(consultasComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]) {
+                        return p?.[(consultasComponentSchema?.searchKeys?.[0] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '') || p?.[(consultasComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '')
+                      }
+                      return null
+                    }) || []).length)
+                }
+              />}
             showsVerticalScrollIndicator={false}
           />
         </View>
@@ -189,7 +204,6 @@ export const Consultas: React.FC = () => {
           ref={bottomSheetModalRef}
           index={2}
           snapPoints={snapPoints}
-          onChange={handleSheetChanges}
           backdropComponent={BottomSheetBackdrop}
         >
           <BottomSheetScrollView style={styles.contentContainer}>

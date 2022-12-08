@@ -21,7 +21,7 @@ const commonKeys: {
   }
 }
 
-export const Item: React.FC<ItemProps> = React.memo(function Item ({
+export const ItemProducto: React.FC<ItemProps> = React.memo(function Item ({
   item,
   handleEdit = (item: Producto) => { console.log('UNHANDLE EDIT ITEM ', item) },
   handleDelete = (item: Producto) => { console.log('UNHANDLE DELETE ITEM ', item) },

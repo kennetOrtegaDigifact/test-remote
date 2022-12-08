@@ -4,7 +4,7 @@ import { fonts, theme } from '../../Config/theme'
 import { useComponentSchema } from '../../Hooks/useComponentSchema'
 import Icon from '../Icon'
 import { cleanUserName, numberFormater } from '../../Config/utilities'
-import { IconType } from '../../types'
+import { Consultas, IconType } from '../../types'
 type ButtonBarProps={
   icon?: IconType
   title?: string
@@ -44,15 +44,15 @@ const cancelledKeys = (key: string, value: string) => {
   }
 }
 
-export const ConsultasItem: React.FC<{item: any}> = React.memo(function ConsultasItem ({ item }) {
+export const ConsultasItem: React.FC<{item: Consultas}> = React.memo(function ConsultasItem ({ item }) {
   const [cancelled, setCancelled] = useState<boolean>(false)
   useLayoutEffect(() => {
     Object.keys(item).forEach(key => {
       if (consultasComponentSchema?.labels?.[key]) {
-        console.log(`${consultasComponentSchema?.labels?.[key]}${item?.[key]}`)
+        console.log(`${consultasComponentSchema?.labels?.[key]}${item?.[key as keyof typeof item]}`)
       }
     })
-    const anulado = Object.keys(item).some(key => cancelledKeys(key, item?.[key]))
+    const anulado = Object.keys(item).some(key => cancelledKeys(key, item?.[key as keyof typeof item] || ''))
     setCancelled(anulado)
   }, [])
   const { consultasComponentSchema } = useComponentSchema()
@@ -157,17 +157,66 @@ export const ConsultasItem: React.FC<{item: any}> = React.memo(function Consulta
           borderTopWidth: 0.5,
           borderTopColor: theme.gray50,
           flexDirection: 'row',
-          padding: 5,
+          paddingVertical: 5,
+          paddingHorizontal: 10,
           alignItems: 'center',
           justifyContent: 'space-between'
         }}
         >
-          <ButtonBar />
-          <ButtonBar />
-          <ButtonBar />
-          <ButtonBar />
-          <ButtonBar />
-          <ButtonBar />
+          <ButtonBar
+            icon={{
+              name: 'print',
+              color: theme.purple,
+              size: 20,
+              type: 'i'
+            }}
+            title='Imprimir'
+          />
+          <ButtonBar
+            icon={{
+              name: 'file-eye',
+              color: theme.purple,
+              size: 20,
+              type: 'm'
+            }}
+            title='PDF'
+          />
+          <ButtonBar
+            icon={{
+              name: 'share-social',
+              color: theme.purple,
+              size: 20,
+              type: 'i'
+            }}
+            title='Compartir'
+          />
+          <ButtonBar
+            icon={{
+              name: 'code-slash',
+              color: theme.purple,
+              size: 20,
+              type: 'i'
+            }}
+            title='HTML'
+          />
+          <ButtonBar
+            icon={{
+              name: 'email',
+              color: theme.purple,
+              size: 20,
+              type: 'm'
+            }}
+            title='Enviar'
+          />
+          <ButtonBar
+            icon={{
+              name: 'cancel',
+              color: cancelled ? theme.red50 : theme.red,
+              size: 20,
+              type: 'm'
+            }}
+            title='Anular'
+          />
         </View>
       </View>
 

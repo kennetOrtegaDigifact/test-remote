@@ -329,6 +329,7 @@ export type Filter={
     paymentType?: string
     limit?: number
     CUFE?: string
+    signal?: AbortSignal
 }
 
 export type Invoice = {

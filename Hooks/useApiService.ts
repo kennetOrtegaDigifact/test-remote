@@ -1612,8 +1612,10 @@ export const useApiService = () => {
     data: Consultas[]
     key: string
   }> => {
-    console.log('------------ DTES XML ------------------', getDtesXml())
+    // console.log('------------ DTES XML ------------------', getDtesXml())
+    const { signal = new AbortController().signal } = props || {}
     return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
+      signal,
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
       body: getDtesXml(props)
@@ -1628,7 +1630,7 @@ export const useApiService = () => {
             const container: any[] = []
             container.push(dataResponse)
             const data: Consultas[] = container?.flat()?.map((e: Consultas) => {
-              console.log('------ CONSULTAS ELEMENT ------', e)
+              // console.log('------ CONSULTAS ELEMENT ------', e)
               const obj: Consultas|any = {}
               // Primero creamos el objeto base con sus key por pais ya que el tipo Consultas lleva mas props dependendiendo del pais
               consultasFetchProps?.[user?.country || '']?.keys?.forEach((key: string) => {
@@ -1674,7 +1676,7 @@ export const useApiService = () => {
           key: 'consultas'
         }
       })
-  }, [])
+  }, [user?.country])
 
   const getDashboardService = async ({
     taxid,

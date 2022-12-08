@@ -3,13 +3,21 @@ import { useToast } from 'react-native-toast-notifications'
 import { useSelector } from 'react-redux'
 import { appCodes } from '../Config/appCodes'
 import { ReduxState } from '../Redux/store'
-import { Cliente, ComponentSchema, Impuestos, OTI, Producto } from '../types'
+import { Cliente, ComponentSchema, ConsultasComponentSchema, Filter, Impuestos, OTI, Producto } from '../types'
 import { useApiService } from './useApiService'
 
 export const useComponentSchema = () => {
   const { country } = useSelector((state: ReduxState) => state.userDB)
   const toast = useToast()
-  const { getAllClientsServiceTS, addEditClientServiceTS, deleteClientServiceTS, deleteProductServiceTS, getAllProductsServiceTS, addEditProductServiceTS } = useApiService()
+  const {
+    getAllClientsServiceTS,
+    addEditClientServiceTS,
+    deleteClientServiceTS,
+    deleteProductServiceTS,
+    getAllProductsServiceTS,
+    addEditProductServiceTS,
+    getDtesServiceTS
+  } = useApiService()
 
   const borrarProducto = useCallback(async (item: Producto) => {
     const { name } = item
@@ -275,8 +283,60 @@ export const useComponentSchema = () => {
       }
     }
   }
+
+  const getDtes = useCallback(async (props?: Filter) => {
+    return getDtesServiceTS(props).then(res => res)
+  }, [])
+
+  const consultas: ConsultasComponentSchema = {
+    GT: {
+      labels: {
+        documentType: 'Tipo de Documento: ',
+        numeroAuth: 'Numero de Autorización: ',
+        numeroSerie: 'Numero de Serie: ',
+        numeroDocumento: 'Numero de Documento: ',
+        razonSocial: 'Razon Social: ',
+        fechaEmision: 'Fecha de Emision: ',
+        userName: 'Usuario que la Emitio: ',
+        establecimiento: 'Establecimiento Emisor: ',
+        monto: 'Monto: Q.',
+        cancelled: 'Documento Anulado: ',
+        clientTaxid: 'NIT del Cliente: ',
+        clientName: 'Nombre del Cliente: ',
+        searchLabel: 'Buscar por Numero de Autorizacion/Serie'
+      },
+      searchKeys: ['numeroAuth', 'numeroSerie'],
+      functions: {
+        anular: () => {},
+        fetchData: getDtes,
+        html: () => {},
+        pdf: () => {},
+        print: () => {},
+        sendCorreo: () => {},
+        share: () => {}
+      }
+    },
+    PA: {
+      labels: {
+        documentType: 'Tipo de Documento: ',
+        razonSocial: 'Razon Social: ',
+        searchLabel: 'Buscar por CUFE/RUC'
+      },
+      searchKeys: ['clientTaxid', 'CUFE'],
+      functions: {
+        anular: () => {},
+        fetchData: getDtes,
+        html: () => {},
+        pdf: () => {},
+        print: () => {},
+        sendCorreo: () => {},
+        share: () => {}
+      }
+    }
+  }
   return {
     productosComponentSchema: products[country || ''],
-    clientesComponentSchema: clientes[country || '']
+    clientesComponentSchema: clientes[country || ''],
+    consultasComponentSchema: consultas[country || '']
   }
 }

@@ -10,11 +10,10 @@ import { formulario, FormularioPerCountry } from '../types'
 import { useApiService } from './useApiService'
 import { useValidator } from './useValidator'
 
-export const useFormSchema = (props
-  : {
+export const useFormSchema = (props?: {
     onBlur?: (values?: any) => void
   }) => {
-  const { onBlur = (values) => { console.log('UNHANDLED ONBLUR', values) } } = props
+  const { onBlur = (values: any) => { console.log('UNHANDLED ONBLUR', values) } } = props || {}
   const { getUnitMeasurementServiceTS } = useApiService()
   const dispatch = useDispatch()
   const { clientesValidatorSchema, selectProductoValidatorSchema } = useValidator()

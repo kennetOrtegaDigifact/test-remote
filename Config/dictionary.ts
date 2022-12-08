@@ -1191,23 +1191,23 @@ export const consultasFetchProps: ServiceFetchProps = {
     // obj.userName = dte.userName
     keys: [
       'documentType',
-      'clientTaxid',
-      'clientName',
+      'razonSocial',
+      'establecimiento',
+      'userName',
+      'CUFE',
+      'numeroAuth',
       'numeroSerie',
       'numeroDocumento',
       'fechaEmision',
+      'clientTaxid',
+      'clientName',
       'monto',
       'paidTime',
       'cancelled',
-      'establecimiento',
       'countryCode',
       'userCountryCode',
       'userTaxId',
-      'razonSocial',
-      'CUFE',
-      'numeroAuth',
-      'internalID',
-      'userName'
+      'internalID'
     ],
     props: {
       documentType: 'A',
@@ -1251,41 +1251,41 @@ export const consultasFetchProps: ServiceFetchProps = {
     // obj.userName = dte.userName
     keys: [
       'documentType',
-      'clientTaxid',
-      'clientName',
+      'razonSocial',
+      'establecimiento',
+      'userName',
+      'numeroAuth',
       'numeroSerie',
       'numeroDocumento',
       'fechaEmision',
+      'clientTaxid',
+      'clientName',
       'monto',
       'paidTime',
       'cancelled',
-      'establecimiento',
       'countryCode',
       'userCountryCode',
       'userTaxId',
-      'razonSocial',
-      'numeroAuth',
-      'internalID',
-      'userName'
+      'internalID'
     ],
     props: {
       documentType: 'A',
-      clientTaxid: 'B',
-      clientName: 'C',
+      razonSocial: 'Z',
+      establecimiento: 'S',
+      userName: 'userName',
+      numeroAuth: 'DG',
       numeroSerie: 'D',
       numeroDocumento: 'E',
       fechaEmision: 'F',
+      clientTaxid: 'B',
+      clientName: 'C',
       monto: 'G',
       paidTime: 'H',
       cancelled: 'I',
-      establecimiento: 'S',
       countryCode: 'W',
       userCountryCode: 'X',
       userTaxId: 'Y',
-      razonSocial: 'Z',
-      numeroAuth: 'DG',
-      internalID: 'IntID',
-      userName: 'userName'
+      internalID: 'IntID'
     }
   }
 }

@@ -21,7 +21,7 @@ import { useValidator } from '../../Hooks/useValidator'
 import Icon from '../../Components/Icon'
 import { productTemplate } from '../../Config/templates'
 import { appCodes } from '../../Config/appCodes'
-import { Item } from './item'
+import { ItemProducto } from './ItemProducto'
 
 const ListLimit = ({ isEmpty = false }: {isEmpty: boolean}) => {
   return (
@@ -222,7 +222,7 @@ export const Productos: React.FC = () => {
     }
   }, [permisos])
 
-  const renderItem = useCallback(({ item }: {item: Producto}) => (<Item item={item} handleEdit={handleEdit} handleDelete={handleDelete} country={country} />), [handleEdit, handleDelete])
+  const renderItem = useCallback(({ item }: {item: Producto}) => (<ItemProducto item={item} handleEdit={handleEdit} handleDelete={handleDelete} country={country} />), [handleEdit, handleDelete])
 
   const fecthData = useCallback(async () => {
     setLoading(true)
