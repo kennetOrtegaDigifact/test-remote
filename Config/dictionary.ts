@@ -62,22 +62,22 @@ export const tiposDocumentoGT: {
       name: 'Factura Cambiaria'
     },
     {
-      no: 9,
+      no: 10,
       code: 'NCRE',
       name: 'Nota de Credito'
     },
     {
-      no: 10,
+      no: 9,
       code: 'NDEB',
       name: 'Nota de Debito'
     },
     {
-      no: 6,
+      no: 8,
       code: 'RECI',
       name: 'Recibo'
     },
     {
-      no: 5,
+      no: 7,
       code: 'RDON',
       name: 'Recibo de Donacion'
     }
@@ -94,7 +94,7 @@ export const tiposDocumentoGT: {
       name: 'Factura Cambiaria Pequeño Contribuyente'
     },
     {
-      no: 6,
+      no: 8,
       code: 'RECI',
       name: 'Recibo'
     }
@@ -111,7 +111,7 @@ export const tiposDocumentoGT: {
       name: 'Factura Cambiaria Pequeño Contribuyente Regimen Electronico'
     },
     {
-      no: 6,
+      no: 8,
       code: 'RECI',
       name: 'Recibo'
     }
@@ -142,12 +142,12 @@ export const tiposDocumentoGT: {
   ],
   EXE: [
     {
-      no: 6,
+      no: 8,
       code: 'RECI',
       name: 'Recibo'
     },
     {
-      no: 5,
+      no: 7,
       code: 'RDON',
       name: 'Recibo de Donacion'
     }
@@ -1288,4 +1288,10 @@ export const consultasFetchProps: ServiceFetchProps = {
       internalID: 'IntID'
     }
   }
+}
+
+export const currenciePrefix: {[key: string]: string} = {
+  GT: 'Q.',
+  PA: 'B/.',
+  '': ''
 }

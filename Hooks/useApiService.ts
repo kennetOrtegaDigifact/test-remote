@@ -1612,7 +1612,7 @@ export const useApiService = () => {
     data: Consultas[]
     key: string
   }> => {
-    // console.log('------------ DTES XML ------------------', getDtesXml())
+    console.log('------------ DTES XML ------------------', getDtesXml(props))
     const { signal = new AbortController().signal } = props || {}
     return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
       signal,
@@ -1676,7 +1676,7 @@ export const useApiService = () => {
           key: 'consultas'
         }
       })
-  }, [user?.country])
+  }, [user?.country, getDtesXml])
 
   const getDashboardService = async ({
     taxid,

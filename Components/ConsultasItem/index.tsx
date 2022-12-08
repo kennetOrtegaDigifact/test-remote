@@ -5,6 +5,7 @@ import { useComponentSchema } from '../../Hooks/useComponentSchema'
 import Icon from '../Icon'
 import { cleanUserName, numberFormater } from '../../Config/utilities'
 import { Consultas, IconType } from '../../types'
+import { currenciePrefix } from '../../Config/dictionary'
 type ButtonBarProps={
   icon?: IconType
   title?: string
@@ -44,7 +45,7 @@ const cancelledKeys = (key: string, value: string) => {
   }
 }
 
-export const ConsultasItem: React.FC<{item: Consultas}> = React.memo(function ConsultasItem ({ item }) {
+export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = React.memo(function ConsultasItem ({ item, country = '' }) {
   const [cancelled, setCancelled] = useState<boolean>(false)
   useLayoutEffect(() => {
     // Object.keys(item).forEach(key => {
@@ -60,7 +61,7 @@ export const ConsultasItem: React.FC<{item: Consultas}> = React.memo(function Co
   const especialCharacters = useCallback((key: string, value: any) => {
     const configs: {[key: string]: any} = {
       username: cleanUserName({ usuario: value }),
-      monto: numberFormater({ number: Number(value), toFixed: true })
+      monto: numberFormater({ number: Number(value), toFixed: true, prefix: currenciePrefix?.[country] })
     }
     if (configs?.[key]) {
       return configs?.[key]

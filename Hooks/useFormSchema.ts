@@ -110,7 +110,7 @@ export const useFormSchema = (props?: {
       schema: [
         {
           type: 'inputText',
-          label: 'NIT:',
+          label: 'NIT del Cliente:',
           name: 'taxidReceptor',
           icon: {
             name: 'idcard',

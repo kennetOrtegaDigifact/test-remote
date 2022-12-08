@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native'
 import {
   BottomSheetModal,
@@ -14,12 +14,12 @@ import { ReduxState } from '../../Redux/store'
 import { useFormSchema } from '../../Hooks/useFormSchema'
 import { Form } from '../../Components/Form'
 import { FlashList } from '@shopify/flash-list'
-import { useApiService } from '../../Hooks/useApiService'
 import { useComponentSchema } from '../../Hooks/useComponentSchema'
 import { ConsultasItem } from '../../Components/ConsultasItem'
 import { appCodes } from '../../Config/appCodes'
-import { Consultas } from '../../types'
-const renderItem = ({ item }: {item: any}) => <ConsultasItem item={item} />
+import { Consultas, Filter } from '../../types'
+import { numberFormater } from '../../Config/utilities'
+import { currenciePrefix } from '../../Config/dictionary'
 
 const ListLimit = ({ isEmpty = false }: {isEmpty: boolean}) => {
   return (
@@ -80,7 +80,7 @@ export const ConsultasV: React.FC = () => {
   const toast = useToast()
   const controller = new AbortController()
   const { signal } = controller
-  const { country, taxid, requestor, userName } = useSelector((state: ReduxState) => state.userDB)
+  const { country = '', taxid, requestor, userName } = useSelector((state: ReduxState) => state.userDB)
   const { consultasFiltroFormSchema } = useFormSchema()
   const { consultasComponentSchema } = useComponentSchema()
   const [dtes, setDtes] = useState<Array<Consultas>>([])
@@ -95,9 +95,10 @@ export const ConsultasV: React.FC = () => {
     bottomSheetModalRef.current?.present()
   }, [])
 
-  const onSubmit = useCallback((values: any) => {
+  const onSubmit = useCallback((values: Filter) => {
     bottomSheetModalRef.current?.close()
     console.log(values)
+    fetchData({ ...values })
   }, [])
 
   useLayoutEffect(() => {
@@ -106,9 +107,10 @@ export const ConsultasV: React.FC = () => {
     return () => controller.abort()
   }, [])
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (props?: Filter) => {
     setLoading(true)
-    return consultasComponentSchema?.functions?.fetchData({ signal })
+    setDtes([])
+    return consultasComponentSchema?.functions?.fetchData({ signal, ...(props || {}) })
       .then(res => {
         setLoading(false)
         if (res.code === appCodes.ok) {
@@ -130,6 +132,16 @@ export const ConsultasV: React.FC = () => {
         })
       })
   }, [signal])
+
+  const calculateTotal = useCallback(() => {
+    const datos = dtes.filter(e => e?.numeroAuth?.toString()?.toLowerCase()?.includes(search.toLowerCase())) || []
+    let monto = 0
+    datos.forEach(e => { monto += Number(e?.monto || 0) })
+    // console.log('comoooooooooooooooooooooo', datos)
+    return numberFormater({ number: monto, toFixed: true, prefix: currenciePrefix?.[country] })
+  }, [dtes, search])
+
+  const renderItem = ({ item }: {item: any}) => <ConsultasItem item={item} country={country} />
 
   return (
 
@@ -232,6 +244,16 @@ export const ConsultasV: React.FC = () => {
             />
           </BottomSheetScrollView>
         </BottomSheetModal>
+      </View>
+      <View style={{ backgroundColor: theme.graygreen, borderRadius: 13, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: theme.white, fontSize: fonts.small }}>Total de Documentos Mostrados</Text>
+          <Text style={{ color: theme.white, fontSize: fonts.subHeader, fontWeight: 'bold' }}>{numberFormater({ number: dtes.filter(e => e?.numeroAuth?.toString()?.toLowerCase()?.includes(search.toLowerCase()))?.length, toFixed: true, fixedDecimal: 0 })}</Text>
+        </View>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: theme.white, fontSize: fonts.small }}>Total en Efectivo</Text>
+          <Text style={{ color: theme.white, fontSize: fonts.subHeader, fontWeight: 'bold' }}>{calculateTotal()}</Text>
+        </View>
       </View>
     </>
   )

@@ -591,6 +591,7 @@ export const useXmlFetchConstructor = () => {
       numeroSerie = '',
       taxidReceptor = ''
     } = props || {}
+    console.log('---------------------- SEARCH BASIC PROPS ---------------------', props)
     return `<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
         <soap:Body>
@@ -608,11 +609,11 @@ export const useXmlFetchConstructor = () => {
                         <ApplySearchCriteria>true</ApplySearchCriteria>
                         <SCountryCode>${country}</SCountryCode>
                         <STaxIdOrName>${taxid}</STaxIdOrName>
-                        <Branch>${establecimientos}|${allDTESorUsername}|${CUFE?.length ? `${CUFE}|` : ''}</Branch>
+                        <Branch>${establecimientos}|${allDTESorUsername || 'n'}|${CUFE?.length ? `${CUFE}|` : ''}</Branch>
                         <CurrencyCode />
                         <RCountryCode>${country}</RCountryCode>
                         <RTaxIdOrName>${taxidReceptor}</RTaxIdOrName>
-                        <SKind>${documentType}</SKind>
+                        <SKind>${documentType || '0'}</SKind>
                         <ReturnBatchAsLike>${Boolean(numeroSerie.length)}</ReturnBatchAsLike>
                         <Batch>${numeroSerie}</Batch>
                         <UseSerialFrom>false</UseSerialFrom>
@@ -625,16 +626,16 @@ export const useXmlFetchConstructor = () => {
                         <InternalIDTo>0</InternalIDTo>
                         <UseDateFrom>${Boolean(dateFrom.length)}</UseDateFrom>
                         <UseDateTo>${Boolean(dateTo.length)}</UseDateTo>
-                        <DateFrom>${dateFrom || '2000-01-01'}T00:00:00</DateFrom>
-                        <DateTo>${dateTo || new Date().toISOString().slice(0, 10)}T23:59:59.999</DateTo>
+                        <DateFrom>${dateFrom?.split('-')?.reverse()?.join('-') || '2000-01-01'}T00:00:00</DateFrom>
+                        <DateTo>${dateTo?.split('-')?.reverse()?.join('-') || new Date().toISOString().slice(0, 10)}T23:59:59.999</DateTo>
                         <UseAmountFrom>${amountFrom >= 0}</UseAmountFrom>
                         <UseAmountTo>${amountTo > 0}</UseAmountTo>
-                        <AmountFrom>${amountFrom}</AmountFrom>
-                        <AmountTo>${amountTo}</AmountTo>
+                        <AmountFrom>${amountFrom || 0}</AmountFrom>
+                        <AmountTo>${amountTo || 0}</AmountTo>
                         <Paid>2</Paid>
-                        <Cancelled>${cancelled}</Cancelled>
+                        <Cancelled>${cancelled || 0}</Cancelled>
                         <Distributed>2</Distributed>
-                        <QueryTop>${limit}</QueryTop>
+                        <QueryTop>${limit || '10'}</QueryTop>
                         <OrderBy>0</OrderBy>
                         <Descending>true</Descending>
                         </SearchCriteria>
