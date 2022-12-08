@@ -226,6 +226,26 @@ export const useFormSchema = (props?: {
         },
         {
           type: 'picker',
+          label: 'Filtrar por Documentos Anulados: ',
+          name: 'cancelled',
+          icon: {
+            name: 'cancel',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: [{ label: '-- Filtro por Anulados  --', value: '0' }, { value: '0', label: 'NO' }, { value: '1', label: 'SI' }],
+            labelKey: 'label',
+            valueKey: 'value',
+            defaultValue: '-- Filtro por Anulados  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          }
+        },
+        {
+          type: 'picker',
           label: 'Cantidad de Documentos: ',
           name: 'limit',
           icon: {
@@ -278,7 +298,8 @@ export const useFormSchema = (props?: {
           allDTESorUsername: '',
           limit: '10',
           dateFrom: '',
-          dateTo: ''
+          dateTo: '',
+          cancelled: ''
         },
         reValidateMode: 'onChange',
         mode: 'onSubmit',
