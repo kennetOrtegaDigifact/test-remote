@@ -199,10 +199,20 @@ export const cleanAccents = (string?: string): string => {
       const cleanString = regexSpecialChars(string)
       return cleanString?.normalize('NFD')?.replace(/[\u0300-\u036f]/g, '')
     } else {
-      return string
+      return string || ''
     }
   } catch (ex) {
     console.error('ERROR CLEAN ACCENTS FUNCTION UTILITIES', ex)
-    return string
+    return string || ''
   }
+}
+
+export const regexDate = (string: string): string => {
+  const r1 = string.replace(/-/, '/').replace(/-/, '/').replace(/T/gi, ' ')
+  const index = r1.indexOf('-')
+  if (index !== -1) {
+    const r2 = r1.slice(0, index)
+    return r2
+  }
+  return r1
 }

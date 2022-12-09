@@ -10,6 +10,7 @@ import { useServiceBuilder } from '../../Hooks/useServiceBuilder'
 import { useApiService } from '../../Hooks/useApiService'
 import { appCodes } from '../../Config/appCodes'
 import { useToast } from 'react-native-toast-notifications'
+import { useParser } from '../../Hooks/useParser'
 type ButtonBarProps={
   icon?: IconType
   title?: string
@@ -59,6 +60,7 @@ export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = Reac
   const [cancelled, setCancelled] = useState<boolean>(false)
   const { ticketBuilder } = useServiceBuilder()
   const { getDocumentServiceTS } = useApiService()
+  const { parseXmlToJsonNUC } = useParser()
   const toast = useToast()
   useLayoutEffect(() => {
     // Object.keys(item).forEach(key => {
@@ -96,12 +98,45 @@ export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = Reac
         if (res?.code === appCodes.ok) {
           if (res?.data?.XML?.length > 0) {
             setTimeout(() => {
-              toast.update(t, 'Documento obtenido exitosamente!', {
-                type: 'ok',
-                duration: 3000
+              toast.update(t, 'Procesando Documento', {
+                type: 'loading',
+                duration: 60000,
+                data: {
+                  theme: 'dark'
+                }
               })
             }, 500)
-            console.log('PARSER XML')
+            parseXmlToJsonNUC(res.data.XML).then(res => {
+              console.log(`-------------------------------- XML PARSER TO NUC FOR ${country} ---------------`, JSON.stringify(res.data))
+              if (res.code === appCodes.ok) {
+                setTimeout(() => {
+                  toast.update(t, 'Procesando Documento', {
+                    type: 'loading',
+                    duration: 500,
+                    data: {
+                      theme: 'dark'
+                    }
+                  })
+                }, 500)
+                ticketBuilder({ customOrder: {}, json: res.data })
+              } else {
+                setTimeout(() => {
+                  toast.update(t, 'Error Procesando Documento', {
+                    type: 'error',
+                    duration: 5000
+                  })
+                }, 500)
+              }
+            })
+              .catch(err => {
+                console.log(`ERROR PARSE XML TO JSON NUC IN CONSULTAS ITEM FOR ${country}`, err)
+                setTimeout(() => {
+                  toast.update(t, 'Algo salio mal al procesar tu documento', {
+                    type: 'error',
+                    duration: 5000
+                  })
+                }, 500)
+              })
           } else {
             setTimeout(() => {
               toast.update(t, 'Algo salio mal al obtener tu documento, revisa tu conexion a internet o intentalo nuevamente mas tarde, si el error persiste reportalo.', {
@@ -119,7 +154,7 @@ export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = Reac
           }, 500)
         }
       })
-  }, [])
+  }, [country, getDocumentServiceTS, item?.numeroAuth, parseXmlToJsonNUC, ticketBuilder, toast])
 
   return (
     <>
@@ -278,4 +313,4 @@ export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = Reac
 
     </>
   )
-}, (prev, next) => JSON.stringify(prev) === JSON.stringify(next))
+}, (prev, next) => prev.item.numeroAuth === next.item.numeroAuth)

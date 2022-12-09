@@ -600,8 +600,8 @@ type Tax={
     Amount?: number
 }
 type Totals={
-    TotalBDiscount?: number
-    TotalWDiscount?: number
+    TotalBDiscounts?: number
+    TotalWDiscounts?: number
     TotalBTaxes?: number
     TotalWTaxes?: number
     SpecificTotal?: number
@@ -709,14 +709,14 @@ export interface NUC {
         DocTemplate?: any
         AdditionalInfo?: AdditionalInfoAdendas
         AditionalInfo?: AdditionlInfo[]
+        CUFE?: string,
+        NumeroAutorizacion?: string,
+        Serie?: string,
+        Numero?: string,
+        FechaEmi?: string,
+        FechaCert?: string,
+        QRCode?: string
     }
-    CUFE?: string,
-    NumeroAutorizacion?: string,
-    Serie?: string,
-    Numero?: string,
-    FechaEmi?: string,
-    FechaCert?: string,
-    QRCode?: string
 }
 type printerCodes = 'logo'| 'header'| 'docInfo'| 'clientInfo'| 'items'| 'totals'| 'extras'| 'qrcode'| 'certInfo'
 export type printerFunctions = {[key: string]: printerCodes[]}

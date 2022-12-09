@@ -4,7 +4,12 @@ import { optionsWithAttr } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
 import { useCallback } from 'react'
 import { NUC } from '../types'
-
+import { useSelector } from 'react-redux'
+import { ReduxState } from '../Redux/store'
+type NUCResponse = Promise<{
+        code: number
+        data?: NUC
+  }>
 const parserXMLBase64 = (XML?: string): {
     code: number
     data: any
@@ -35,10 +40,9 @@ const parserXMLBase64 = (XML?: string): {
   }
 }
 export const useParser = () => {
-  const parseXmlToJsonNUCPA = useCallback(async (xml?: string): Promise<{
-        code: number
-        data: NUC
-  }> => {
+  const { country = '' } = useSelector((state: ReduxState) => state.userDB)
+
+  const parseXmlToJsonNUCPA = useCallback(async (xml?: string): NUCResponse => {
     return new Promise((resolve, reject) => {
       try {
         const res = parserXMLBase64(xml)
@@ -47,7 +51,8 @@ export const useParser = () => {
         const gTot = res.data.rContFe.xFe.rFE.gTot
         console.log('PARSE XML TO PRINT ', JSON.stringify(res.data))
         console.log('------------------------------ DEGEN --------------------------', JSON.stringify(gDGen))
-        const data = {
+        const data: NUC = {
+          CountryCode: country,
           Header: {
             DocType: ('00' + gDGen.iDoc).slice(-2),
             IssuedDateTime: gDGen.dFechaEm,
@@ -296,11 +301,18 @@ export const useParser = () => {
         reject(ex)
       }
     })
+  }, [country])
+
+  const parseXmlToJsonNUCGT = useCallback(async (xml?: string):NUCResponse => {
+    return new Promise((resolve) => resolve({
+      code: appCodes.ok
+    }))
   }, [])
+  const parseXmlToJsonNUCPerCountry: {[key: string]: (xml?: string) => NUCResponse} = {
+    GT: parseXmlToJsonNUCGT,
+    PA: parseXmlToJsonNUCPA
+  }
   return {
-    parseXmlToJsonNUC: {
-      GT: () => {},
-      PA: parseXmlToJsonNUCPA
-    }
+    parseXmlToJsonNUC: parseXmlToJsonNUCPerCountry?.[country]
   }
 }

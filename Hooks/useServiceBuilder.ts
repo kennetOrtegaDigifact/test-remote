@@ -143,7 +143,7 @@ export const useServiceBuilder = () => {
     }
   }, [])
 
-  const ticketBuilder = useCallback(async ({ customOrder = {}, json = { Header: {}, Buyer: {}, Seller: {}, ThirdParties: [], Items: [], Totals: { GrandTotal: {} }, AdditionalDocumentInfo: {} } }:{customOrder?: printerFunctions, json: NUC}) => {
+  const ticketBuilder = useCallback(async ({ customOrder = {}, json = { Header: {}, Buyer: {}, Seller: {}, ThirdParties: [], Items: [], Totals: { GrandTotal: {} }, AdditionalDocumentInfo: {} } }:{customOrder?: printerFunctions, json?: NUC}) => {
     const order: printerFunctions =
       customOrder?.[country]?.length
         ? customOrder

@@ -189,7 +189,7 @@ export const ConsultasV: React.FC = () => {
               }
               return null
             }) || []}
-            estimatedItemSize={431}
+            estimatedItemSize={10}
             refreshControl={
               <RefreshControl
                 refreshing={loading}

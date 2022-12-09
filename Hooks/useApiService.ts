@@ -1737,7 +1737,7 @@ export const useApiService = () => {
           key: 'document'
         }
       })
-  }, [user?.country])
+  }, [getDocumentXml, user?.country])
 
   const getDashboardService = async ({
     taxid,
