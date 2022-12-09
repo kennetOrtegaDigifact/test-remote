@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { Cliente, Filter, Producto, XmlProps } from '../types'
+import { Cliente, documentTypesToGet, Filter, Producto, XmlProps } from '../types'
 const requestTransaction: {[key: string]: string} = {
   GT: 'xmlns="http://www.fact.com.mx/schema/ws"',
   PA: 'xmlns="https://www.digifact.com.pa/schema/ws"'
@@ -647,6 +647,36 @@ export const useXmlFetchConstructor = () => {
         </soap:Body>
     </soap:Envelope>`
   }, [user])
+
+  const getDocumentXmlConstructor = useCallback((props?: {documentType: documentTypesToGet, numeroAuth: string}) => {
+    const {
+      numeroAuth = '',
+      documentType = ''
+    } = props || {}
+    const {
+      country = '',
+      userName = '',
+      requestor = '',
+      taxid = ''
+    } = user
+    return `<?xml version = "1.0" encoding = "utf-8" ?>
+  <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Body>
+      <RequestTransaction ${requestTransaction?.[country]}>
+        <Requestor>${requestor}</Requestor>
+        <Transaction>GET_DOCUMENT</Transaction>
+        <Country>${country}</Country>
+        <Entity>${taxid}</Entity>
+        <User>${requestor}</User>
+        <UserName>${userName}</UserName>
+        <Data1>${numeroAuth}</Data1>
+        <Data2></Data2>
+        <Data3>${documentType}</Data3>
+      </RequestTransaction>
+    </soap:Body>
+  </soap:Envelope>`
+  }, [user])
+
   return {
     getAllClientsXml: getAllClientsConstructor,
     addEditClientXml: addEditClientsConstructor,
@@ -674,6 +704,7 @@ export const useXmlFetchConstructor = () => {
     getFamiliasXml: getFamiliasXmlConstructor,
     getUnitMeasurementXml: getUnitMeasurementXmlConstructor,
     recoverPasswordXml: recoverPasswordXmlConstructor,
-    getDtesXml: getDtesXmlConstructor
+    getDtesXml: getDtesXmlConstructor,
+    getDocumentXml: getDocumentXmlConstructor
   }
 }

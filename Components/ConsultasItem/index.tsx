@@ -7,6 +7,9 @@ import { cleanUserName, numberFormater } from '../../Config/utilities'
 import { Consultas, IconType } from '../../types'
 import { currenciePrefix } from '../../Config/dictionary'
 import { useServiceBuilder } from '../../Hooks/useServiceBuilder'
+import { useApiService } from '../../Hooks/useApiService'
+import { appCodes } from '../../Config/appCodes'
+import { useToast } from 'react-native-toast-notifications'
 type ButtonBarProps={
   icon?: IconType
   title?: string
@@ -55,6 +58,8 @@ const cancelledKeys = (key: string, value: string) => {
 export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = React.memo(function ConsultasItem ({ item, country = '' }) {
   const [cancelled, setCancelled] = useState<boolean>(false)
   const { ticketBuilder } = useServiceBuilder()
+  const { getDocumentServiceTS } = useApiService()
+  const toast = useToast()
   useLayoutEffect(() => {
     // Object.keys(item).forEach(key => {
     //   if (consultasComponentSchema?.labels?.[key]) {
@@ -76,6 +81,46 @@ export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = Reac
     }
     return value
   }, [])
+
+  const printDocument = useCallback(() => {
+    // ticketBuilder({ json: {}, customOrder: {} })
+    const t = toast.show('Obtiendo documento...', {
+      type: 'loading',
+      duration: 60000,
+      data: {
+        theme: 'dark'
+      }
+    })
+    getDocumentServiceTS({ documentType: 'XML', numeroAuth: item?.numeroAuth || '' })
+      .then(res => {
+        if (res?.code === appCodes.ok) {
+          if (res?.data?.XML?.length > 0) {
+            setTimeout(() => {
+              toast.update(t, 'Documento obtenido exitosamente!', {
+                type: 'ok',
+                duration: 3000
+              })
+            }, 500)
+            console.log('PARSER XML')
+          } else {
+            setTimeout(() => {
+              toast.update(t, 'Algo salio mal al obtener tu documento, revisa tu conexion a internet o intentalo nuevamente mas tarde, si el error persiste reportalo.', {
+                type: 'error',
+                duration: 5000
+              })
+            }, 500)
+          }
+        } else {
+          setTimeout(() => {
+            toast.update(t, 'Algo salio mal al obtener tu documento, revisa tu conexion a internet o intentalo nuevamente mas tarde, si el error persiste reportalo.', {
+              type: 'error',
+              duration: 5000
+            })
+          }, 500)
+        }
+      })
+  }, [])
+
   return (
     <>
       <View
@@ -180,7 +225,7 @@ export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = Reac
               type: 'i'
             }}
             title='Imprimir'
-            onPress={() => ticketBuilder({ json: {}, customOrder: {} })}
+            onPress={printDocument}
           />
           <ButtonBar
             icon={{

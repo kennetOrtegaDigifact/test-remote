@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps, Provincia, Distrito, Corregimiento, Currencie, IncoTerm, Segmento, Familia, UnidadDeMedida, Consultas } from '../types'
+import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps, Provincia, Distrito, Corregimiento, Currencie, IncoTerm, Segmento, Familia, UnidadDeMedida, Consultas, documentTypesToGet } from '../types'
 import { XMLParser } from 'fast-xml-parser'
 import base64 from 'react-native-base64'
 import { urlApiMs, urlsByCountry, urlWsRest, urlWsRestV2, urlWsSoap, urlWsToken, urlXMLTransformation } from '../Config/api'
@@ -55,7 +55,8 @@ export const useApiService = () => {
     getSegmentosXml,
     getUnitMeasurementXml,
     recoverPasswordXml,
-    getDtesXml
+    getDtesXml,
+    getDocumentXml
   } = useXmlFetchConstructor()
   const { country } = useSelector((state: ReduxState) => state.userDB)
   const user = useSelector((state: ReduxState) => state.userDB)
@@ -1677,6 +1678,66 @@ export const useApiService = () => {
         }
       })
   }, [user?.country, getDtesXml])
+
+  const getDocumentServiceTS = useCallback(async (props?: {documentType: documentTypesToGet, numeroAuth: string}): Promise<{
+    code: number
+    data:{
+      XML: string
+      PDF: string
+    }
+    key: string
+  }> => {
+    console.log('----------------- GET DOCUMENT XML -------------', getDocumentXml(props))
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getDocumentXml(props)
+    })
+      .then(res => res.text())
+      .then(response => {
+        try {
+          const dataParser = parser.parse(response)
+          const XML = dataParser.Envelope.Body.RequestTransactionResponse
+            .RequestTransactionResult.ResponseData.ResponseData1
+          const HTML = dataParser.Envelope.Body.RequestTransactionResponse
+            .RequestTransactionResult.ResponseData.ResponseData2
+
+          const PDF = dataParser.Envelope.Body.RequestTransactionResponse
+            .RequestTransactionResult.ResponseData.ResponseData3
+
+          return {
+            code: appCodes.ok,
+            data: {
+              XML,
+              HTML,
+              PDF
+            },
+            key: 'document'
+          }
+        } catch (ex) {
+          console.log('ERROR EXCEPTION GET DOCUMENT SERVICE', ex)
+          return {
+            code: appCodes.processError,
+            data: {
+              XML: '',
+              PDF: ''
+            },
+            key: 'document'
+          }
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET DOCUMENT SERVICE', err)
+        return {
+          code: appCodes.processError,
+          data: {
+            XML: '',
+            PDF: ''
+          },
+          key: 'document'
+        }
+      })
+  }, [user?.country])
 
   const getDashboardService = async ({
     taxid,
@@ -3524,6 +3585,7 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     getFamiliasServiceTS,
     getUnitMeasurementServiceTS,
     recoverPasswordServiceTS,
-    getDtesServiceTS
+    getDtesServiceTS,
+    getDocumentServiceTS
   }
 }

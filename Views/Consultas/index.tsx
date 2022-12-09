@@ -245,7 +245,7 @@ export const ConsultasV: React.FC = () => {
           </BottomSheetScrollView>
         </BottomSheetModal>
       </View>
-      <View style={{ backgroundColor: theme.graygreen, borderRadius: 13, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <View style={{ backgroundColor: theme.graygreen, borderRadius: 13, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
           <Text style={{ color: theme.white, fontSize: fonts.small }}>Total de Documentos Mostrados</Text>
           <Text style={{ color: theme.white, fontSize: fonts.subHeader, fontWeight: 'bold' }}>{numberFormater({ number: dtes.filter(e => e?.numeroAuth?.toString()?.toLowerCase()?.includes(search.toLowerCase()))?.length, toFixed: true, fixedDecimal: 0 })}</Text>

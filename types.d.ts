@@ -646,12 +646,12 @@ type AdditionalInfoAdendas={
     Code?: string
     Type?: string
     Description?: string
-    AddressInfo: AddressInfo
+    AddressInfo?: AddressInfo
     Texts?: any
     AditionalData?: {
         Data?: AditionalData[]
     }
-}
+} | AdditionlInfo | any[]
 export interface NUC {
     Version?: string
     CountryCode?: string
@@ -691,7 +691,7 @@ export interface NUC {
         AdditionlInfo?: AdditionlInfo[]
         AddressInfo?: AddressInfo
     }
-    ThirdParties: ThirdParties[]
+    ThirdParties?: ThirdParties[]
     Items: ItemNUC[]
     Charges?: any
     Totals: {
@@ -699,8 +699,8 @@ export interface NUC {
         TotalItems?: number
         TotalTaxableAmount?: number
         TotalTaxes?: number
-        TotalCharges?: number
-        TotalDiscounts?: number
+        TotalCharges?: number | null
+        TotalDiscounts?: number | null
         GrandTotal: Totals
         InWords?: string
     }
@@ -710,6 +710,13 @@ export interface NUC {
         AdditionalInfo?: AdditionalInfoAdendas
         AditionalInfo?: AdditionlInfo[]
     }
+    CUFE?: string,
+    NumeroAutorizacion?: string,
+    Serie?: string,
+    Numero?: string,
+    FechaEmi?: string,
+    FechaCert?: string,
+    QRCode?: string
 }
 type printerCodes = 'logo'| 'header'| 'docInfo'| 'clientInfo'| 'items'| 'totals'| 'extras'| 'qrcode'| 'certInfo'
 export type printerFunctions = {[key: string]: printerCodes[]}
