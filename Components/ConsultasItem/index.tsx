@@ -1,20 +1,23 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react'
-import { Text, View, TouchableOpacity } from 'react-native'
+import { Text, View, TouchableOpacity, GestureResponderEvent } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
 import { useComponentSchema } from '../../Hooks/useComponentSchema'
 import Icon from '../Icon'
 import { cleanUserName, numberFormater } from '../../Config/utilities'
 import { Consultas, IconType } from '../../types'
 import { currenciePrefix } from '../../Config/dictionary'
+import { useServiceBuilder } from '../../Hooks/useServiceBuilder'
 type ButtonBarProps={
   icon?: IconType
   title?: string
   disabled?: boolean
+  onPress?: (event: GestureResponderEvent) => void
 }
 const ButtonBar: React.FC<ButtonBarProps> = React.memo(function ButtonBar ({
   icon,
   title = '',
-  disabled = false
+  disabled = false,
+  onPress = () => { console.log('UNHANDLED BUTTON BAR FUNCTION') }
 }) {
   return (
     <TouchableOpacity
@@ -23,6 +26,7 @@ const ButtonBar: React.FC<ButtonBarProps> = React.memo(function ButtonBar ({
         justifyContent: 'center',
         alignItems: 'center'
       }}
+      onPress={onPress}
     >
       <Icon
         name={icon?.name}
@@ -50,6 +54,7 @@ const cancelledKeys = (key: string, value: string) => {
 
 export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = React.memo(function ConsultasItem ({ item, country = '' }) {
   const [cancelled, setCancelled] = useState<boolean>(false)
+  const { ticketBuilder } = useServiceBuilder()
   useLayoutEffect(() => {
     // Object.keys(item).forEach(key => {
     //   if (consultasComponentSchema?.labels?.[key]) {
@@ -175,6 +180,7 @@ export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = Reac
               type: 'i'
             }}
             title='Imprimir'
+            onPress={() => ticketBuilder({ json: {}, customOrder: {} })}
           />
           <ButtonBar
             icon={{

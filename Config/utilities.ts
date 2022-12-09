@@ -19,8 +19,7 @@ export const establecimientosSpliter = ({ establecimientos = '' }: {establecimie
             municipio: '',
             nombre: '',
             numero: 0,
-            pais: '',
-            nit: ''
+            pais: ''
           }
           const et = e.trim()
           const index = et.indexOf('<') + 1
@@ -190,6 +189,20 @@ export const calculateLength = ({ string = '' }:{string?: string}): string => {
     }
     return `${result}\x20`
   } else {
+    return string
+  }
+}
+
+export const cleanAccents = (string?: string): string => {
+  try {
+    if (typeof string === 'string') {
+      const cleanString = regexSpecialChars(string)
+      return cleanString?.normalize('NFD')?.replace(/[\u0300-\u036f]/g, '')
+    } else {
+      return string
+    }
+  } catch (ex) {
+    console.error('ERROR CLEAN ACCENTS FUNCTION UTILITIES', ex)
     return string
   }
 }

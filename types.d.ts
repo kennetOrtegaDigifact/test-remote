@@ -653,8 +653,8 @@ type AdditionalInfoAdendas={
     }
 }
 export interface NUC {
-    Version: string
-    CountryCode: string
+    Version?: string
+    CountryCode?: string
     Header: {
         DocType?: string
         GUID?: string
@@ -711,3 +711,7 @@ export interface NUC {
         AditionalInfo?: AdditionlInfo[]
     }
 }
+type printerCodes = 'logo'| 'header'| 'docInfo'| 'clientInfo'| 'items'| 'totals'| 'extras'| 'qrcode'| 'certInfo'
+export type printerFunctions = {[key: string]: printerCodes[]}
+
+export type documentTypesToGet = 'PDF' | 'XML'

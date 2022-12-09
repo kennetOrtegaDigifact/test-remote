@@ -1,9 +1,13 @@
 import { useCallback } from 'react'
+import { useSelector } from 'react-redux'
 import { appCodes } from '../Config/appCodes'
 import { acceptedCountrys } from '../Config/dictionary'
 import { deletePadLeft } from '../Config/utilities'
-import { userInterface, UTILSDB } from '../types'
+import { ReduxState } from '../Redux/store'
+import { NUC, printerFunctions, userInterface, UTILSDB } from '../types'
 import { useApiService } from './useApiService'
+import { useBluetoothService } from './useBluetoothService'
+import { usePrinter } from './usePrinter'
 type loginProps={
     userName: string
     password: string
@@ -11,6 +15,9 @@ type loginProps={
     country: string
 }
 export const useServiceBuilder = () => {
+  const { country = '' } = useSelector((state: ReduxState) => state.userDB)
+  const print = usePrinter()
+  const { connectToPrint } = useBluetoothService()
   const {
     getCertTokenServiceTS,
     getAccountDetailsServiceTS,
@@ -136,10 +143,29 @@ export const useServiceBuilder = () => {
     }
   }, [])
 
-  const ticketBuilder = useCallback(() => {
+  const ticketBuilder = useCallback(async ({ customOrder = {}, json = { Header: {}, Buyer: {}, Seller: {}, ThirdParties: [], Items: [], Totals: { GrandTotal: {} }, AdditionalDocumentInfo: {} } }:{customOrder?: printerFunctions, json: NUC}) => {
+    const order: printerFunctions =
+      customOrder?.[country]?.length
+        ? customOrder
+        : {
+            GT: ['logo', 'header', 'docInfo', 'clientInfo', 'items', 'totals', 'extras', 'qrcode', 'certInfo'],
+            PA: ['logo', 'header', 'docInfo', 'clientInfo', 'items', 'totals', 'qrcode', 'extras', 'certInfo']
+          }
+    connectToPrint()
+      .then(async res => {
+        if (res?.code === appCodes.ok) {
+          for (const f of order?.[country]) {
+            await print?.[f]?.[country](json)
+          }
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CONNECT TO PRINT TICKET BUILDER', err)
+      })
+  }, [print, country, connectToPrint])
 
-  }, [])
   return {
-    loginBuilder
+    loginBuilder,
+    ticketBuilder
   }
 }
