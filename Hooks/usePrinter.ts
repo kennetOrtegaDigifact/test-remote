@@ -29,12 +29,6 @@ const tipoPago = [
   { label: 'Punto de Pago', value: '10' },
   { label: 'Otro', value: '99' }
 ]
-const tipoContribuyente = [
-  { name: 'Contribuyente', value: 1 },
-  { name: 'CF', value: 2 },
-  { name: 'Gobierno', value: 3 },
-  { name: 'Extranjero', value: 4 }
-]
 const tipoContribuyenteG: {[key: string]: string} = {
   '01': 'Contribuyente',
   '02': 'CF',
@@ -68,6 +62,14 @@ export const genericPrintingOptions = {
   heigthTimes: 0,
   fonttype: 0
 }
+
+const complementosGT = {
+  NumeroAutorizacionDocumentoOrigen: 'Numero Autorizacion Documento Origen: ',
+  SerieDocumentoOrigen: 'Serie Documento Origen: ',
+  NumeroDocumentoOrigen: 'Numero Documento Origen: ',
+  FechaEmisionDocumentoOrigen: 'Fecha Emision Documento Origen: ',
+  MotivoAjuste: 'Motivo Ajuste: '
+}
 export const usePrinter = () => {
   const { logos, country = '' } = useSelector((state: ReduxState) => state.userDB)
   const [manufacturer] = useState<string>(deviceInfoModule.getManufacturerSync().toLowerCase())
@@ -89,7 +91,13 @@ export const usePrinter = () => {
     console.log(`PRINT HEADER FOR ${country}`)
     const headers: {[key: string]: string} = {
       '': '',
-      GT: cleanAccents('HEADER GT'),
+      GT: cleanAccents(`${ALIGN.CENTER}
+${ALIGN.CENTER}${BOLD.ON}${calculateLength({ string: json.Seller.Name })}
+${ALIGN.CENTER}${BOLD.OFF}${calculateLength({ string: json.Seller.BranchInfo?.Name })}
+${ALIGN.CENTER}${calculateLength({ string: json.Seller.BranchInfo?.AddressInfo?.Address })}
+${lineSeparatorG}
+${BOLD.ON}${ALIGN.CENTER}Documento Tributario Electronico${BOLD.OFF}
+`),
       PA:
 cleanAccents(`${ALIGN.CENTER}${BOLD.ON}${calculateLength({ string: `${json?.Seller?.Name || ''}` })}
 RUC. ${json?.Seller?.TaxID} DV. ${json?.Seller?.TaxIDAdditionalInfo?.[0]?.Value}
@@ -111,7 +119,15 @@ ${ALIGN.CENTER}${BOLD.OFF}Comprobante Auxiliar de Factura Electronica\x0D\x20
     console.log(`PRINT DOC INFO FOR ${country}`)
     const headers: {[key: string]: string} = {
       '': '',
-      GT: cleanAccents('DOC INFO GT'),
+      GT: cleanAccents(`${lineSeparatorG}
+${ALIGN.CENTER}${BOLD.ON}${json.Header.DocType}
+${ALIGN.LEFT}${calculateLength({ string: `${BOLD.ON}Numero de Serie: ${BOLD.OFF}${json.AdditionalDocumentInfo.Serie}` })}
+${calculateLength({ string: `${BOLD.ON}Numero de Autorizacion: ${BOLD.OFF}${json.AdditionalDocumentInfo.NumeroAutorizacion}` })}
+${calculateLength({ string: `${BOLD.ON}Numero de Documento: ${BOLD.OFF}${json.AdditionalDocumentInfo.Numero}` })}
+${calculateLength({ string: `${BOLD.ON}Fecha y Hora de Emision: ${BOLD.OFF}${regexDate(json?.AdditionalDocumentInfo?.FechaEmi || '--/--/--')}` })}
+${calculateLength({ string: `${BOLD.ON}Fecha y Hora de Certificacion: ${BOLD.OFF}${regexDate(json?.AdditionalDocumentInfo?.FechaCert || '--/--/--')}` })}
+
+`),
       PA: cleanAccents(`${lineSeparatorG}
 ${ALIGN.LEFT}${BOLD.ON}Serie: ${BOLD.OFF}${json?.Header?.AdditionalIssueDocInfo?.find(item => item.Name === 'CodigoSeguridad')?.Value}
 ${BOLD.ON}Numero: ${BOLD.OFF}${json?.Header?.AdditionalIssueDocInfo?.find(item => item.Name === 'NumeroDF')?.Value}
@@ -133,7 +149,13 @@ ${BOLD.ON}${BOLD.OFF}${calculateLength({ string: `${BOLD.ON}Fecha de Certificaci
     console.log(`PRINT CLIENT FOR ${country}`)
     const headers: {[key: string]: string} = {
       '': '',
-      GT: cleanAccents('CLIENT INFO GT'),
+      GT: cleanAccents(`${lineSeparatorG}
+${ALIGN.CENTER}${BOLD.ON}Datos Cliente
+${ALIGN.LEFT}${calculateLength({ string: `${BOLD.ON}NIT: ${BOLD.OFF}${json.Buyer.TaxID}` })}
+${ALIGN.LEFT}${calculateLength({ string: `${BOLD.ON}Nombre: ${BOLD.OFF}${json.Buyer.Name}` })}
+${ALIGN.LEFT}${calculateLength({ string: `${BOLD.ON}Direccion: ${BOLD.OFF}${json.Buyer.AddressInfo?.Address}` })}
+
+`),
       PA: cleanAccents(`${lineSeparatorG}
 ${ALIGN.CENTER}${BOLD.ON}Datos Cliente
 ${ALIGN.LEFT}${BOLD.ON}Tipo: ${BOLD.OFF}${tipoContribuyenteG?.[tc || '02']}
@@ -162,9 +184,25 @@ Total B/. ${Number(prod?.Totals?.TotalWTaxes).toFixed(2)}
       }
       return items
     }
+    const itemsGT = (): string => {
+      let items = ''
+      for (const item of json.Items) {
+        items = `${ALIGN.LEFT}${BOLD.OFF}${lineSeparator}
+${calculateLength({ string: `${BOLD.ON}Cant: ${BOLD.OFF}${Number(item.Qty).toFixed(3)}` })}
+${calculateLength({ string: `${BOLD.ON}Descripcion: ${BOLD.OFF}${item.Description}` })}
+${calculateLength({ string: `${BOLD.ON}Precio: ${BOLD.OFF}${Number(item.Price).toFixed(2)}` })}
+${calculateLength({ string: `${BOLD.ON}Total: ${BOLD.OFF}${Number(item.Totals?.TotalItem).toFixed(2)}` })}
+`
+      }
+      return items
+    }
     const headers: {[key: string]: string} = {
       '': '',
-      GT: cleanAccents('ITEMS GT'),
+      GT: cleanAccents(`${lineSeparatorG}
+${ALIGN.CENTER}${BOLD.ON}Datos de la Venta
+${itemsGT()}
+${lineSeparatorG}
+`),
       PA: cleanAccents(`${lineSeparatorG}
 ${ALIGN.CENTER}${BOLD.ON}Datos de la Venta
 
@@ -216,24 +254,90 @@ ${metodosPago}
 
 `
     }
-    const headers: {[key: string]: string} = {
+    const totalsGT = (): string => {
+      let IVA = 0
+      let ITH = 0
+      let IDP = 0
+      let descuento = 0
+      let totalsTXT = ''
+      for (const item of json.Items) {
+        descuento += Number(item.Discounts || 0)
+        for (const taxes of item.Taxes?.Tax || []) {
+          if (taxes.Description === 'IVA') {
+            IVA += Number(taxes?.Amount || 0)
+          }
+          if (taxes.Description === 'TURISMO HOSPEDAJE') {
+            ITH += Number(taxes?.Amount || 0)
+          }
+          if (taxes.Description === 'PETROLEO') {
+            IDP += Number(taxes?.Amount || 0)
+          }
+        }
+      }
+      totalsTXT += `${BOLD.ON}${ALIGN.CENTER}Totales
+`
+      totalsTXT += IDP > 0 ? `${ALIGN.LEFT}${BOLD.OFF}${IDP > 0 ? `IDP: ${IDP.toFixed(2)}\n` : ''}` : ''
+      totalsTXT += ITH > 0 ? `${ALIGN.LEFT}${BOLD.OFF}${ITH > 0 ? `ITH: ${ITH.toFixed(2)}\n` : ''}` : ''
+      totalsTXT += IVA > 0 ? `${ALIGN.LEFT}${BOLD.OFF}${IVA > 0 ? `IVA: ${IVA.toFixed(2)}\n` : ''}` : ''
+      totalsTXT += descuento > 0 ? `${ALIGN.LEFT}${BOLD.OFF}${descuento > 0 ? `Descuento: ${descuento.toFixed(2)}` : ''}` : ''
+      totalsTXT += `${ALIGN.LEFT}${BOLD.OFF}Total: ${Number(json.Totals.GrandTotal.InvoiceTotal).toFixed(2)}\n`
+      totalsTXT += `
+${BOLD.ON}${ALIGN.CENTER}Moneda en ${json.Header.Currency || 'GTQ'}
+`
+      return totalsTXT
+    }
+    const totales: {[key: string]: string} = {
       '': '',
-      GT: cleanAccents('TOTALS GT'),
+      GT: totalsGT(),
       PA: totalsPA()
     }
     if (manufacturer !== 'sunmi' || model === 'd2s_lite') { // generic
-      await BluetoothEscposPrinter.printText(headers?.[country], {})
+      await BluetoothEscposPrinter.printText(totales?.[country], {})
     }
     if (manufacturer === 'sunmi' && model !== 'd2s_lite') { // sunmi
-      SunmiPrinter.printerText(headers?.[country])
+      SunmiPrinter.printerText(totales?.[country])
     }
   }, [country, manufacturer, model])
 
   const printExtras = useCallback(async (json: NUC) => {
     console.log(`PRINT EXTRAS FOR ${country}`)
+    const extrasGT = (): string => {
+      let extras = `${lineSeparatorG}
+`
+      for (const frase of json?.Seller?.AdditionlInfo || []) {
+        if (frase?.Name === 'TipoFrase') {
+          extras += `${BOLD.ON}${ALIGN.CENTER}${frase?.Value}\n`
+        }
+      }
+      for (const complemento of [json?.AdditionalDocumentInfo?.AdditionalInfo].flat()) {
+        if (complemento?.Code === 'FCAMB') {
+          extras += `${lineSeparatorG}
+${BOLD.ON}${ALIGN.CENTER}Datos de los Abonos
+`
+          for (const abonos of complemento?.AditionalInfo) {
+            extras += `${lineSeparator}
+${calculateLength({ string: `${ALIGN.LEFT}${BOLD.ON}Abono No: ${BOLD.OFF}${abonos?.Name}` })}
+${calculateLength({ string: `${BOLD.ON}Fecha del Abono: ${BOLD.OFF}${abonos?.Data}` })}
+${calculateLength({ string: `${BOLD.ON}Monto: ${BOLD.OFF}${Number(abonos?.Value || 0).toFixed(2)}` })}
+`
+          }
+        }
+      }
+      for (const complemento of [json?.AdditionalDocumentInfo?.AdditionalInfo].flat()) {
+        if (complemento?.Code === 'NCRE' || complemento?.Code === 'NDEB') {
+          extras += `${lineSeparatorG}
+${BOLD.ON}${ALIGN.CENTER}Datos de la Nota
+`
+          for (const nota of complemento?.AditionalInfo) {
+            extras += `${ALIGN.LEFT}${calculateLength({ string: `${BOLD.ON}${complementosGT?.[nota?.Name as keyof typeof complementosGT]}${BOLD.OFF}${nota?.Value}` })}\n`
+          }
+        }
+      }
+      return extras
+    }
     const extras: {[key: string]: string} = {
       '': '',
-      GT: cleanAccents('EXTRAS GT'),
+      GT: extrasGT(),
       PA: cleanAccents(`${ALIGN.CENTER}${BOLD.ON}${calculateLength({ string: 'Consulte en https://dgi-fep.mef.gob.pa/Consultas/FacturasPorCUFE usando el CUFE:' })}
 ${ALIGN.CENTER}${BOLD.ON}${calculateLength({ string: `${json?.AdditionalDocumentInfo?.CUFE}` })}
 
@@ -251,7 +355,7 @@ ${ALIGN.CENTER}${BOLD.ON}${calculateLength({ string: `${json?.AdditionalDocument
     console.log(`PRINT QR FOR ${country}`)
     const QR: {[key: string]: string} = {
       '': '',
-      GT: cleanAccents('QR GT'),
+      GT: json?.AdditionalDocumentInfo?.QRCode || '',
       PA: json?.AdditionalDocumentInfo?.QRCode || ''
 
     }
@@ -270,10 +374,13 @@ ${ALIGN.CENTER}${BOLD.ON}${calculateLength({ string: `${json?.AdditionalDocument
     console.log(`PRINT CERT INFO FOR ${country}`)
     const headers: {[key: string]: string} = {
       '': '',
-      GT: `${cleanAccents('CERT INFO GT')}
+      GT: cleanAccents(`${ALIGN.CENTER}${BOLD.ON}DATOS DEL CERTIFICADOR
+${ALIGN.CENTER}${BOLD.ON}NIT: 77454820
+${ALIGN.CENTER}${BOLD.ON}DIGIFACT SERVICIOS, S.A
 
 
-      `,
+
+`),
       PA: cleanAccents(`${ALIGN.CENTER}${BOLD.ON}DATOS DEL PAC
 ${ALIGN.CENTER}${BOLD.ON}DIGIFACT SERVICIOS, S.A
 ${ALIGN.CENTER}${BOLD.ON}155704849-2-2021

@@ -591,7 +591,7 @@ type ThirdParties = {
     TaxIDType?: string
     TaxIDAdditionalInfo?: TaxIDAdditionalInfo[]
 }
-type Tax={
+export type Tax={
     Code?: string
     Description?: string
     TaxableAmount?: number
@@ -609,7 +609,7 @@ type Totals={
     TotalItem?: number
     InvoiceTotal?: number
 }
-type ItemNUC={
+export type ItemNUC={
     Number?: string
     Codes?: Codes[]
     Type?: string
@@ -635,9 +635,9 @@ type Payments={
     AditionalData?: any
     nombreFormaPago?: string
 }
-type Info=AdditionlInfo
-type AditionalData={
-    Info?: Info[]
+export type Info=AdditionlInfo
+export type AditionalData={
+    Info?: Info[] | string
     Name?: string
     Id: number
 }
@@ -673,7 +673,7 @@ export interface NUC {
         FiscalCategory?: string
         Contact?: ContactNUC
         AdditionlInfo?: AdditionlInfo[]
-        AddressInfo?: string
+        AddressInfo?: string | null
         BranchInfo?: {
             Code?: string
             Name?: string
@@ -691,7 +691,7 @@ export interface NUC {
         AdditionlInfo?: AdditionlInfo[]
         AddressInfo?: AddressInfo
     }
-    ThirdParties?: ThirdParties[]
+    ThirdParties?: ThirdParties[] | null
     Items: ItemNUC[]
     Charges?: any
     Totals: {

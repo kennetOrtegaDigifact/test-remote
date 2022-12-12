@@ -216,3 +216,107 @@ export const regexDate = (string: string): string => {
   }
   return r1
 }
+
+export const frasesDictionaryGT: {[key: number]: {[key:number]: string}} = {
+  1: {
+    1: 'Sujeto a pagos trimestrales',
+    2: 'Sujeto a retencion definitiva ISR',
+    3: 'Sujeto a pago directo ISR'
+  },
+  2: {
+    1: 'Agente de retencion del IVA'
+  },
+  3: {
+    1: 'No genera derecho a credito fiscal'
+  },
+  4: {
+    1: 'Exenta del IVA (art. 7 num. 2 Ley del IVA)',
+    2: 'Exenta del IVA (art. 7 num. 4 Ley del IVA)',
+    3: 'Exenta del IVA (art. 7 num. 5 Ley del IVA)',
+    4: 'Exenta del IVA (art.  7 num. 9 Ley del IVA)',
+    5: 'Exenta del IVA (art. 7 num. 10 Ley del IVA)',
+    6: 'Exenta del IVA (art. 7 num. 13 Ley del IVA)',
+    7: 'Exenta del IVA (art. 7 num. 14 Ley del IVA)',
+    8: 'Exenta del IVA (art. 8 num. 1 Ley del IVA)',
+    9: 'Exenta del IVA (art. 7 num. 15 Ley del IVA)',
+    10: 'Esta factura no incluye IVA (art. 55 Ley del IVA)',
+    11: 'No afecta al IVA (Decreto 29-89 Ley de Maquila)',
+    12: 'No afecta al IVA (Decreto 65-89 Ley de Zonas Francas)',
+    13: 'Exenta del IVA (art. 7 num. 12,  Ley del IVA)',
+    14: 'Exenta del IVA (art. 7 num. 6 Ley del IVA)',
+    15: 'Exenta del IVA (art. 7 num. 11 Ley del IVA)',
+    16: 'Exenta del IVA (art. 8 num. 2 Ley del IVA)',
+    17: 'Exenta del IVA (art. 32 literal c Ley Orgánica Zolic)',
+    18: 'Contribuyentes con resoluciones específicas de exención al IVA)',
+    19: 'Exenta del IVA (art. 3 num. 7 Ley del IVA)',
+    20: 'Aportes (art. 35 Ley de Fortalecimiento al Emprendimiento)',
+    21: 'Cargos e impuestos no sujetos a IVA (Aerolíneas)',
+    22: 'Factura origen no incluye IVA',
+    23: 'Exenta del IVA (art. 7, numeral 3, literal c, Ley del IVA)',
+    24: 'No afecto al IVA (Fuera del hecho generador art. 3, 7 y 8, Ley del IVA)'
+
+  },
+  5: {
+    1: 'El vendedor o prestador del servicio se negó a emitir la factura correspondiente. (art. 52 Ley del IVA)'
+  },
+  6: {
+    1: 'Con forma de pago sobre las ventas brutas',
+    2: 'Con forma de pago sobre las utilidades, no retener'
+  },
+  7: {
+    1: 'No retener XXXX',
+    2: 'No retener XXXX'
+  },
+  8: {
+    1: 'Exenta del ISR (art. 8 núm. 2 Ley de Actualización Tributaria)',
+    2: 'Exenta del ISR (art. 8 núm. 3 Ley de Actualización Tributaria)',
+    3: 'Exenta del ISR (art. 8 núm. 5 Ley de Actualización Tributaria)',
+    4: 'Exenta del ISR (art. 11 núm. 1 Ley de Actualización Tributaria)',
+    5: 'Exenta del ISR (art. 11 núm. 2 Ley de Actualización Tributaria)'
+  }
+}
+
+export const frase9GT = ({ tipo, escenario, leyendas = [], items = [], granTotal = 0 }:{tipo?: string, escenario?: string, leyendas?: any[], items?: any[], granTotal?: number}) => {
+  console.log('FRASE 9-------------------------------', tipo, escenario, leyendas)
+  try {
+    if (tipo === '9' && escenario === '2') {
+      const gas92 = leyendas?.find(e => e?.tipoOperacion === 'Gasolina')?.valor || ''
+      if (gas92.length) {
+        console.log('LEYENDA 92', gas92, items)
+        if (!isNaN(items?.descuentoSubsidio)) {
+          // console.log('COMOOOOOOOOOOOOpoooooooooooo', `${gas92} ${items.descuentoSubsidio}`)
+          if (items?.descuentoSubsidio > 0) {
+            // console.log('COMOOOOOOOOOOOO', `${gas92} ${parseFloat(items.descuentoSubsidio).toFixed(2)}`)
+            return `${gas92} ${parseFloat(items?.descuentoSubsidio || 0).toFixed(2)}`
+          }
+        }
+      }
+    }
+    if (tipo === '9' && escenario === '3') {
+      const gas93 = leyendas?.find(e => e?.nit === `${tipo},${escenario}`)?.valor || ''
+      if (gas93.length) {
+        if (!isNaN(items?.descuentoSubsidio) && !isNaN(granTotal)) {
+          if (items?.descuentoSubsidio > 0 && granTotal > 0) {
+            return `${gas93} ${parseFloat(parseFloat(granTotal || 0) + parseFloat(items?.descuentoSubsidio || 0)).toFixed(2)}`
+          }
+        }
+      }
+    }
+    if (tipo === '9' && escenario === '1') {
+      const gasPropano = leyendas?.find(e => e?.tipoOperacion === 'GasPropano')?.valor || ''
+      if (gasPropano.length) {
+        if (!isNaN(items?.descuentoSubsidio)) {
+          // console.log('COMOOOOOOOOOOOOpoooooooooooo', `${gas92} ${items.descuentoSubsidio}`)
+          if (items?.descuentoSubsidio > 0) {
+            // console.log('COMOOOOOOOOOOOO', `${gas92} ${parseFloat(items.descuentoSubsidio).toFixed(2)}`)
+            return `${gasPropano} ${parseFloat(items?.descuentoSubsidio || 0).toFixed(2)}`
+          }
+        }
+      }
+    }
+    return null
+  } catch (ex) {
+    console.error('EXCEPTION FRASES 9 GT FUNCTION UTILITIES', ex)
+    return ''
+  }
+}

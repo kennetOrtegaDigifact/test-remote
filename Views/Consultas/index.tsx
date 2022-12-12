@@ -20,6 +20,7 @@ import { appCodes } from '../../Config/appCodes'
 import { Consultas, Filter } from '../../types'
 import { numberFormater } from '../../Config/utilities'
 import { currenciePrefix } from '../../Config/dictionary'
+import { Filters } from './Filters'
 
 const ListLimit = ({ isEmpty = false }: {isEmpty: boolean}) => {
   return (
@@ -80,12 +81,13 @@ export const ConsultasV: React.FC = () => {
   const toast = useToast()
   const controller = new AbortController()
   const { signal } = controller
-  const { country = '', taxid, requestor, userName } = useSelector((state: ReduxState) => state.userDB)
+  const { country = '' } = useSelector((state: ReduxState) => state.userDB)
   const { consultasFiltroFormSchema } = useFormSchema()
   const { consultasComponentSchema } = useComponentSchema()
   const [dtes, setDtes] = useState<Array<Consultas>>([])
   const [search, setSearch] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
+  const [filters, setFilters] = useState<Filter>({})
   // ref
   const bottomSheetModalRef = useRef<BottomSheetModal>(null)
   // variables
@@ -98,12 +100,14 @@ export const ConsultasV: React.FC = () => {
   const onSubmit = useCallback((values: Filter) => {
     bottomSheetModalRef.current?.close()
     console.log(values)
+    setFilters(values)
     fetchData({ ...values })
   }, [])
 
   useLayoutEffect(() => {
     console.log('CONSULTAS RENDER')
-    fetchData()
+    fetchData(consultasFiltroFormSchema?.settings?.defaultValues)
+    setFilters(consultasFiltroFormSchema?.settings?.defaultValues || {})
     return () => controller.abort()
   }, [])
 
@@ -177,6 +181,7 @@ export const ConsultasV: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
+        <Filters filters={filters} country={country} />
         <View style={{
           flex: 1
         }}

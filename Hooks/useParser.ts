@@ -3,9 +3,10 @@ import { XMLParser } from 'fast-xml-parser'
 import { optionsWithAttr } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
 import { useCallback } from 'react'
-import { NUC } from '../types'
+import { AditionalData, ItemNUC, NUC, Tax } from '../types'
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
+import { cleanAccents, frase9GT, frasesDictionaryGT } from '../Config/utilities'
 type NUCResponse = Promise<{
         code: number
         data?: NUC
@@ -39,8 +40,35 @@ const parserXMLBase64 = (XML?: string): {
     }
   }
 }
+
+const parseDirectionGT = (data?: any, key?: string): string => {
+  // keys = DireccionEmisor, DireccionReceptor
+  const direccion = cleanAccents(`${data?.[key || 'DireccionEmisor']?.Direccion || 'CIUDAD'}`)
+  console.log('------------ DIRECCION INGRESADA-------------', direccion)
+  const mun = cleanAccents(data?.[key || 'DireccionEmisor']?.Municipio || '')
+  const mR = mun.split(' ')
+  let municipio = ''
+  mR?.forEach(e => {
+    console.log(e)
+    if (e?.includes('Jos')) {
+      municipio += ' Jose'
+    } else {
+      municipio += ` ${e?.trim()}`
+    }
+  })
+  municipio = municipio?.trim()
+  const departamento = cleanAccents(data?.[key || 'DireccionEmisor']?.Departamento || '')
+  const direccionPlusMunicipio = !direccion?.toLowerCase()?.includes(municipio?.toLowerCase())
+    ? `${direccion}, ${municipio}`
+    : direccion
+  const direccionPlusDepartamento = !(direccionPlusMunicipio?.split(',')?.length === 3)
+    ? `${direccionPlusMunicipio}, ${departamento}`
+    : direccionPlusMunicipio
+
+  return direccionPlusDepartamento
+}
 export const useParser = () => {
-  const { country = '' } = useSelector((state: ReduxState) => state.userDB)
+  const { country = '', configuracionApp } = useSelector((state: ReduxState) => state.userDB)
 
   const parseXmlToJsonNUCPA = useCallback(async (xml?: string): NUCResponse => {
     return new Promise((resolve, reject) => {
@@ -303,11 +331,289 @@ export const useParser = () => {
     })
   }, [country])
 
-  const parseXmlToJsonNUCGT = useCallback(async (xml?: string):NUCResponse => {
-    return new Promise((resolve) => resolve({
-      code: appCodes.ok
-    }))
-  }, [])
+  const parseXmlToJsonNUCGT = useCallback(async (xml?: string): NUCResponse => {
+    try {
+      const res = parserXMLBase64(xml)
+      const leyendasDictionary = configuracionApp?.filter(e => e.idTipoConfiguracion === 13) // Leyendas subsidio
+      const subsidioGasDictionary = configuracionApp?.filter(e => e.idTipoConfiguracion === 11) // Subsidio gasolina
+      const subsidioGasDictionaryPropano = configuracionApp?.filter(e => e.idTipoConfiguracion === 12) // Subsidio propano
+      const idpGasDictionary = configuracionApp?.map(e => {
+        const obj: {
+        idp?: number,
+        nombre?: string
+        codGravable?: string | number
+      } = {}
+        if (e.idTipoConfiguracion === 7) {
+          obj.idp = Number(e?.valor) // monto a descontar
+          obj.nombre = e.tipoOperacion // nombre del subsidio
+          obj.codGravable = e.nit // codigo de sat para identificar el tipo
+          return obj
+        }
+        return null
+      })?.filter(e => e !== null) // IDP gasolina
+      console.log('RESPONSE JSON GT', JSON.stringify(res))
+
+      const cuerpoFact = res?.data.GTDocumento?.SAT?.DTE
+      const adenda = res?.data?.GTDocumento?.SAT?.Adenda || {}
+      const datosEmision = cuerpoFact?.DatosEmision
+      const datosReceptor = cuerpoFact?.DatosEmision?.Receptor
+      const datosCertificacion = cuerpoFact?.Certificacion
+      const emisorData = cuerpoFact?.DatosEmision?.Emisor
+      const complementos = datosEmision?.Complementos
+      const itemsArr = datosEmision?.Items?.Item || []
+      const items = [itemsArr].flat()
+      const direccionEmisor = parseDirectionGT(emisorData, 'DireccionEmisor')
+      console.log('---------- COMPLEMENTOS -------------', JSON.stringify(complementos))
+      console.log('---------- ADENDA -------------------', JSON.stringify(adenda))
+      console.log('---------- EMISOR -------------------', JSON.stringify(emisorData))
+      console.log('---------- CERTIFICACION -------------------', JSON.stringify(datosCertificacion))
+      console.log('---------- DIRECCION EMISOR -------------------', direccionEmisor)
+      console.log('---------- DATOS RECEPTOR -------------------', datosReceptor)
+      console.log('---------- DATOS ITEMS -------------------', JSON.stringify(items))
+      const bienesServicios: {[key: string]: string} = {
+        B: 'BIEN',
+        S: 'SERVICIO',
+        '': ''
+      }
+      // -------- ARRAY DE FRASES
+      const arrFr = []
+      arrFr.push(datosEmision?.Frases?.Frase || [])
+
+      // -------- ITEMS
+      // frases para gasolina y derivados del petroleo
+      const gasIdpsDiscount = items.map(e => {
+        const obj: any = {}
+        // console.log(e.impuestos.some(e => e.NombreCorto === 'PETROLEO'))
+        if ([e?.Impuestos?.Impuesto || []].flat().some((e: any) => e.NombreCorto === 'PETROLEO')) {
+          obj.nombre = e.Descripcion
+          obj.cantidad = e.Cantidad
+          obj.precio = e.PrecioUnitario
+          obj.codGravable = [e?.Impuestos?.Impuesto || []].flat().find(e => e.NombreCorto === 'PETROLEO').CodigoUnidadGravable
+          const IDP = idpGasDictionary?.find(e => e?.codGravable === obj?.codGravable) || 0
+          if (IDP?.nombre === 'GasPropano') { // Gas propano
+            subsidioGasDictionaryPropano?.forEach(k => {
+              const libs = k?.nombre?.replace('lbs', '')
+              const libsNum = parseFloat(libs)
+              const cantiLbsXml = parseFloat(e.cantidad) * 4.19// convertimos los galones a libras
+              const cantiLimitMin = libsNum - 0.1// limitie min de libras por si los calculos no son exactos
+              const cantiLimitMax = libsNum + 0.1
+              if (cantiLbsXml >= cantiLimitMin && cantiLbsXml <= cantiLimitMax) {
+                obj.descuentoSubsidio += parseFloat(k.valor || 0)
+                obj.descuentoSubsidio += e?.cantidad * parseFloat(k.valor || 0)
+              }
+            })
+          } else {
+          // console.log('COMOOOOOOOOOO', subsidioGasDictionary, IDP)
+            const SUB = subsidioGasDictionary?.find(e => e?.tipoOperacion?.toLowerCase()?.includes(IDP?.nombre?.toLowerCase()))
+            obj.descuentoSubsidio = 0
+            obj.descuentoSubsidio += e.cantidad * parseFloat(SUB?.valor || 0)
+          }
+          return obj
+        }
+        return null
+      }).filter(e => e !== null)
+
+      let montoImpuestos = 0.0
+      const NUC: NUC = {
+        Version: '1.00',
+        CountryCode: country || 'GT',
+        Header: {
+          DocType: datosEmision?.DatosGenerales?.['@_Tipo'] || 'UNKNOWN',
+          IssuedDateTime: datosEmision?.DatosGenerales?.['@_FechaHoraEmision'] || '',
+          Currency: datosEmision?.DatosGenerales?.['@_CodigoMoneda'] || 'GTQ'
+        },
+        Seller: {
+          TaxID: emisorData?.['@_NITEmisor'] || '',
+          TaxIDAdditionalInfo: [
+            {
+              Name: 'AfiliacionIVA',
+              Value: emisorData?.['@_AfiliacionIVA'] || ''
+            }
+          ],
+          Name: emisorData?.['@_NombreEmisor'] || '',
+          Contact: {},
+          AdditionlInfo: arrFr.flat().map(e => {
+            if (e['@_TipoFrase'] !== '9') {
+            // console.log('COMOO',`${frasesDictionaryGT[e['@_TipoFrase']]}`)
+              return {
+                Name: 'TipoFrase',
+                Value: `${frasesDictionaryGT[e['@_TipoFrase']][e['@_CodigoEscenario']]}`
+              }
+            }
+            if (e['@_TipoFrase'] === '9') {
+              let frase9 = null
+              gasIdpsDiscount.forEach(i => {
+                frase9 = frase9GT({ tipo: e['@_TipoFrase'], escenario: e['@_CodigoEscenario'], items: i, leyendas: leyendasDictionary, granTotal: datosEmision.Totales.GranTotal })
+              })
+              return {
+                Name: 'TipoFrase',
+                Value: frase9 || ''
+              }
+            }
+            return {
+              Name: '',
+              Value: ''
+            }
+          })?.filter(e => e?.Name !== '' && e?.Value !== ''),
+          AddressInfo: null,
+          BranchInfo: {
+            Code: emisorData?.['@_CodigoEstablecimiento'] || '',
+            Name: emisorData?.['@_NombreComercial'],
+            AddressInfo: {
+              Address: direccionEmisor, // DIreccion con municipio y departamento agregados
+              City: emisorData?.DireccionEmisor?.CodigoPostal || '01010',
+              Country: emisorData?.DireccionEmisor?.Pais || 'GT',
+              District: emisorData?.DireccionEmisor?.Municipio || 'GUATEMALA', // MUNICIPIO
+              State: emisorData?.DireccionEmisor?.Departamento || 'GUATEMALA' // DEPARTAMENTO
+            }
+          }
+        },
+        Buyer: {
+          TaxID: datosReceptor?.['@_IDReceptor'] || 'CF',
+          Name: datosReceptor?.['@_NombreReceptor'] || 'CONSUMIDOR FINAL',
+          AddressInfo: {
+            Address: parseDirectionGT(datosReceptor, 'DireccionReceptor') || 'CIUDAD',
+            City: datosReceptor?.DireccionReceptor?.CodigoPostal || '01010',
+            District: datosReceptor?.DireccionReceptor?.Municipio || 'GUATEMALA',
+            State: datosReceptor?.DireccionReceptor?.Departamento || 'GUATEMALA',
+            Country: datosReceptor?.DireccionReceptor?.Pais || 'GT'
+          }
+        },
+        ThirdParties: null,
+        Items: items.map((e: any, i: number) => {
+          const obj: ItemNUC = {
+            Number: e?.['@_NumeroLinea'] || (i + 1).toString(),
+            Description: e?.Descripcion || '',
+            Type: bienesServicios?.[e?.['@_BienOServicio'] || ''] || 'BIEN',
+            Qty: Number(e?.Cantidad || 1),
+            UnitOfMeasure: e?.UnidadMedida || 'UNO',
+            Price: Number(e?.Precio || 0.0) / Number(e?.Cantidad || 1),
+            Discounts: Number(e?.Descuento || 0),
+            Taxes: {
+              Tax: [e?.Impuestos?.Impuesto || []].flat().map(im => {
+                const tax: Tax = {
+                  Code: im?.CodigoUnidadGravable?.toString() || '',
+                  Description: im?.NombreCorto || '',
+                  TaxableAmount: Number(im?.MontoGravable || 0),
+                  Amount: Number(im?.MontoImpuesto || 0)
+                }
+                if (im.NombreCorto === 'PETROLEO' || im.NombreCorto === 'TURISMO HOSPEDAJE') {
+                  montoImpuestos += parseFloat(im.MontoImpuesto || 0)
+                }
+                return tax
+              })
+            },
+            Totals: {
+              TotalBDiscounts: Number(e?.Precio || 0.0),
+              TotalWDiscounts: Number(e?.Precio || 0.0) - Number(e?.Descuento || 0),
+              TotalBTaxes: Number(e?.Precio || 0.0),
+              TotalWTaxes: Number(e?.Precio || 0.0) + montoImpuestos,
+              SpecificTotal: 0.0,
+              TotalItem: e?.Total
+            }
+          }
+          return obj
+        }),
+        Totals: {
+          GrandTotal: {
+            TotalBTaxes: 0.0,
+            TotalWTaxes: 0.0,
+            TotalBDiscounts: 0.0,
+            TotalWDiscounts: 0.0,
+            ExplicitTotal: 0.0,
+            InvoiceTotal: datosEmision?.Totales?.GranTotal
+          },
+          InWords: ''
+        },
+        AdditionalDocumentInfo: {
+          FechaEmi: datosEmision?.DatosGenerales?.['@_FechaHoraEmision'] || datosCertificacion?.FechaHoraCertificacion || '',
+          FechaCert: datosCertificacion?.FechaHoraCertificacion,
+          NumeroAutorizacion: datosCertificacion?.NumeroAutorizacion?.['#text'],
+          Serie: datosCertificacion?.NumeroAutorizacion?.['@_Serie'],
+          Numero: datosCertificacion?.NumeroAutorizacion?.['@_Numero'],
+          QRCode: `https://felpub.c.sat.gob.gt/verificador-web/publico/vistas/verificacionDte.jsf?tipo=autorizacion&numero=${datosCertificacion?.NumeroAutorizacion?.['#text']}&emisor=${emisorData?.['@_NITEmisor']}&receptor=${datosReceptor?.['@_IDReceptor']}&monto=${datosEmision?.Totales?.GranTotal}`,
+          AdditionalInfo: [
+            ...[adenda?.Informacion_COMERCIAL?.InformacionAdicional || []].flat().map(ad => {
+              return {
+                Code: ad?.REFERENCIA_INTERNA,
+                Type: 'ADENDA',
+                AditionalData: {
+                  Data: [ad?.INFORMACION_ADICIONAL?.Detalle || []].flat().map((d, i) => {
+                    const obj: AditionalData = {
+                      Info: d?.['@_Value'] || '',
+                      Name: d?.['@_Data'] || '',
+                      Id: i
+                    }
+                    return obj
+                  })
+                }
+              }
+            }),
+            ...[complementos?.Complemento || []].flat().map(c => {
+              if (c?.['@_NombreComplemento'] === 'NCRE' || c?.['@_NombreComplemento'] === 'NDEB') {
+                return {
+                  Code: c?.['@_NombreComplemento'],
+                  Type: 'COMPLEMENTO',
+                  AditionalInfo: [
+                    {
+                      Name: 'NumeroAutorizacionDocumentoOrigen',
+                      Value: c?.ReferenciasNota?.['@_NumeroAutorizacionDocumentoOrigen']
+                    },
+                    {
+                      Name: 'SerieDocumentoOrigen',
+                      Value: c?.ReferenciasNota?.['@_SerieDocumentoOrigen']
+                    },
+                    {
+                      Name: 'NumeroDocumentoOrigen',
+                      Value: c?.ReferenciasNota?.['@_NumeroDocumentoOrigen']
+                    },
+                    {
+                      Name: 'FechaEmisionDocumentoOrigen',
+                      Value: c?.ReferenciasNota?.['@_FechaEmisionDocumentoOrigen']
+                    },
+                    {
+                      Name: 'MotivoAjuste',
+                      Value: c?.ReferenciasNota?.['@_MotivoAjuste']
+                    }
+                  ]
+                }
+              }
+              if (c?.AbonosFacturaCambiaria) {
+                return {
+                  Code: c?.['@_NombreComplemento'],
+                  Type: 'AbonosFacturaCambiaria',
+                  AditionalInfo: [
+                    ...[complementos?.Complemento?.AbonosFacturaCambiaria?.Abono || []].flat().map(c => {
+                      return {
+                        Name: `${c?.NumeroAbono}`,
+                        Data: c?.FechaVencimiento,
+                        Value: c?.MontoAbono
+                      }
+                    })
+                  ]
+                }
+              }
+              return {
+                Code: 'UNKNOWN'
+              }
+            }).filter(e => e?.Code !== 'UNKNOWN')
+          ]
+        }
+      }
+
+      console.log('--------------------- RESPONSE FINAL NUC GT --------------------', JSON.stringify(NUC))
+      return new Promise((resolve) => resolve({
+        code: appCodes.ok,
+        data: NUC
+      }))
+    } catch (err) {
+      console.log('EXCEPTION CATCH PARSE XML JSON NUC GT', err)
+      return new Promise((resolve) => resolve({
+        code: appCodes.processError
+      }))
+    }
+  }, [country, configuracionApp])
+
   const parseXmlToJsonNUCPerCountry: {[key: string]: (xml?: string) => NUCResponse} = {
     GT: parseXmlToJsonNUCGT,
     PA: parseXmlToJsonNUCPA

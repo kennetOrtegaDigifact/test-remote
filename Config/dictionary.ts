@@ -1295,3 +1295,63 @@ export const currenciePrefix: {[key: string]: string} = {
   PA: 'B/.',
   '': ''
 }
+
+export const filterTagsProps: ServiceFetchProps = {
+  GT: {
+    keys: [
+      'dateFrom',
+      'dateTo',
+      'establecimientos',
+      'taxidReceptor',
+      'cancelled',
+      'documentType',
+      'numeroSerie',
+      'allDTESorUsername',
+      'amountFrom',
+      'amountTo',
+      'limit'
+    ],
+    props: {
+      dateFrom: 'Fecha desde: ',
+      dateTo: 'Fecha hasta: ',
+      establecimientos: 'Establecimientos: ',
+      taxidReceptor: 'NIT Receptor: ',
+      cancelled: 'Anulada: ',
+      documentType: 'Tipo de Documento: ',
+      numeroSerie: 'Numero de Serie: ',
+      allDTESorUsername: 'Por Usuario Emisor: ',
+      amountFrom: 'Monto desde: ',
+      amountTo: 'Monto hasta: ',
+      limit: 'Cantidad de Documentos: '
+    }
+  },
+  PA: {
+    keys: [
+      'dateFrom',
+      'dateTo',
+      'establecimientos',
+      'taxidReceptor',
+      'cancelled',
+      'documentType',
+      'allDTESorUsername',
+      'amountFrom',
+      'amountTo',
+      'limit',
+      'CUFE'
+    ],
+    props: {
+      CUFE: 'Por CUFE: ',
+      dateFrom: 'Fecha desde: ',
+      dateTo: 'Fecha hasta: ',
+      establecimientos: 'Establecimientos: ',
+      taxidReceptor: 'RUC Receptor: ',
+      cancelled: 'Anulada: ',
+      documentType: 'Tipo de Documento: ',
+      numeroSerie: 'Numero de Serie: ',
+      allDTESorUsername: 'Por Usuario Emisor: ',
+      amountFrom: 'Monto desde: ',
+      amountTo: 'Monto hasta: ',
+      limit: 'Cantidad de Documentos: '
+    }
+  }
+}
