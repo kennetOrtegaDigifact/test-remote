@@ -11,6 +11,7 @@ import { ReduxState } from '../../Redux/store'
 
 export const SideMenu: React.FC<PropsWithChildren<{drawerRef: React.RefObject<DrawerLayout | null>}>> = ({ children, drawerRef }) => {
   const user = useSelector((state: ReduxState) => state.userDB)
+  const { countryCodes } = useSelector((state: ReduxState) => state.utilsDB)
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [manufacturer, setManufacturer] = useState('')
@@ -190,15 +191,31 @@ export const SideMenu: React.FC<PropsWithChildren<{drawerRef: React.RefObject<Dr
               type: 'i'
             }}
           />
-          <Text
-            style={{
-              color: theme.white,
-              textAlign: 'left',
-              marginHorizontal: 10 / PixelRatio.getFontScale(),
-              fontSize: fonts.small
-            }}
-          >Version {deviceInfoModule.getVersion()}
-          </Text>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+          >
+            <Text
+              style={{
+                color: theme.white,
+                textAlign: 'left',
+                marginHorizontal: 10 / PixelRatio.getFontScale(),
+                fontSize: fonts.small
+              }}
+            >{countryCodes?.find(e => e?.countryCode === user?.country)?.countryName}
+            </Text>
+            <Text
+              style={{
+                color: theme.white,
+                textAlign: 'left',
+                marginHorizontal: 10 / PixelRatio.getFontScale(),
+                fontSize: fonts.small
+              }}
+            >Version {deviceInfoModule.getVersion()}
+            </Text>
+          </View>
         </View>
       </View>
     )

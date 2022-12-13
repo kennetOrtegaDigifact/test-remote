@@ -16,5 +16,10 @@ export const optionsWithAttr = { // convert options with attributes
   ignorePiTags: true,
   attributeNamePrefix: '@_',
   removeNSPrefix: true,
-  allowBooleanAttributes: true
+  allowBooleanAttributes: true,
+  numberParseOptions: {
+    leadingZeros: false,
+    hex: true,
+    skipLike: /\+[0-9]{10}/
+  }
 }

@@ -83,7 +83,7 @@ const ClientesV = () => {
   const toast = useToast()
   const dispatch = useDispatch()
   const controller = useRef<AbortController>(new AbortController()).current
-  const { country, permisos, clientes, token } = useSelector((state: ReduxState) => state.userDB)
+  const { country = '', permisos, clientes, token = '' } = useSelector((state: ReduxState) => state.userDB)
   const { distritos, corregimientos } = useSelector((state: ReduxState) => state.utilsDB)
   const [loading, setLoading] = useState<boolean>(false)
   const [customCountry, setCustomCountry] = useState<string>(country)
@@ -255,7 +255,7 @@ const ClientesV = () => {
         }
         if (res.code === appCodes.dataVacio) {
           toast.show('Parece que no posees Clientes', {
-            type: 'advertise'
+            type: 'warning'
           })
         }
         if (res.code === appCodes.processError) {
@@ -413,6 +413,7 @@ const ClientesV = () => {
             onChangeText={setSearch}
             keyboardType='default'
             placeholder={clientesComponentSchema?.labels?.searchLabel || 'Buscar...'}
+            placeholderTextColor={theme.gray50}
             icon={{
               name: 'search1',
               color: theme.graygreen,
@@ -446,8 +447,8 @@ const ClientesV = () => {
           <FlashList
             renderItem={renderItem}
             data={clientes?.filter((p: Cliente) => {
-              if (p?.[clientesComponentSchema?.searchKeys?.[0] || ''] || p?.[clientesComponentSchema?.searchKeys?.[1] || '']) {
-                return p?.[clientesComponentSchema?.searchKeys?.[0] || '']?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '') || p?.[clientesComponentSchema?.searchKeys?.[1] || '']?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '')
+              if (p?.[(clientesComponentSchema?.searchKeys?.[0] || '') as keyof typeof p] || p?.[(clientesComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]) {
+                return p?.[(clientesComponentSchema?.searchKeys?.[0] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '') || p?.[(clientesComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '')
               }
               return null
             }) || []}
@@ -463,8 +464,8 @@ const ClientesV = () => {
             ListEmptyComponent={() => <ListEmpty />}
             ListFooterComponent={() => <ListLimit isEmpty={
                 Boolean((clientes?.filter((p: Cliente) => {
-                  if (p?.[clientesComponentSchema?.searchKeys?.[0] || ''] || p?.[clientesComponentSchema?.searchKeys?.[1] || '']) {
-                    return p?.[clientesComponentSchema?.searchKeys?.[0] || '']?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '') || p?.[clientesComponentSchema?.searchKeys?.[1] || '']?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '')
+                  if (p?.[(clientesComponentSchema?.searchKeys?.[0] || '') as keyof typeof p] || p?.[(clientesComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]) {
+                    return p?.[(clientesComponentSchema?.searchKeys?.[0] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '') || p?.[(clientesComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '')
                   }
                   return null
                 }) || [])?.length)

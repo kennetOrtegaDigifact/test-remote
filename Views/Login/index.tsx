@@ -5,8 +5,6 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useToast } from 'react-native-toast-notifications'
 import { loginSchema } from '../../Validators/loginSchema'
 import deviceInfoModule from 'react-native-device-info'
-import { recoverPasswordService } from '../../Services/apiService'
-import { deletePadLeft } from '../../Config/utilities'
 import { appCodes } from '../../Config/appCodes'
 import { useDispatch } from 'react-redux'
 import { addUser } from '../../Redux/userReducer'
@@ -17,10 +15,12 @@ import { ErrorLabel } from '../../Components/ErrorLabel'
 import Icon from '../../Components/Icon'
 import { PickerTS } from '../../Components/Picker'
 import { LoginCountries } from '../../Config/dictionary'
-import { useApiService } from '../../Hooks/useApiService'
 import { useServiceBuilder } from '../../Hooks/useServiceBuilder'
+import { setUtils } from '../../Redux/utilsReducer'
+import { useApiService } from '../../Hooks/useApiService'
 
 export const Login: React.FC = () => {
+  const { recoverPasswordServiceTS } = useApiService()
   const { control, handleSubmit, formState: { errors, isSubmitting }, setValue, getValues } = useForm({
     defaultValues: {
       userName: '',
@@ -53,9 +53,12 @@ export const Login: React.FC = () => {
             type: 'ok'
           })
           new Promise((resolve) => {
-            resolve(dispatch(addUser(res?.data)))
-          }).then(() => {
-            navigate('/')
+            resolve(dispatch(addUser(res?.data?.user || {})))
+          }).then(async () => {
+            return new Promise((resolve) => {
+              resolve(dispatch(setUtils(res?.data?.utilities || {})))
+            })
+              .then(() => navigate('/'))
           })
         } else if (res?.code === appCodes.unauthorized) {
           toast.show('Credenciales Incorrectas (Error: 401)', {
@@ -77,39 +80,37 @@ export const Login: React.FC = () => {
 
   const handleRecoverPassword = useCallback(() => {
     const country = getValues('country')
-    const username = getValues('userName')
+    const userName = getValues('userName')
     let taxid = getValues('taxid')
-    if (taxid && country && username) {
+    if (taxid && country && userName) {
       if (country === 'GT') {
         taxid = taxid.padStart(12, '0')
-        const recoverPassUser = `${country}.${taxid.trim()}.${username.trim()}`
-        console.log('RECOVER USER', recoverPassUser)
-        recoverPasswordService({ recoverPassUser })
-          .then(res => {
-            console.log('RESPONSE RECOVER PASSWORD LOGIN', res)
-            if (res.code === appCodes.ok) {
-              toast.show(`Contraseña nueva enviada al correo asociado al usuario ${username}, porfavor verifique la informacion.`, {
-                type: 'ok'
-              })
-            } else if (res.code === appCodes.invalidData) {
-              toast.show('Datos incorrectos y no se pudo recuperar su contraseña asegurese que el usuario exista y todos los datos sean los correctos, verfique la informacion o vuelvalo a intentarlo', {
-                type: 'error'
-              })
-            } else if (res.code === appCodes.processError) {
-              toast.show('Algo salio mal al tratar recuperar su contraseña, verfique la informacion y vuelvalo a intentarlo', {
-                type: 'error'
-              })
-            }
-          })
-          .catch((err: Error) => {
-            console.log('ERROR CATCH RECOVER PASSWORD LOGIN', err)
-            toast.show('Ocurrio un error tratando de recuperar su contraseña, verfique la informacion o vuelvalo a intentarlo', {
+      }
+      recoverPasswordServiceTS({ country, taxid, userName })
+        .then(res => {
+          console.log('RESPONSE RECOVER PASSWORD LOGIN', res)
+          if (res.code === appCodes.ok) {
+            toast.show(`Contraseña nueva enviada al correo asociado al usuario ${userName}, porfavor verifique la informacion.`, {
+              type: 'ok'
+            })
+          } else if (res.code === appCodes.invalidData) {
+            toast.show('Datos incorrectos y no se pudo recuperar su contraseña asegurese que el usuario exista y todos los datos sean los correctos, verfique la informacion o vuelvalo a intentarlo', {
               type: 'error'
             })
+          } else if (res.code === appCodes.processError) {
+            toast.show('Algo salio mal al tratar recuperar su contraseña, verfique la informacion y vuelvalo a intentarlo', {
+              type: 'error'
+            })
+          }
+        })
+        .catch((err: Error) => {
+          console.log('ERROR CATCH RECOVER PASSWORD LOGIN', err)
+          toast.show('Ocurrio un error tratando de recuperar su contraseña, verfique la informacion o vuelvalo a intentarlo', {
+            type: 'error'
           })
-      }
+        })
     } else {
-      toast.show('Porfavor Indique su: Pais, Identificador Tributario y Nombre de Usuario; para recuperar su contraseña', {
+      toast.show('Porfavor Indique su: Pais, Identificador Tributario y Nombre de Usuario para recuperar su contraseña', {
         type: 'warning'
       })
     }
@@ -124,7 +125,7 @@ export const Login: React.FC = () => {
   //   // const taxid = '123456'
   //   // const country = 'GT'
   //   // const userName = 'luis1234567'
-  //   // const password = 'fw?Uq3f+'
+  //   // const password = 'J&%X7Yb!'
 
   //   // const taxid = '155704849-2-2021'
   //   // const country = 'PA'

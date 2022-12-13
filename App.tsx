@@ -29,9 +29,8 @@ import { fonts, theme } from './Config/theme'
 import { Layout } from './Components/Layout'
 import { VerifyScreen } from './Views/VerifyScreen'
 import { Login } from './Views/Login'
-import { Consultas } from './Views/Consultas'
+import { ConsultasV } from './Views/Consultas'
 import { Dashboard } from './Views/Dashboard'
-import { Dte } from './Views/DTE'
 import { Productos } from './Views/Productos'
 import { Clientes } from './Views/Clientes'
 import { ToastProvider } from 'react-native-toast-notifications'
@@ -228,7 +227,7 @@ const App = () => {
                       <Route path='DTE' element={<DtePA key={3} />} />
                     </Route>
                     <Route path='/-' element={<SideMenu drawerRef={drawerRef}><Layout drawerRef={drawerRef}><Outlet /></Layout></SideMenu>}>
-                      <Route path='Consultas' element={<Consultas key={2} />} />
+                      <Route path='Consultas' element={<ConsultasV key={2} />} />
                       <Route path='Dashboard' element={<Dashboard key={1} />} />
                       <Route path='Clientes' element={<Clientes key={5} />} />
                       <Route path='Productos' element={<Productos key={4} />} />

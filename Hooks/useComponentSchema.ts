@@ -3,13 +3,21 @@ import { useToast } from 'react-native-toast-notifications'
 import { useSelector } from 'react-redux'
 import { appCodes } from '../Config/appCodes'
 import { ReduxState } from '../Redux/store'
-import { Cliente, ComponentSchema, Impuestos, OTI, Producto } from '../types'
+import { Cliente, ComponentSchema, ConsultasComponentSchema, Filter, Impuestos, OTI, Producto } from '../types'
 import { useApiService } from './useApiService'
 
 export const useComponentSchema = () => {
   const { country } = useSelector((state: ReduxState) => state.userDB)
   const toast = useToast()
-  const { getAllClientsServiceTS, addEditClientServiceTS, deleteClientServiceTS, deleteProductServiceTS, getAllProductsServiceTS, addEditProductServiceTS } = useApiService()
+  const {
+    getAllClientsServiceTS,
+    addEditClientServiceTS,
+    deleteClientServiceTS,
+    deleteProductServiceTS,
+    getAllProductsServiceTS,
+    addEditProductServiceTS,
+    getDtesServiceTS
+  } = useApiService()
 
   const borrarProducto = useCallback(async (item: Producto) => {
     const { name } = item
@@ -44,7 +52,7 @@ export const useComponentSchema = () => {
         if (res.code === appCodes.dataVacio) {
           setTimeout(() => {
             toast.update(t, `No fue posible eliminar el producto${name ? ` "${name}"` : ''}`, {
-              type: 'advertise',
+              type: 'warning',
               duration: 5000
             })
           }, 500)
@@ -75,7 +83,7 @@ export const useComponentSchema = () => {
       }
       if (dictionaryTaxes?.[key]) {
         obj.Codigo = dictionaryTaxes?.[key]
-        obj.Tasa = (parseFloat(props?.[key]) / 100) || 0
+        obj.Tasa = (parseFloat(props?.[key])) || 0
         obj.Valor = ((parseFloat(props?.[key]) / 100) || 0) * parseFloat((props?.precio || 0))
       }
       return obj
@@ -83,7 +91,7 @@ export const useComponentSchema = () => {
 
     const impuestos: Impuestos = {
       ISC: {
-        Tasa: (parseFloat(props?.ISC || 0) / 100),
+        Tasa: (parseFloat(props?.ISC || 0)),
         Valor: (parseFloat(props?.ISC || 0) / 100) * parseFloat(props?.precio || 0)
       },
       ITBMS: props?.ITBMS || '00',
@@ -126,7 +134,7 @@ export const useComponentSchema = () => {
         if (res?.code === appCodes.dataVacio) {
           setTimeout(() => {
             toast.update(t, `No fue posible Crear o Editar el producto${props?.name ? ` "${props?.name}"` : ''}`, {
-              type: 'advertise',
+              type: 'warning',
               duration: 5000
             })
           }, 500)
@@ -198,7 +206,7 @@ export const useComponentSchema = () => {
         if (res.code === appCodes.dataVacio) {
           setTimeout(() => {
             toast.update(t, `No fue posible eliminar el cliente${item?.nombreContacto ? ` "${item?.nombreContacto}"` : ''}`, {
-              type: 'advertise',
+              type: 'warning',
               duration: 5000
             })
           }, 500)
@@ -275,8 +283,71 @@ export const useComponentSchema = () => {
       }
     }
   }
+
+  const getDtes = useCallback(async (props?: Filter) => {
+    return getDtesServiceTS(props).then(res => res)
+  }, [])
+
+  const consultas: ConsultasComponentSchema = {
+    GT: {
+      labels: {
+        documentType: 'Tipo de Documento: ',
+        numeroAuth: 'Numero de Autorización: ',
+        numeroSerie: 'Numero de Serie: ',
+        numeroDocumento: 'Numero de Documento: ',
+        razonSocial: 'Razon Social: ',
+        fechaEmision: 'Fecha de Emision: ',
+        userName: 'Usuario que la Emitio: ',
+        establecimiento: 'Establecimiento Emisor: ',
+        monto: 'Monto: ',
+        cancelled: 'Documento Anulado: ',
+        clientTaxid: 'NIT del Cliente: ',
+        clientName: 'Nombre del Cliente: ',
+        searchLabel: 'Buscar por Numero de Autorizacion/Serie'
+      },
+      searchKeys: ['numeroAuth', 'numeroSerie'],
+      functions: {
+        anular: () => {},
+        fetchData: getDtes,
+        html: () => {},
+        pdf: () => {},
+        print: () => {},
+        sendCorreo: () => {},
+        share: () => {}
+      }
+    },
+    PA: {
+      labels: {
+        documentType: 'Tipo de Documento: ',
+        CUFE: 'CUFE: ',
+        numeroAuth: 'Numero de Autorización: ',
+        numeroSerie: 'Numero de Serie: ',
+        numeroDocumento: 'Numero de Documento: ',
+        razonSocial: 'Razon Social: ',
+        fechaEmision: 'Fecha de Emision: ',
+        userName: 'Usuario que la Emitio: ',
+        establecimiento: 'Establecimiento Emisor: ',
+        monto: 'Monto: ',
+        cancelled: 'Documento Anulado: ',
+        clientTaxid: 'NIT del Cliente: ',
+        clientName: 'Nombre del Cliente: ',
+        searchLabel: 'Buscar por Numero de Autorizacion/Serie'
+      },
+      searchKeys: ['numeroAuth', 'numeroSerie'],
+      functions: {
+        anular: () => {},
+        fetchData: getDtes,
+        html: () => {},
+        pdf: () => {},
+        print: () => {},
+        sendCorreo: () => {},
+        share: () => {}
+      }
+    }
+  }
   return {
-    productosComponentSchema: products[country],
-    clientesComponentSchema: clientes[country]
+    productosComponentSchema: products[country || ''],
+    clientesComponentSchema: clientes[country || ''],
+    consultasComponentSchema: consultas[country || '']
   }
 }

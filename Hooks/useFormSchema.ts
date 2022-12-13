@@ -1,20 +1,38 @@
 import { yupResolver } from '@hookform/resolvers/yup'
-import { useSelector } from 'react-redux'
-import { DepartamentosGT, ITBMSDictionary, LoginCountries, MunicipiosGT, tiposDocumentoGT, tiposDocumentoPA } from '../Config/dictionary'
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { appCodes } from '../Config/appCodes'
+import { DepartamentosGT, ITBMSDictionary, LoginCountries, MunicipiosGT, tiposDocumentoGT, tiposDocumentoPA, unitDictionaryGT } from '../Config/dictionary'
 import { fonts, theme } from '../Config/theme'
 import { ReduxState } from '../Redux/store'
+import { setUtils } from '../Redux/utilsReducer'
 import { formulario, FormularioPerCountry } from '../types'
+import { useApiService } from './useApiService'
 import { useValidator } from './useValidator'
 
-export const useFormSchema = ({
-  onBlur = (values) => { console.log('UNHANDLED ONBLUR', values) }
-}
-  : {
+export const useFormSchema = (props?: {
     onBlur?: (values?: any) => void
   }) => {
+  const { onBlur = (values: any) => { console.log('UNHANDLED ONBLUR', values) } } = props || {}
+  const { getUnitMeasurementServiceTS } = useApiService()
+  const dispatch = useDispatch()
   const { clientesValidatorSchema, selectProductoValidatorSchema } = useValidator()
-  const { country, establecimientos, infoFiscalUser, usuarios } = useSelector((state: ReduxState) => state.userDB)
+  const { country = '', establecimientos, infoFiscalUser, usuarios, clientes } = useSelector((state: ReduxState) => state.userDB)
   const { countryCodes, corregimientos, provincias, distritos, units, segmentos, familias } = useSelector((state: ReduxState) => state.utilsDB)
+
+  useEffect(() => {
+    if (!units?.length) {
+      getUnitMeasurementServiceTS({ country })
+        .then(res => {
+          console.log(res)
+          if (res?.code === appCodes.ok) {
+            dispatch(setUtils({
+              units: res?.data || {}
+            }))
+          }
+        })
+    }
+  }, [])
 
   const loginFormSchema: Array<formulario> = [
     {
@@ -92,8 +110,8 @@ export const useFormSchema = ({
       schema: [
         {
           type: 'inputText',
-          label: 'NIT:',
-          name: 'nit',
+          label: 'NIT del Cliente:',
+          name: 'taxidReceptor',
           icon: {
             name: 'idcard',
             color: theme.gray,
@@ -118,7 +136,7 @@ export const useFormSchema = ({
           type: 'inputText',
           keyboardType: 'decimal-pad',
           label: 'Monto Inicial:',
-          name: 'montoInicial',
+          name: 'amountFrom',
           icon: {
             name: 'cash',
             color: theme.gray,
@@ -131,7 +149,7 @@ export const useFormSchema = ({
           type: 'inputText',
           keyboardType: 'decimal-pad',
           label: 'Monto Final:',
-          name: 'montoFinal',
+          name: 'amountTo',
           icon: {
             name: 'cash',
             color: theme.gray,
@@ -142,7 +160,7 @@ export const useFormSchema = ({
         },
         {
           type: 'picker',
-          name: 'establecimiento',
+          name: 'establecimientos',
           label: 'Establecimiento: ',
           icon: {
             name: 'office-building-marker',
@@ -165,7 +183,7 @@ export const useFormSchema = ({
         {
           type: 'picker',
           label: 'Tipo de Documento: ',
-          name: 'tipoDocumento',
+          name: 'documentType',
           icon: {
             name: 'receipt',
             color: theme.gray,
@@ -173,7 +191,7 @@ export const useFormSchema = ({
             type: 'i'
           },
           picker: {
-            data: [{ name: '-- Selecccione un Tipo de Documento  --', code: '', no: '' }, ...(tiposDocumentoGT?.[infoFiscalUser?.afiliacion] || [])],
+            data: [{ name: '-- Selecccione un Tipo de Documento  --', code: '', no: '' }, ...(tiposDocumentoGT?.[infoFiscalUser?.afiliacion || ''] || [])],
             defaultValue: '-- Filtrar por Tipo de Documento  --',
             labelKey: 'name',
             valueKey: 'no',
@@ -208,8 +226,28 @@ export const useFormSchema = ({
         },
         {
           type: 'picker',
+          label: 'Filtrar por Documentos Anulados: ',
+          name: 'cancelled',
+          icon: {
+            name: 'cancel',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: [{ label: '-- Filtro por Anulados  --', value: '0' }, { value: '0', label: 'NO' }, { value: '1', label: 'SI' }],
+            labelKey: 'label',
+            valueKey: 'value',
+            defaultValue: '-- Filtro por Anulados  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          }
+        },
+        {
+          type: 'picker',
           label: 'Cantidad de Documentos: ',
-          name: 'cantidadDocumentos',
+          name: 'limit',
           icon: {
             name: 'receipt',
             color: theme.gray,
@@ -227,7 +265,7 @@ export const useFormSchema = ({
         {
           type: 'dateTime',
           label: 'Filtrar por fecha desde: ',
-          name: 'fechaInicio',
+          name: 'dateFrom',
           icon: {
             name: 'calendar',
             color: theme.gray,
@@ -239,7 +277,7 @@ export const useFormSchema = ({
         {
           type: 'dateTime',
           label: 'Filtrar por fecha hasta: ',
-          name: 'fechaFin',
+          name: 'dateTo',
           icon: {
             name: 'calendar',
             color: theme.gray,
@@ -251,20 +289,31 @@ export const useFormSchema = ({
       ],
       settings: {
         defaultValues: {
-          nit: '',
+          taxidReceptor: '',
           numeroSerie: '',
-          montoInicial: '',
-          montoFinal: '',
-          establecimiento: '',
-          tipoDocumento: '',
+          amountFrom: '',
+          amountTo: '',
+          establecimientos: '',
+          documentType: '',
           allDTESorUsername: '',
-          cantidadDocumentos: 30,
-          fechaInicio: '',
-          fechaFin: ''
+          limit: '10',
+          dateFrom: '',
+          dateTo: '',
+          cancelled: ''
         },
         reValidateMode: 'onChange',
         mode: 'onSubmit',
         shouldFocusError: true
+      },
+      resetButton: {
+        icon: {
+          name: 'trash',
+          color: theme.white,
+          size: 20,
+          type: 'i'
+        },
+        text: 'Limpiar Filtros',
+        visible: true
       }
     },
     PA: {
@@ -294,7 +343,7 @@ export const useFormSchema = ({
           }
         },
         {
-          name: 'montoInicio',
+          name: 'amountFrom',
           type: 'inputText',
           keyboardType: 'decimal-pad',
           label: 'Filtrar por Monto Inicial :',
@@ -307,7 +356,7 @@ export const useFormSchema = ({
           }
         },
         {
-          name: 'montoFin',
+          name: 'amountTo',
           type: 'inputText',
           keyboardType: 'decimal-pad',
           label: 'Filtrar por Monto Final :',
@@ -342,7 +391,7 @@ export const useFormSchema = ({
         {
           type: 'picker',
           label: 'Filtrar por Tipo de Documento: ',
-          name: 'tipoDocumento',
+          name: 'documentType',
           icon: {
             name: 'receipt',
             color: theme.gray,
@@ -362,7 +411,7 @@ export const useFormSchema = ({
         {
           type: 'picker',
           label: 'Filtrar por Usuario: ',
-          name: 'porUsuario',
+          name: 'allDTESorUsername',
           icon: {
             name: 'people',
             color: theme.gray,
@@ -383,7 +432,7 @@ export const useFormSchema = ({
         {
           type: 'picker',
           label: 'Filtrar por Documentos Anulados: ',
-          name: 'porAnulados',
+          name: 'cancelled',
           icon: {
             name: 'cancel',
             color: theme.gray,
@@ -403,7 +452,7 @@ export const useFormSchema = ({
         {
           type: 'picker',
           label: 'Filtrar por Cantidad de Documentos: ',
-          name: 'cantidadDocumentos',
+          name: 'limit',
           icon: {
             name: 'receipt',
             color: theme.gray,
@@ -419,7 +468,7 @@ export const useFormSchema = ({
           }
         },
         {
-          name: 'fechaInicio',
+          name: 'dateFrom',
           type: 'dateTime',
           label: 'Filtrar por Fecha de Inicio :',
           placeholder: 'Filtrar por Fecha Desde',
@@ -431,7 +480,7 @@ export const useFormSchema = ({
           }
         },
         {
-          name: 'fechaFin',
+          name: 'dateTo',
           type: 'dateTime',
           label: 'Filtrar por Fecha de Fin :',
           placeholder: 'Filtrar por Fecha Hasta',
@@ -447,90 +496,101 @@ export const useFormSchema = ({
         defaultValues: {
           taxidReceptor: '',
           CUFE: '',
-          montoInicio: '',
-          montoFin: '',
+          amountFrom: '',
+          amountTo: '',
           establecimientos: '',
-          tipoDocumento: '',
-          porUsuario: '',
-          porAnulados: '',
-          cantidadDocumentos: '10',
-          fechaInicio: '',
-          fechaFin: ''
+          documentType: '',
+          allDTESorUsername: '',
+          cancelled: '',
+          limit: '10',
+          dateFrom: '',
+          dateTo: ''
         },
         mode: 'onSubmit',
         shouldFocusError: true,
         reValidateMode: 'onChange'
+      },
+      resetButton: {
+        icon: {
+          name: 'trash',
+          color: theme.white,
+          size: 20,
+          type: 'i'
+        },
+        text: 'Limpiar Filtros',
+        visible: true
       }
     }
   }
-  // const selectProduct: FormularioPerCountry = {
-  //   PA: {
-  //     schema: [
-  //       {
-  //         name: 'name',
-  //         type: 'inputText',
-  //         placeholder: 'Descripcion',
-  //         required: true,
-  //         label: 'Descripcion : ',
-  //         icon: {
-  //           name: 'file-document-edit',
-  //           color: theme.graygreen,
-  //           size: 20,
-  //           type: 'm'
-  //         }
-  //       },
-  //       {
-  //         name: 'quantity',
-  //         type: 'inputText',
-  //         placeholder: 'Cantidad',
-  //         keyboardType: 'decimal-pad',
-  //         required: true,
-  //         label: 'Cantidad : ',
-  //         icon: {
-  //           name: 'scale-balance',
-  //           color: theme.graygreen,
-  //           size: 20,
-  //           type: 'm'
-  //         }
-  //       },
-  //       {
-  //         type: 'picker',
-  //         label: 'Tasa ITBMS: ',
-  //         required: true,
-  //         name: 'impuestos.ITBMS',
-  //         icon: {
-  //           name: 'scale-balance',
-  //           color: theme.gray,
-  //           size: 20,
-  //           type: 'm'
-  //         },
-  //         picker: {
-  //           data: ITBMSDictionary,
-  //           labelKey: 'label',
-  //           valueKey: 'value',
-  //           defaultValue: '-- Selecccione Tasa ITBMS  --',
-  //           arrowIcon: {
-  //             color: theme.gray
-  //           }
-  //         },
-  //         rules: {
-  //           required: 'Seleccione una tasa de ITBMS valida o seleccione excento (0%)',
-  //           validate: value => value !== '-1'
-  //         }
-  //       }
-  //     ],
-  //     settings: {
-  //       defaultValues: {
-  //         quantity: '1',
-  //         name: '',
-  //         'impuestos.ITBMS': ''
-  //       },
-  //       resolver: yupResolver(selectProductoValidatorSchema())
-  //     }
-  //   }
-  // }
 
-  const clientes: FormularioPerCountry = {
+  const selectProduct: FormularioPerCountry = {
+    PA: {
+      schema: [
+        {
+          name: 'name',
+          type: 'inputText',
+          placeholder: 'Descripcion',
+          required: true,
+          label: 'Descripcion : ',
+          icon: {
+            name: 'file-document-edit',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          }
+        },
+        {
+          name: 'quantity',
+          type: 'inputText',
+          placeholder: 'Cantidad',
+          keyboardType: 'decimal-pad',
+          required: true,
+          label: 'Cantidad : ',
+          icon: {
+            name: 'scale-balance',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Tasa ITBMS: ',
+          required: true,
+          name: 'impuestos.ITBMS',
+          icon: {
+            name: 'scale-balance',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: ITBMSDictionary,
+            labelKey: 'label',
+            valueKey: 'value',
+            defaultValue: '-- Selecccione Tasa ITBMS  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          },
+          rules: {
+            required: 'Seleccione una tasa de ITBMS valida o seleccione excento (0%)',
+            validate: value => value !== '-1'
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          quantity: '1',
+          name: '',
+          'impuestos.ITBMS': ''
+        },
+        resolver: yupResolver(selectProductoValidatorSchema())
+      }
+    }
+  }
+
+  const clientesSchema: FormularioPerCountry = {
     GT: {
       schema: [
         {
@@ -658,7 +718,7 @@ export const useFormSchema = ({
         },
         {
           name: 'telefono',
-          placeholder: 'Telefono (####-####;####-####...etc)',
+          placeholder: 'Telefono (########;########...etc)',
           label: 'Telefono del Cliente :',
           type: 'inputText',
           keyboardType: 'phone-pad',
@@ -693,7 +753,8 @@ export const useFormSchema = ({
           municipio: '',
           telefono: '',
           correo: ''
-        }
+        },
+        resolver: yupResolver(clientesValidatorSchema()({ array: clientes }))
       },
       observables: ['departamento'],
       onBlurValues: ['cTaxId']
@@ -1087,10 +1148,351 @@ export const useFormSchema = ({
       observables: ['countryCode']
     }
   }
+
+  const productos: FormularioPerCountry = {
+    PA: {
+      schema: [
+        {
+          name: 'name',
+          placeholder: 'Descripcion',
+          label: 'Descripcion del Producto:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'text-box',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'La descripcion del producto es obligatoria'
+          }
+        },
+        {
+          name: 'ean',
+          placeholder: 'Codigo',
+          label: 'Codigo del Producto:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'barcode',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El codigo del producto es obligatorio'
+          }
+        },
+        {
+          name: 'price',
+          placeholder: 'Precio Base',
+          label: 'Precio del Producto:',
+          required: true,
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'pricetag',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El precio del producto es obligatorio'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Tasa ITBMS: ',
+          required: true,
+          name: 'ITBMS',
+          icon: {
+            name: 'scale-balance',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: ITBMSDictionary,
+            labelKey: 'label',
+            valueKey: 'value',
+            defaultValue: '-- Selecccione Tasa ITBMS  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          },
+          rules: {
+            required: 'Seleccione una tasa de ITBMS valida o seleccione excento (0%)',
+            validate: value => value !== '-1'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Unidad de Medida: ',
+          required: true,
+          name: 'unit',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: units,
+            labelKey: 'label',
+            valueKey: 'nombre',
+            defaultValue: '-- Selecccione Unidade de Medida  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Unidad de Medida'
+          },
+          rules: {
+            required: 'Seleccione una Unidad de Medida Valida'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Codigo de Bienes y Servicios: ',
+          required: true,
+          name: 'segmento',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: segmentos,
+            labelKey: 'nombreSegmento',
+            valueKey: 'codSegmento',
+            defaultValue: '-- Selecccione Un Segmento  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Segmento'
+          },
+          rules: {
+            required: 'Seleccione un Segmento Valido'
+          }
+        },
+        {
+          type: 'picker',
+          name: 'familia',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: familias,
+            labelKey: 'nombreFamilia',
+            valueKey: 'codFamilia',
+            defaultValue: '-- Selecccione Una Familia  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Familia'
+          },
+          rules: {
+            required: 'Seleccione una Familia Valido'
+          }
+        },
+        {
+          name: 'ISC',
+          placeholder: 'Tasa (%)',
+          label: 'Impuesto Selectivo al Consumo (ISC):',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'scale-unbalanced',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          }
+        },
+        {
+          name: 'SUME911',
+          label: 'Otras Tasas o Impuesto (OTI):',
+          placeholder: 'SUME 911 (%)',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'calculator',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          }
+        },
+        {
+          name: 'TasaPortabilidadNumerica',
+          placeholder: 'Tasa Portabilidad Numerica (%)',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'calculator',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          }
+        },
+        {
+          name: 'ImpuestoSobreSeguro',
+          placeholder: 'Impuesto Sobre Seguro (%)',
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'calculator',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          name: '',
+          ean: '',
+          price: '',
+          ITBMS: '',
+          ISC: '',
+          SUME911: '',
+          unit: '',
+          TasaPortabilidadNumerica: '',
+          ImpuestoSobreSeguro: '',
+          segmento: '',
+          familia: ''
+        },
+        reValidateMode: 'onChange',
+        mode: 'onSubmit',
+        shouldFocusError: true
+
+      }
+    },
+    GT: {
+      schema: [
+        {
+          name: 'name',
+          placeholder: 'Descripcion',
+          label: 'Descripcion del Producto:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'text-box',
+            color: theme.graygreen,
+            size: 20,
+            type: 'm'
+          },
+          rules: {
+            required: 'La descripcion del producto es obligatoria'
+          }
+        },
+        {
+          name: 'ean',
+          placeholder: 'Codigo',
+          label: 'Codigo del Producto:',
+          required: true,
+          type: 'inputText',
+          icon: {
+            name: 'barcode',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El codigo del producto es obligatorio'
+          }
+        },
+        {
+          name: 'price',
+          placeholder: 'Precio Base',
+          label: 'Precio del Producto:',
+          required: true,
+          type: 'inputText',
+          keyboardType: 'decimal-pad',
+          icon: {
+            name: 'pricetag',
+            color: theme.graygreen,
+            size: 20,
+            type: 'i'
+          },
+          rules: {
+            required: 'El precio del producto es obligatorio'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Unidad de Medida: ',
+          required: true,
+          name: 'unit',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: unitDictionaryGT,
+            labelKey: 'label',
+            valueKey: 'nombre',
+            defaultValue: '-- Selecccione Unidade de Medida  --',
+            arrowIcon: {
+              color: theme.gray
+            },
+            withSearch: true,
+            searchlabel: 'Buscar Unidad de Medida'
+          },
+          rules: {
+            required: 'Seleccione una Unidad de Medida Valida'
+          }
+        },
+        {
+          type: 'picker',
+          label: 'Tipo de Producto: ',
+          required: true,
+          name: 'tipo',
+          icon: {
+            name: 'tape-measure',
+            color: theme.gray,
+            size: 20,
+            type: 'm'
+          },
+          picker: {
+            data: ['BIEN', 'SERVICIO'],
+            defaultValue: '-- Selecccione un Tipo de Producto  --',
+            arrowIcon: {
+              color: theme.gray
+            }
+          },
+          rules: {
+            required: 'Seleccione un Tipo de Producto Valido'
+          }
+        }
+      ],
+      settings: {
+        defaultValues: {
+          name: '',
+          ean: '',
+          price: '',
+          unit: '',
+          tipo: ''
+        },
+        reValidateMode: 'onChange',
+        mode: 'onSubmit',
+        shouldFocusError: true
+      }
+    }
+  }
+
   return {
     loginFormSchema,
-    clientsFormSchema: (customCountry?: string) => clientes[customCountry || country],
-    consultasFiltroFormSchema: consultasFiltroFormSchema[country]
-    // selectProductFormSchema: selectProduct[country]
+    clientsFormSchema: (customCountry?: string) => clientesSchema[customCountry || country],
+    consultasFiltroFormSchema: consultasFiltroFormSchema[country],
+    productsSchema: productos[country],
+    selectProductFormSchema: selectProduct[country]
   }
 }

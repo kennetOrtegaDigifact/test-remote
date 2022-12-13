@@ -28,7 +28,13 @@ type formProps = {
   buttonStyles?: ViewStyle,
   buttonIcon?: IconType,
   containerInputStyle?: ViewStyle,
-  watchCallback?: (name?: any, value?: any, extraData?: any) => void
+  watchCallback?: (name?: any, value?: any, extraData?: any) => void,
+  resetButton?: {
+      visible?: boolean
+      text?: string
+      style?: ViewStyle
+      icon?: IconType
+  }
 }
 
 const commmonKeys: {[key: string]: {ListaProductos: string}} = {
@@ -36,14 +42,14 @@ const commmonKeys: {[key: string]: {ListaProductos: string}} = {
     ListaProductos: 'ListaProductos'
   }
 }
-export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onSubmit = () => { console.log('UNHANDLE SUBMIT') }, watchCallback = () => { console.log('UNHANDLE WATCH') }, observables = [], inputStyle, buttonTextStyle, buttonText, buttonStyles, containerInputStyle, inputProps }) => {
-  const { productos, country } = useSelector((state: ReduxState) => state.userDB)
+export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onSubmit = () => { console.log('UNHANDLE SUBMIT') }, watchCallback = () => { console.log('UNHANDLE WATCH') }, observables = [], inputStyle, buttonTextStyle, buttonText, buttonStyles, containerInputStyle, inputProps, resetButton }) => {
+  const { productos = [], country = '' } = useSelector((state: ReduxState) => state.userDB)
   const { control, handleSubmit, formState: { errors, isSubmitting }, setValue, watch, getValues, reset } = useForm(settings)
   const [date, setDate] = useState<string>('')
   const [search, setSearch] = useState<string>('')
   const bottomSheetModalRef = useRef<BottomSheetModal>(null)
-  const snapPoints = useMemo(() => ['25%', '50%', '80%'], [])
-  const [selectedProducts, setSelectedProducts] = useState<Producto[]>(JSON.parse(settings.defaultValues?.[commmonKeys?.[country]?.ListaProductos || ''] || '[]'))
+  const snapPoints = useMemo(() => ['25%', '50%', '90%'], [])
+  const [selectedProducts, setSelectedProducts] = useState<Producto[]>(JSON.parse(settings.defaultValues?.[commmonKeys?.[country || '']?.ListaProductos || ''] || '[]'))
   // console.log('AAAAAAAAAAAAAAAAAAAAAAAAa', JSON.parse(settings.defaultValues?.[commmonKeys?.[country]?.ListaProductos || ''] || '[]'))
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present()
@@ -106,7 +112,7 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
     })
   }, [selectedProducts])
 
-  const renderItem = ({ item, name }: {item: Producto, name: string}) => <SelectProductForm item={item} country={country} onSubmit={handleProduct} name={name} onDelete={deleteProduct} />
+  const renderItem = ({ item, name }: {item: Producto, name: string}) => <SelectProductForm item={item} country={country || ''} onSubmit={handleProduct} name={name} onDelete={deleteProduct} />
 
   useEffect(() => {
     reset(settings?.defaultValues)
@@ -791,6 +797,23 @@ export const Form: React.FC<formProps> = ({ form = [], settings, buttonIcon, onS
         }
         return null
       })}
+      {resetButton?.visible
+        ? (
+          <TouchableOpacity
+            style={[styles.buttonR, resetButton?.style]}
+            onPress={() => { console.log('RESET') }}
+            disabled={isSubmitting}
+          >
+            <Icon
+              name={resetButton?.icon?.name || 'trash'}
+              size={resetButton?.icon?.size || 20}
+              color={resetButton?.icon?.color || theme.white}
+              type={resetButton?.icon?.type || 'i'}
+            />
+            <Text style={[styles.buttonTextR]}>{resetButton?.text || 'Limpiar'}</Text>
+          </TouchableOpacity>
+          )
+        : null}
       <TouchableOpacity
         style={[styles.button, buttonStyles]}
         onPress={handleSubmit(onSubmit)}
@@ -833,6 +856,23 @@ const styles = StyleSheet.create({
   buttonText: {
     textAlign: 'center',
     color: theme.gray,
+    fontSize: fonts.subHeader,
+    fontWeight: '600',
+    marginLeft: 5 / PixelRatio.getFontScale()
+  },
+  buttonR: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13 / PixelRatio.getFontScale(),
+    paddingVertical: 10 / PixelRatio.getFontScale(),
+    paddingHorizontal: 15 / PixelRatio.getFontScale(),
+    marginVertical: 10 / PixelRatio.getFontScale(),
+    backgroundColor: theme.red
+  },
+  buttonTextR: {
+    textAlign: 'center',
+    color: theme.white,
     fontSize: fonts.subHeader,
     fontWeight: '600',
     marginLeft: 5 / PixelRatio.getFontScale()

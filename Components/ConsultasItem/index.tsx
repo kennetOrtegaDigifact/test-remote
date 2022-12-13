@@ -1,24 +1,36 @@
 import React, { useCallback, useLayoutEffect, useState } from 'react'
-import { Text, View, TouchableOpacity } from 'react-native'
+import { Text, View, TouchableOpacity, GestureResponderEvent } from 'react-native'
 import { fonts, theme } from '../../Config/theme'
 import { useComponentSchema } from '../../Hooks/useComponentSchema'
 import Icon from '../Icon'
 import { cleanUserName, numberFormater } from '../../Config/utilities'
-import { IconType } from '../../types'
+import { Consultas, IconType } from '../../types'
+import { currenciePrefix } from '../../Config/dictionary'
+import { useServiceBuilder } from '../../Hooks/useServiceBuilder'
+import { useApiService } from '../../Hooks/useApiService'
+import { appCodes } from '../../Config/appCodes'
+import { useToast } from 'react-native-toast-notifications'
+import { useParser } from '../../Hooks/useParser'
 type ButtonBarProps={
   icon?: IconType
   title?: string
+  disabled?: boolean
+  onPress?: (event: GestureResponderEvent) => void
 }
 const ButtonBar: React.FC<ButtonBarProps> = React.memo(function ButtonBar ({
   icon,
-  title = ''
+  title = '',
+  disabled = false,
+  onPress = () => { console.log('UNHANDLED BUTTON BAR FUNCTION') }
 }) {
   return (
     <TouchableOpacity
+      disabled={disabled}
       style={{
         justifyContent: 'center',
         alignItems: 'center'
       }}
+      onPress={onPress}
     >
       <Icon
         name={icon?.name}
@@ -44,15 +56,19 @@ const cancelledKeys = (key: string, value: string) => {
   }
 }
 
-export const ConsultasItem: React.FC<{item: any}> = React.memo(function ConsultasItem ({ item }) {
+export const ConsultasItem: React.FC<{item: Consultas, country?: string}> = React.memo(function ConsultasItem ({ item, country = '' }) {
   const [cancelled, setCancelled] = useState<boolean>(false)
+  const { ticketBuilder } = useServiceBuilder()
+  const { getDocumentServiceTS } = useApiService()
+  const { parseXmlToJsonNUC } = useParser()
+  const toast = useToast()
   useLayoutEffect(() => {
-    Object.keys(item).forEach(key => {
-      if (consultasComponentSchema?.labels?.[key]) {
-        console.log(`${consultasComponentSchema?.labels?.[key]}${item?.[key]}`)
-      }
-    })
-    const anulado = Object.keys(item).some(key => cancelledKeys(key, item?.[key]))
+    // Object.keys(item).forEach(key => {
+    //   if (consultasComponentSchema?.labels?.[key]) {
+    //     console.log(`${consultasComponentSchema?.labels?.[key]}${item?.[key as keyof typeof item]}`)
+    //   }
+    // })
+    const anulado = Object.keys(item).some(key => cancelledKeys(key, item?.[key as keyof typeof item] || ''))
     setCancelled(anulado)
   }, [])
   const { consultasComponentSchema } = useComponentSchema()
@@ -60,13 +76,86 @@ export const ConsultasItem: React.FC<{item: any}> = React.memo(function Consulta
   const especialCharacters = useCallback((key: string, value: any) => {
     const configs: {[key: string]: any} = {
       username: cleanUserName({ usuario: value }),
-      monto: numberFormater({ number: Number(value), toFixed: true })
+      monto: numberFormater({ number: Number(value), toFixed: true, prefix: currenciePrefix?.[country] })
     }
     if (configs?.[key]) {
       return configs?.[key]
     }
     return value
   }, [])
+
+  const printDocument = useCallback(() => {
+    // ticketBuilder({ json: {}, customOrder: {} })
+    const t = toast.show('Obtiendo documento...', {
+      type: 'loading',
+      duration: 60000,
+      data: {
+        theme: 'dark'
+      }
+    })
+    getDocumentServiceTS({ documentType: 'XML', numeroAuth: item?.numeroAuth || '' })
+      .then(res => {
+        if (res?.code === appCodes.ok) {
+          if (res?.data?.XML?.length > 0) {
+            setTimeout(() => {
+              toast.update(t, 'Procesando Documento', {
+                type: 'loading',
+                duration: 60000,
+                data: {
+                  theme: 'dark'
+                }
+              })
+            }, 500)
+            parseXmlToJsonNUC(res.data.XML).then(res => {
+              console.log(`-------------------------------- XML PARSER TO NUC FOR ${country} ---------------`, JSON.stringify(res.data))
+              if (res.code === appCodes.ok) {
+                setTimeout(() => {
+                  toast.update(t, 'Procesando Documento', {
+                    type: 'loading',
+                    duration: 500,
+                    data: {
+                      theme: 'dark'
+                    }
+                  })
+                }, 500)
+                ticketBuilder({ customOrder: {}, json: res.data })
+              } else {
+                setTimeout(() => {
+                  toast.update(t, 'Error Procesando Documento', {
+                    type: 'error',
+                    duration: 5000
+                  })
+                }, 500)
+              }
+            })
+              .catch(err => {
+                console.log(`ERROR PARSE XML TO JSON NUC IN CONSULTAS ITEM FOR ${country}`, err)
+                setTimeout(() => {
+                  toast.update(t, 'Algo salio mal al procesar tu documento', {
+                    type: 'error',
+                    duration: 5000
+                  })
+                }, 500)
+              })
+          } else {
+            setTimeout(() => {
+              toast.update(t, 'Algo salio mal al obtener tu documento, revisa tu conexion a internet o intentalo nuevamente mas tarde, si el error persiste reportalo.', {
+                type: 'error',
+                duration: 5000
+              })
+            }, 500)
+          }
+        } else {
+          setTimeout(() => {
+            toast.update(t, 'Algo salio mal al obtener tu documento, revisa tu conexion a internet o intentalo nuevamente mas tarde, si el error persiste reportalo.', {
+              type: 'error',
+              duration: 5000
+            })
+          }, 500)
+        }
+      })
+  }, [country, getDocumentServiceTS, item?.numeroAuth, parseXmlToJsonNUC, ticketBuilder, toast])
+
   return (
     <>
       <View
@@ -114,7 +203,7 @@ export const ConsultasItem: React.FC<{item: any}> = React.memo(function Consulta
                         fontSize: fonts.verySmall,
                         marginVertical: 2
                       }}
-                    >{especialCharacters(key.toLowerCase(), `${item?.[key]}`)}
+                    >{especialCharacters(key.toLowerCase(), `${item?.[key as keyof typeof item]}`)}
                     </Text>
                   </View>
                 )
@@ -157,20 +246,71 @@ export const ConsultasItem: React.FC<{item: any}> = React.memo(function Consulta
           borderTopWidth: 0.5,
           borderTopColor: theme.gray50,
           flexDirection: 'row',
-          padding: 5,
+          paddingVertical: 5,
+          paddingHorizontal: 10,
           alignItems: 'center',
           justifyContent: 'space-between'
         }}
         >
-          <ButtonBar />
-          <ButtonBar />
-          <ButtonBar />
-          <ButtonBar />
-          <ButtonBar />
-          <ButtonBar />
+          <ButtonBar
+            icon={{
+              name: 'print',
+              color: theme.purple,
+              size: 20,
+              type: 'i'
+            }}
+            title='Imprimir'
+            onPress={printDocument}
+          />
+          <ButtonBar
+            icon={{
+              name: 'file-eye',
+              color: theme.purple,
+              size: 20,
+              type: 'm'
+            }}
+            title='PDF'
+          />
+          <ButtonBar
+            icon={{
+              name: 'share-social',
+              color: theme.purple,
+              size: 20,
+              type: 'i'
+            }}
+            title='Compartir'
+          />
+          <ButtonBar
+            icon={{
+              name: 'code-slash',
+              color: theme.purple,
+              size: 20,
+              type: 'i'
+            }}
+            title='HTML'
+          />
+          <ButtonBar
+            icon={{
+              name: 'email',
+              color: theme.purple,
+              size: 20,
+              type: 'm'
+            }}
+            title='Enviar'
+          />
+          <ButtonBar
+            icon={{
+              name: 'cancel',
+              color: cancelled ? theme.red50 : theme.red,
+              size: 20,
+              type: 'm'
+            }}
+            title='Anular'
+            disabled={cancelled}
+          />
         </View>
       </View>
 
     </>
   )
-}, (prev, next) => JSON.stringify(prev) === JSON.stringify(next))
+}, (prev, next) => prev.item.numeroAuth === next.item.numeroAuth)

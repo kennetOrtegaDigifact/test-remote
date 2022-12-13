@@ -62,22 +62,22 @@ export const tiposDocumentoGT: {
       name: 'Factura Cambiaria'
     },
     {
-      no: 9,
+      no: 10,
       code: 'NCRE',
       name: 'Nota de Credito'
     },
     {
-      no: 10,
+      no: 9,
       code: 'NDEB',
       name: 'Nota de Debito'
     },
     {
-      no: 6,
+      no: 8,
       code: 'RECI',
       name: 'Recibo'
     },
     {
-      no: 5,
+      no: 7,
       code: 'RDON',
       name: 'Recibo de Donacion'
     }
@@ -94,7 +94,7 @@ export const tiposDocumentoGT: {
       name: 'Factura Cambiaria Pequeño Contribuyente'
     },
     {
-      no: 6,
+      no: 8,
       code: 'RECI',
       name: 'Recibo'
     }
@@ -111,7 +111,7 @@ export const tiposDocumentoGT: {
       name: 'Factura Cambiaria Pequeño Contribuyente Regimen Electronico'
     },
     {
-      no: 6,
+      no: 8,
       code: 'RECI',
       name: 'Recibo'
     }
@@ -142,12 +142,12 @@ export const tiposDocumentoGT: {
   ],
   EXE: [
     {
-      no: 6,
+      no: 8,
       code: 'RECI',
       name: 'Recibo'
     },
     {
-      no: 5,
+      no: 7,
       code: 'RDON',
       name: 'Recibo de Donacion'
     }
@@ -1008,4 +1008,350 @@ export const DepartamentosGT: string[] = [
 export const acceptedCountrys: {[key: string]: boolean} = {
   GT: true,
   PA: true
+}
+
+export const provinciasFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codProvincia',
+      'nombre'
+    ],
+    props: {
+      codProvincia: 'CodProvincia',
+      nombre: 'Nombre'
+    }
+  }
+}
+
+export const distritosFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codDistrito',
+      'nombre'
+    ],
+    props: {
+      codDistrito: 'CodDistrito',
+      nombre: 'Nombre'
+    }
+  }
+}
+
+export const corregimientosFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codCorregimiento',
+      'nombre'
+    ],
+    props: {
+      codCorregimiento: 'CodCorregimiento',
+      nombre: 'Nombre'
+    }
+  }
+}
+
+export const currenciesFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'CC',
+      'CN'
+    ],
+    props: {
+      CC: 'CC',
+      CN: 'CN'
+    }
+  }
+}
+
+export const incoTermsFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'condicion',
+      'texto'
+    ],
+    props: {
+      condicion: 'Condicion',
+      texto: 'Texto'
+    }
+  }
+}
+
+export const segmentosFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codSegmento',
+      'nombreSegmento'
+    ],
+    props: {
+      codSegmento: 'CodSegmento',
+      nombreSegmento: 'NombreSegmento'
+    }
+  }
+}
+
+export const familiasFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'codFamilia',
+      'nombreFamilia'
+    ],
+    props: {
+      codFamilia: 'CodFamilia',
+      nombreFamilia: 'NombreFamilia'
+    }
+  }
+}
+
+export const unitMeasurementFetchProps: ServiceFetchProps = {
+  PA: {
+    keys: [
+      'label',
+      'medida',
+      'sistema',
+      'nombre',
+      'simbolo',
+      'comentarios'
+    ],
+    props: {
+      label: '',
+      medida: 'Medida',
+      sistema: 'Sistema',
+      nombre: 'Nombre',
+      simbolo: 'Simbolo',
+      comentarios: 'Comentario'
+    }
+  },
+  GT: {
+    keys: [
+      'label',
+      'medida',
+      'sistema',
+      'nombre',
+      'simbolo',
+      'comentarios'
+    ],
+    props: {
+      label: '',
+      medida: 'Medida',
+      sistema: 'Sistema',
+      nombre: 'Nombre',
+      simbolo: 'Simbolo',
+      comentarios: 'Comentario'
+    }
+  }
+}
+
+export const unitDictionaryGT: string[] = [
+  'CJ',
+  'EA',
+  'GAL',
+  'HRS',
+  'KG',
+  'LTR',
+  'MTS',
+  'PCE',
+  'PZA',
+  'SER',
+  'UNO',
+  'CA',
+  'YD',
+  'FRD',
+  'LBS',
+  'PAR',
+  'PKG',
+  'UNI',
+  'QQ',
+  'DZ',
+  'DOC',
+  'PIE',
+  'MP',
+  'OZ',
+  'MT2'
+]
+
+export const consultasFetchProps: ServiceFetchProps = {
+  PA: {
+    // ----------- MODELO PA-
+    // obj.documentType = dte.A
+    // obj.clientTaxid = dte.B
+    // obj.clientName = dte.C
+    // obj.numeroSerie = dte.D
+    // obj.numeroDocumento = dte.E
+    // obj.fechaEmision = dte.F
+    // obj.monto = dte.G
+    // obj.paidTime = dte.H
+    // obj.cancelled = dte.I
+    // obj.establecimiento = dte.S
+    // obj.countryCode = dte.W
+    // obj.userCountryCode = dte.X
+    // obj.userTaxId = dte.Y
+    // obj.razonSocial = dte.Z
+    // obj.CUFE = dte.CUFE
+    // obj.numeroAuth = dte.DG
+    // obj.internalID = dte.IntID
+    // obj.userName = dte.userName
+    keys: [
+      'documentType',
+      'razonSocial',
+      'establecimiento',
+      'userName',
+      'CUFE',
+      'numeroAuth',
+      'numeroSerie',
+      'numeroDocumento',
+      'fechaEmision',
+      'clientTaxid',
+      'clientName',
+      'monto',
+      'paidTime',
+      'cancelled',
+      'countryCode',
+      'userCountryCode',
+      'userTaxId',
+      'internalID'
+    ],
+    props: {
+      documentType: 'A',
+      clientTaxid: 'B',
+      clientName: 'C',
+      numeroSerie: 'D',
+      numeroDocumento: 'E',
+      fechaEmision: 'F',
+      monto: 'G',
+      paidTime: 'H',
+      cancelled: 'I',
+      establecimiento: 'S',
+      countryCode: 'W',
+      userCountryCode: 'X',
+      userTaxId: 'Y',
+      razonSocial: 'Z',
+      CUFE: 'CUFE',
+      numeroAuth: 'DG',
+      internalID: 'IntID',
+      userName: 'userName'
+    }
+  },
+  GT: {
+    // --------- MODELO GT
+    // obj.documentType = dte.A
+    // obj.countryCode = dte.W
+    // obj.clientTaxid = dte.B
+    // obj.clientName = dte.C
+    // obj.userCountryCode = dte.X
+    // obj.userTaxId = dte.Y
+    // obj.razonSocial = dte.Z
+    // obj.numeroSerie = dte.D
+    // obj.numeroDocumento = dte.E
+    // obj.establecimiento = dte.S
+    // obj.fechaEmision = dte.F
+    // obj.monto = dte.G
+    // obj.paidTime = dte.H
+    // obj.cancelled = dte.I
+    // obj.numeroAuth = dte.DG
+    // obj.internalID = dte.IntID
+    // obj.userName = dte.userName
+    keys: [
+      'documentType',
+      'razonSocial',
+      'establecimiento',
+      'userName',
+      'numeroAuth',
+      'numeroSerie',
+      'numeroDocumento',
+      'fechaEmision',
+      'clientTaxid',
+      'clientName',
+      'monto',
+      'paidTime',
+      'cancelled',
+      'countryCode',
+      'userCountryCode',
+      'userTaxId',
+      'internalID'
+    ],
+    props: {
+      documentType: 'A',
+      razonSocial: 'Z',
+      establecimiento: 'S',
+      userName: 'userName',
+      numeroAuth: 'DG',
+      numeroSerie: 'D',
+      numeroDocumento: 'E',
+      fechaEmision: 'F',
+      clientTaxid: 'B',
+      clientName: 'C',
+      monto: 'G',
+      paidTime: 'H',
+      cancelled: 'I',
+      countryCode: 'W',
+      userCountryCode: 'X',
+      userTaxId: 'Y',
+      internalID: 'IntID'
+    }
+  }
+}
+
+export const currenciePrefix: {[key: string]: string} = {
+  GT: 'Q.',
+  PA: 'B/.',
+  '': ''
+}
+
+export const filterTagsProps: ServiceFetchProps = {
+  GT: {
+    keys: [
+      'dateFrom',
+      'dateTo',
+      'establecimientos',
+      'taxidReceptor',
+      'cancelled',
+      'documentType',
+      'numeroSerie',
+      'allDTESorUsername',
+      'amountFrom',
+      'amountTo',
+      'limit'
+    ],
+    props: {
+      dateFrom: 'Fecha desde: ',
+      dateTo: 'Fecha hasta: ',
+      establecimientos: 'Establecimientos: ',
+      taxidReceptor: 'NIT Receptor: ',
+      cancelled: 'Anulada: ',
+      documentType: 'Tipo de Documento: ',
+      numeroSerie: 'Numero de Serie: ',
+      allDTESorUsername: 'Por Usuario Emisor: ',
+      amountFrom: 'Monto desde: ',
+      amountTo: 'Monto hasta: ',
+      limit: 'Cantidad de Documentos: '
+    }
+  },
+  PA: {
+    keys: [
+      'dateFrom',
+      'dateTo',
+      'establecimientos',
+      'taxidReceptor',
+      'cancelled',
+      'documentType',
+      'allDTESorUsername',
+      'amountFrom',
+      'amountTo',
+      'limit',
+      'CUFE'
+    ],
+    props: {
+      CUFE: 'Por CUFE: ',
+      dateFrom: 'Fecha desde: ',
+      dateTo: 'Fecha hasta: ',
+      establecimientos: 'Establecimientos: ',
+      taxidReceptor: 'RUC Receptor: ',
+      cancelled: 'Anulada: ',
+      documentType: 'Tipo de Documento: ',
+      numeroSerie: 'Numero de Serie: ',
+      allDTESorUsername: 'Por Usuario Emisor: ',
+      amountFrom: 'Monto desde: ',
+      amountTo: 'Monto hasta: ',
+      limit: 'Cantidad de Documentos: '
+    }
+  }
 }

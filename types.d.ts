@@ -288,10 +288,16 @@ export type formulario = {
 
 export type FormularioPerCountry = {
     [key: string]: {
-        schema: Array<formulario>,
-        settings: UseFormProps,
-        observables?: string[],
+        schema: Array<formulario>
+        settings: UseFormProps
+        observables?: string[]
         onBlurValues?: string[]
+        resetButton?: {
+            visible?: boolean
+            text?: string
+            style?: ViewStyle
+            icon?: IconType
+        }
     }
 }
 
@@ -316,18 +322,20 @@ export type ProductoResumen={
 }
 
 export type Filter={
-    fechaInicio?: string
-    fechaFin?: string
+    dateFrom?: string
+    dateTo?: string
     establecimientos?: Establecimiento
-    nitReceptor?: string
-    porAnulados?: { value: number | string }
-    tipoDocumento?: {no?: number|string}
+    taxidReceptor?: string
+    cancelled?: number
+    documentType?: number
     numeroSerie?: string
     allDTESorUsername?: string
     amountFrom?: number
     amountTo?: number
     paymentType?: string
     limit?: number
+    CUFE?: string
+    signal?: AbortSignal
 }
 
 export type Invoice = {
@@ -444,6 +452,25 @@ export type ComponentSchema = {
     }
 }
 
+export type ConsultasComponentSchema = {
+    [key: string]: {
+        labels: {
+            searchLabel: string,
+            [key: string]: string
+        },
+        searchKeys?: string[],
+        functions: {
+            print: (props: any) => Promise<any>
+            fetchData: (props: any) => Promise<any>
+            html: (props: any) => Promise<any>
+            anular: (props: any) => Promise<any>
+            pdf: (props: any) => Promise<any>
+            sendCorreo: (props: any) => Promise<any>
+            share: (props: any) => Promise<any>
+        }
+    }
+}
+
 type UnidadDeMedida = {
     label: string
     medida: string
@@ -468,17 +495,40 @@ type CountryCodes = {
     countryCode: string | number
 }
 
+export type Provincia={
+    codProvincia?: string
+    nombre?: string
+}
+export type Distrito={
+    codDistrito?: string
+    nombre?: string
+}
+
+export type Corregimiento={
+    codCorregimiento?: string
+    nombre?: string
+}
+
+export type Currencie={
+    CC?: string
+    CN?: string
+}
+
+export type IncoTerm={
+    condicion?: string
+    texto?: string
+}
 export interface UTILSDB {
-    corregimientos?: any[]
-    distritos?: any[]
-    provincias?: any[]
+    corregimientos?: Corregimiento[]
+    distritos?: Distrito[]
+    provincias?: Provincia[]
     countryCodes?: CountryCodes[]
-    currencies?: any[]
-    incoterms?: any[]
+    currencies?: Currencie[]
+    incoterms?: IncoTerm[]
     familias?: Familia[]
     segmentos?: Segmento[]
     units?: UnidadDeMedida[]
-    talonarioContingencia?: {[key: string]: string|number}
+    talonarioContingencia?: number[]
 }
 
 export type FELDocumentTypes={
@@ -487,4 +537,188 @@ export type FELDocumentTypes={
     no: number|string
 }
 
-export type XmlProps = { requestor?: string, taxid?: string, country?: string, userName?: string }
+export type XmlProps={requestor?: string, taxid?: string, country?: string, userName?: string}
+
+export interface Consultas {
+    documentType?: string,
+    clientTaxid?: string,
+    clientName?: string,
+    numeroSerie?: string,
+    numeroDocumento?: string,
+    fechaEmision?: string,
+    monto?: string,
+    paidTime?: string,
+    cancelled?: string,
+    establecimiento?: string,
+    countryCode?: string,
+    userCountryCode?: string,
+    userTaxId?: string,
+    razonSocial?: string,
+    CUFE?: string,
+    numeroAuth?: string,
+    internalID?: string,
+    userName?: string
+}
+
+type AdditionalIssueDocInfo={
+    Name?: string
+    Data?: string
+    Value?: string
+}
+
+type TaxIDAdditionalInfo = AdditionalIssueDocInfo
+type AdditionlInfo = AdditionalIssueDocInfo
+type AdditionalBranchInfo=AdditionalIssueDocInfo
+type Codes=AdditionalIssueDocInfo
+type ContactNUC = {
+    PhoneList?: {
+        Phone?: string[]
+    }
+    EmailList?: {
+        Email?: string[]
+    }
+    Website?: string
+}
+type AddressInfo = {
+    Address?: string
+    City?: string // POSTAL CODE IN GT
+    District?: string // MUNICIPIO
+    State?: string // DEPARTAMENTO
+    Country?: string
+}
+type ThirdParties = {
+    TaxID?: string
+    TaxIDType?: string
+    TaxIDAdditionalInfo?: TaxIDAdditionalInfo[]
+}
+export type Tax={
+    Code?: string
+    Description?: string
+    TaxableAmount?: number
+    ChargableAmount?: number
+    Rate?: number
+    Amount?: number
+}
+type Totals={
+    TotalBDiscounts?: number
+    TotalWDiscounts?: number
+    TotalBTaxes?: number
+    TotalWTaxes?: number
+    SpecificTotal?: number
+    ExplicitTotal?: number
+    TotalItem?: number
+    InvoiceTotal?: number
+}
+export type ItemNUC={
+    Number?: string
+    Codes?: Codes[]
+    Type?: string
+    Description?: string
+    Qty?: number
+    UnitOfMeasure?: string
+    Price?: number
+    Discounts?: number
+    Taxes?: {
+        Tax: Tax[]
+    }
+    Charges?: any
+    Totals?: Totals
+    AdditionalInfo?: AdditionlInfo[]
+}
+
+type Payments={
+    Type?: string
+    Code?: string
+    Description?: string
+    Date?: string
+    Amount?: number
+    AditionalData?: any
+    nombreFormaPago?: string
+}
+export type Info=AdditionlInfo
+export type AditionalData={
+    Info?: Info[] | string
+    Name?: string
+    Id: number
+}
+
+type AdditionalInfoAdendas={
+    Code?: string
+    Type?: string
+    Description?: string
+    AddressInfo?: AddressInfo
+    Texts?: any
+    AditionalData?: {
+        Data?: AditionalData[]
+    }
+} | AdditionlInfo | any[]
+export interface NUC {
+    Version?: string
+    CountryCode?: string
+    Header: {
+        DocType?: string
+        GUID?: string
+        IssuedDateTime?: string
+        AdditionalIssueType?: number
+        ExchangeRate?: number
+        Currency?: string
+        Reference?: string
+        AdditionalIssueDocInfo?: AdditionalIssueDocInfo[]
+    }
+    Seller: {
+        TaxID?: string
+        TaxIDType?: string
+        TaxIDAdditionalInfo?: TaxIDAdditionalInfo[]
+        Name?: string
+        FiscalCategory?: string
+        Contact?: ContactNUC
+        AdditionlInfo?: AdditionlInfo[]
+        AddressInfo?: string | null
+        BranchInfo?: {
+            Code?: string
+            Name?: string
+            AddressInfo?: AddressInfo
+            Phone?: string
+            AdditionalBranchInfo?: AdditionalBranchInfo[]
+        }
+    }
+    Buyer: {
+        TaxID?: string
+        TaxIDType?: string
+        TaxIDAdditionalInfo?: TaxIDAdditionalInfo[]
+        Name?: string
+        Contact?: ContactNUC
+        AdditionlInfo?: AdditionlInfo[]
+        AddressInfo?: AddressInfo
+    }
+    ThirdParties?: ThirdParties[] | null
+    Items: ItemNUC[]
+    Charges?: any
+    Totals: {
+        QtyItems?: number
+        TotalItems?: number
+        TotalTaxableAmount?: number
+        TotalTaxes?: number
+        TotalCharges?: number | null
+        TotalDiscounts?: number | null
+        GrandTotal: Totals
+        InWords?: string
+    }
+    Payments?: Payments[]
+    AdditionalDocumentInfo: {
+        DocTemplate?: any
+        AdditionalInfo?: AdditionalInfoAdendas
+        AditionalInfo?: AdditionlInfo[]
+        CUFE?: string,
+        NumeroAutorizacion?: string,
+        Serie?: string,
+        Numero?: string,
+        FechaEmi?: string,
+        FechaCert?: string,
+        QRCode?: string
+    }
+}
+type printerCodes = 'logo'| 'header'| 'docInfo'| 'clientInfo'| 'items'| 'totals'| 'extras'| 'qrcode'| 'certInfo'
+export type printerFunctions = {[key: string]: printerCodes[]}
+
+export type documentTypesToGet = 'PDF' | 'XML'

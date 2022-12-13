@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native'
 import {
   BottomSheetModal,
@@ -14,11 +14,13 @@ import { ReduxState } from '../../Redux/store'
 import { useFormSchema } from '../../Hooks/useFormSchema'
 import { Form } from '../../Components/Form'
 import { FlashList } from '@shopify/flash-list'
-import { useApiService } from '../../Hooks/useApiService'
 import { useComponentSchema } from '../../Hooks/useComponentSchema'
 import { ConsultasItem } from '../../Components/ConsultasItem'
 import { appCodes } from '../../Config/appCodes'
-const renderItem = ({ item }: {item: any}) => <ConsultasItem item={item} />
+import { Consultas, Filter } from '../../types'
+import { numberFormater } from '../../Config/utilities'
+import { currenciePrefix } from '../../Config/dictionary'
+import { Filters } from './Filters'
 
 const ListLimit = ({ isEmpty = false }: {isEmpty: boolean}) => {
   return (
@@ -75,42 +77,49 @@ const ListEmpty = () => (
     </Text>
   </View>
 )
-export const Consultas: React.FC = () => {
-  const { Services } = useApiService()
+export const ConsultasV: React.FC = () => {
   const toast = useToast()
-  const { country, taxid, requestor, userName } = useSelector((state: ReduxState) => state.userDB)
+  const controller = new AbortController()
+  const { signal } = controller
+  const { country = '' } = useSelector((state: ReduxState) => state.userDB)
   const { consultasFiltroFormSchema } = useFormSchema()
   const { consultasComponentSchema } = useComponentSchema()
-  const [dtes, setDtes] = useState<Array<any>>([])
+  const [dtes, setDtes] = useState<Array<Consultas>>([])
+  const [search, setSearch] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
+  const [filters, setFilters] = useState<Filter>({})
   // ref
   const bottomSheetModalRef = useRef<BottomSheetModal>(null)
   // variables
-  const snapPoints = useMemo(() => ['25%', '50%', '80%'], [])
+  const snapPoints = useMemo(() => ['25%', '50%', '90%'], [])
   // callbacks
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present()
   }, [])
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index)
-  }, [])
 
-  const onSubmit = useCallback((values: any) => {
+  const onSubmit = useCallback((values: Filter) => {
     bottomSheetModalRef.current?.close()
     console.log(values)
+    setFilters(values)
+    fetchData({ ...values })
   }, [])
 
   useLayoutEffect(() => {
     console.log('CONSULTAS RENDER')
-    const controller = new AbortController()
-    const { signal } = controller
+    fetchData(consultasFiltroFormSchema?.settings?.defaultValues)
+    setFilters(consultasFiltroFormSchema?.settings?.defaultValues || {})
+    return () => controller.abort()
+  }, [])
+
+  const fetchData = useCallback(async (props?: Filter) => {
     setLoading(true)
-    Services.getDTESService?.[country]({ userName, taxid, country, requestor, signal })
-      .then((res: {code: number, data?: Array<any>}) => {
+    setDtes([])
+    return consultasComponentSchema?.functions?.fetchData({ signal, ...(props || {}) })
+      .then(res => {
         setLoading(false)
         if (res.code === appCodes.ok) {
           if (res?.data) {
-            console.log('CONSULTAS RESPONSE', res.data)
+            // console.log('CONSULTAS RESPONSE', res.data)
             setDtes(res?.data)
           }
         } else {
@@ -126,9 +135,17 @@ export const Consultas: React.FC = () => {
           type: 'error'
         })
       })
+  }, [signal])
 
-    return () => controller.abort()
-  }, [])
+  const calculateTotal = useCallback(() => {
+    const datos = dtes.filter(e => e?.numeroAuth?.toString()?.toLowerCase()?.includes(search.toLowerCase())) || []
+    let monto = 0
+    datos.forEach(e => { monto += Number(e?.monto || 0) })
+    // console.log('comoooooooooooooooooooooo', datos)
+    return numberFormater({ number: monto, toFixed: true, prefix: currenciePrefix?.[country] })
+  }, [dtes, search])
+
+  const renderItem = ({ item }: {item: any}) => <ConsultasItem item={item} country={country} />
 
   return (
 
@@ -137,6 +154,9 @@ export const Consultas: React.FC = () => {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <InputIcon
             keyboardType='default'
+            value={search}
+            onChangeText={setSearch}
+            placeholderTextColor={theme.gray50}
             placeholder={consultasComponentSchema?.labels?.searchLabel || 'Buscar...'}
             icon={{
               name: 'search1',
@@ -161,23 +181,40 @@ export const Consultas: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
+        <Filters filters={filters} country={country} />
         <View style={{
           flex: 1
         }}
         >
           <FlashList
             renderItem={renderItem}
-            data={dtes}
-            estimatedItemSize={231}
+            data={dtes?.filter((p: Consultas) => {
+              if (p?.[(consultasComponentSchema?.searchKeys?.[0] || '') as keyof typeof p] || p?.[(consultasComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]) {
+                return p?.[(consultasComponentSchema?.searchKeys?.[0] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '') || p?.[(consultasComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '')
+              }
+              return null
+            }) || []}
+            estimatedItemSize={10}
             refreshControl={
               <RefreshControl
                 refreshing={loading}
+                onRefresh={fetchData}
                 colors={[theme.orange, theme.purple, theme.graygreen]}
                 tintColor={theme.graygreen}
               />
               }
             ListEmptyComponent={() => <ListEmpty />}
-            ListFooterComponent={() => <ListLimit isEmpty={Boolean(dtes.length)} />}
+            ListFooterComponent={() =>
+              <ListLimit
+                isEmpty={
+                    Boolean((dtes?.filter((p: Consultas) => {
+                      if (p?.[(consultasComponentSchema?.searchKeys?.[0] || '') as keyof typeof p] || p?.[(consultasComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]) {
+                        return p?.[(consultasComponentSchema?.searchKeys?.[0] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '') || p?.[(consultasComponentSchema?.searchKeys?.[1] || '') as keyof typeof p]?.toString()?.toLowerCase()?.includes(search?.toLowerCase() || '')
+                      }
+                      return null
+                    }) || []).length)
+                }
+              />}
             showsVerticalScrollIndicator={false}
           />
         </View>
@@ -185,7 +222,6 @@ export const Consultas: React.FC = () => {
           ref={bottomSheetModalRef}
           index={2}
           snapPoints={snapPoints}
-          onChange={handleSheetChanges}
           backdropComponent={BottomSheetBackdrop}
         >
           <BottomSheetScrollView style={styles.contentContainer}>
@@ -202,6 +238,7 @@ export const Consultas: React.FC = () => {
               form={consultasFiltroFormSchema.schema}
               settings={consultasFiltroFormSchema.settings}
               onSubmit={onSubmit}
+              resetButton={consultasFiltroFormSchema?.resetButton}
               buttonText='Filtrar'
               buttonIcon={{
                 name: 'filter-check',
@@ -212,6 +249,16 @@ export const Consultas: React.FC = () => {
             />
           </BottomSheetScrollView>
         </BottomSheetModal>
+      </View>
+      <View style={{ backgroundColor: theme.graygreen, borderRadius: 13, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: theme.white, fontSize: fonts.small }}>Total de Documentos Mostrados</Text>
+          <Text style={{ color: theme.white, fontSize: fonts.subHeader, fontWeight: 'bold' }}>{numberFormater({ number: dtes.filter(e => e?.numeroAuth?.toString()?.toLowerCase()?.includes(search.toLowerCase()))?.length, toFixed: true, fixedDecimal: 0 })}</Text>
+        </View>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: theme.white, fontSize: fonts.small }}>Total en Efectivo</Text>
+          <Text style={{ color: theme.white, fontSize: fonts.subHeader, fontWeight: 'bold' }}>{calculateTotal()}</Text>
+        </View>
       </View>
     </>
   )

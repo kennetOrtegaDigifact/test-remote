@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { ReduxState } from '../Redux/store'
-import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps } from '../types'
+import { ConsultaDTE, Filter, InfoFiscalUser, SharedData, Establecimiento, ConfiguracionApp, Logos, ProductoResumen, User, Invoice, Branch, Cliente, NitService, Producto, DocumentTypes, Usuario, NIT, DashboardType, CountryCodes, MIPOS, PerfilFacturacionType, XmlProps, Provincia, Distrito, Corregimiento, Currencie, IncoTerm, Segmento, Familia, UnidadDeMedida, Consultas, documentTypesToGet } from '../types'
 import { XMLParser } from 'fast-xml-parser'
 import base64 from 'react-native-base64'
 import { urlApiMs, urlsByCountry, urlWsRest, urlWsRestV2, urlWsSoap, urlWsToken, urlXMLTransformation } from '../Config/api'
@@ -10,7 +10,7 @@ import ReactNativeBlobUtil from 'react-native-blob-util'
 import { options } from '../Config/xmlparser'
 import { appCodes } from '../Config/appCodes'
 
-import { clientFetchProps, establecimientosFetchProps, infoFiscalFetchProps, productFetchProps, sharedDataFetchProps, usersFetchProps } from '../Config/dictionary'
+import { clientFetchProps, consultasFetchProps, corregimientosFetchProps, currenciesFetchProps, distritosFetchProps, establecimientosFetchProps, familiasFetchProps, incoTermsFetchProps, infoFiscalFetchProps, productFetchProps, provinciasFetchProps, segmentosFetchProps, sharedDataFetchProps, unitMeasurementFetchProps, usersFetchProps } from '../Config/dictionary'
 import { useXmlFetchConstructor } from './useXmlFetchConstructor'
 import { useCallback } from 'react'
 import { actionsPermissionsTemplate, fatherAccessTemplate } from '../Config/templates'
@@ -44,7 +44,19 @@ export const useApiService = () => {
     getUserFatherPermissionsXml,
     getUserActionsPermissionsXml,
     getUsersByTaxIdXml,
-    getDecimalesXml
+    getDecimalesXml,
+    getCountryCodesXml,
+    getProvinciasXml,
+    getDistritosXml,
+    getCorregimientosXml,
+    getCurrenciesXml,
+    getIncoTermsXml,
+    getFamiliasXml,
+    getSegmentosXml,
+    getUnitMeasurementXml,
+    recoverPasswordXml,
+    getDtesXml,
+    getDocumentXml
   } = useXmlFetchConstructor()
   const { country } = useSelector((state: ReduxState) => state.userDB)
   const user = useSelector((state: ReduxState) => state.userDB)
@@ -57,22 +69,7 @@ export const useApiService = () => {
     return globalThis.fetch('https://pactest.digifact.com.pa/pa.com.wsfront/FEWSFRONT.asmx', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
-      body: `<?xml version="1.0" encoding="utf-8"?>
-        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap:Body>
-            <RequestTransaction xmlns="https://www.digifact.com.pa/schema/ws">
-              <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
-              <Transaction>EXEC_STORED_PROC</Transaction>
-              <Country>PA</Country>
-              <Entity>155704849-2-2021</Entity>
-              <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-              <UserName>PA.155704849-2-2021.FRANK</UserName>
-              <Data1>PLANILLACC_GetAllCountryCodes</Data1>
-              <Data2>CountryCode|PA</Data2>
-              <Data3></Data3>
-            </RequestTransaction>
-          </soap:Body>
-        </soap:Envelope>`
+      body: getCountryCodesXml()
     })
       .then(res => res.text())
       .then(data => {
@@ -167,17 +164,19 @@ export const useApiService = () => {
       })
   }, [])
 
-  const getAccountDetailsServiceTS = useCallback(async ({
-    country,
-    taxid
-  }: {
-    country: string
-    taxid: string
+  const getAccountDetailsServiceTS = useCallback(async (props: {
+    country?: string
+    taxid?: string
   }): Promise<{
     code: number
     data: SharedData
     key: string
   }> => {
+    const {
+      country = '',
+      taxid = ''
+    } = props
+
     return globalThis.fetch(urlsByCountry?.[country]?.urlWsSoap || '', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
@@ -222,22 +221,23 @@ export const useApiService = () => {
       })
   }, [])
 
-  const getInfoFiscalServiceTS = useCallback(async ({
-    country,
-    taxid,
-    requestor,
-    userName
-  }: {
-    country: string
-    taxid: string
-    requestor: string
-    userName: string
+  const getInfoFiscalServiceTS = useCallback(async (props: {
+    country?: string
+    taxid?: string
+    requestor?: string
+    userName?: string
   }): Promise<{
     code: number
     data: InfoFiscalUser
     key: string
   }> => {
-    return globalThis.fetch(urlsByCountry?.[country]?.urlWsSoap || '', {
+    const {
+      country = '',
+      taxid = '',
+      requestor = '',
+      userName = ''
+    } = props
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
       body: infoFiscalXml({ country, taxid, requestor, userName })
@@ -289,12 +289,7 @@ export const useApiService = () => {
       })
   }, [])
 
-  const getAllEstablecimientosServiceTS = useCallback(async ({
-    country,
-    taxid,
-    requestor,
-    userName
-  }: {
+  const getAllEstablecimientosServiceTS = useCallback(async (props: {
       country?: string
       taxid?: string
       requestor?: string
@@ -303,9 +298,15 @@ export const useApiService = () => {
     code: number
     data: Establecimiento[]
     key: string
-  }> => {
+    }> => {
+    const {
+      country = '',
+      taxid = '',
+      requestor = '',
+      userName = ''
+    } = props
     // console.log('---------- XML ESTABLECIMIENTOS ------------', getAllEstablecimientosXml({ country, requestor, taxid, userName }))
-    return globalThis.fetch(urlsByCountry?.[user?.country || country || '']?.urlWsSoap || '', {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
       body: getAllEstablecimientosXml({ country, requestor, taxid, userName })
@@ -350,17 +351,18 @@ export const useApiService = () => {
       })
   }, [user?.country])
 
-  const getConfigAppServiceTS = useCallback(async ({
-    country = '',
-    taxid = ''
-  }: {
-    country: string
-    taxid: string
+  const getConfigAppServiceTS = useCallback(async (props: {
+    country?: string
+    taxid?: string
   }): Promise<{
     code: number
     data: ConfiguracionApp[]
     key: string
   }> => {
+    const {
+      country = '',
+      taxid = ''
+    } = props
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
@@ -705,13 +707,7 @@ export const useApiService = () => {
       })
   }, [])
 
-  const getAllClientsServiceTS = useCallback(async ({
-    country = '',
-    signal = new AbortController().signal,
-    taxid,
-    requestor,
-    userName
-  }: {
+  const getAllClientsServiceTS = useCallback(async (props: {
     country?: string
     signal?: AbortSignal
     taxid?: string
@@ -722,6 +718,14 @@ export const useApiService = () => {
     data: Cliente[]
     key: string
 }> => {
+    const {
+      country = '',
+      signal = new AbortController().signal,
+      taxid = '',
+      requestor = '',
+      userName = ''
+    } = props
+    // console.log('------------ GET ALL CLIENTS XML ------------------', getAllClientsXml({ country, requestor, taxid, userName }))
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       signal,
       headers: { 'Content-Type': 'text/xml' },
@@ -740,12 +744,12 @@ export const useApiService = () => {
             const data: Cliente[] = container?.flat()?.map((e: Cliente) => {
               const obj: Cliente|any = {}
               // Primero creamos el objeto base con sus key por pais ya que el tipo Cliente lleva mas props dependendiendo del pais
-              clientFetchProps?.[country]?.keys?.forEach((key: string) => {
+              clientFetchProps?.[user?.country || country]?.keys?.forEach((key: string) => {
                 // console.log('--------- KEY -------------', key, country)
                 // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
-                obj[key as keyof typeof obj] = regexSpecialChars(e?.[clientFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+                obj[key as keyof typeof obj] = regexSpecialChars(e?.[clientFetchProps?.[user?.country || country]?.props?.[key] as keyof typeof e]?.toString() || '')
                 if (key === 'cargo' && country === 'PA') {
-                  const cargo: {Tipo?: string, Estado?: string} = JSON?.parse(e?.[clientFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString()?.replace(/\\/gi, '') || '{}') || {}
+                  const cargo: {Tipo?: string, Estado?: string} = JSON?.parse(e?.[clientFetchProps?.[user?.country || country]?.props?.[key] as keyof typeof e]?.toString()?.replace(/\\/gi, '') || '{}') || {}
                   obj.tipoContribuyente = cargo?.Tipo || ''
                   obj.estado = cargo?.Estado || ''
                 }
@@ -790,24 +794,26 @@ export const useApiService = () => {
       })
   }, [user?.country])
 
-  const getAllProductsServiceTS = useCallback(async ({
-    signal = new AbortController().signal,
-    taxid = '',
-    country = '',
-    userName = '',
-    requestor = ''
-  }: {
+  const getAllProductsServiceTS = useCallback(async (props: {
     signal?: AbortSignal,
-    taxid: string
-    country: string
-    userName: string
-    requestor: string
+    taxid?: string
+    country?: string
+    userName?: string
+    requestor?: string
 }): Promise<{
     code: number
     data: Producto[],
     key: string
 }> => {
+    const {
+      signal = new AbortController().signal,
+      taxid = '',
+      country = '',
+      userName = '',
+      requestor = ''
+    } = props
     const xml = getAllProductsXml({ country, requestor, taxid, userName })
+    console.log('-------------- GET ALL PRODUCTS XML -------------', xml)
     return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
       signal,
       method: 'POST',
@@ -831,11 +837,11 @@ export const useApiService = () => {
                 selected: false
               }
               // Primero creamos el objeto base con sus key por pais ya que el tipo Producto lleva mas props dependendiendo del pais
-              productFetchProps?.[country]?.keys?.forEach((key: string) => {
+              productFetchProps?.[user?.country || country]?.keys?.forEach((key: string) => {
               // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
-                obj[key as keyof typeof obj] = e?.[productFetchProps?.[country]?.props?.[key]] || ''
-                if (key === 'impuestos') { // hay casos especiales donde hay que traducir un JSON. esto en GT no sucede
-                  obj[key] = JSON.parse(e?.[productFetchProps?.[country]?.props?.[key]] || '{}')
+                obj[key as keyof typeof obj] = e?.[productFetchProps?.[user?.country || country]?.props?.[key]] || ''
+                if (key === 'impuestos' && (user?.country || country) === 'PA') { // hay casos especiales donde hay que traducir un JSON. esto en GT no sucede
+                  obj[key] = JSON.parse(e?.[productFetchProps?.[user?.country || country]?.props?.[key]] || '{}')
                 }
               })
               // console.log('PRODUCTO FINAL', obj)
@@ -905,10 +911,10 @@ export const useApiService = () => {
           const data: Usuario[] = container?.flat()?.map((e: Usuario) => {
             const obj: Usuario|any = {}
             // Primero creamos el objeto base con sus key por pais ya que el tipo Usuario lleva mas props dependendiendo del pais
-            usersFetchProps?.[country]?.keys?.forEach((key: string) => {
+            usersFetchProps?.[user?.country || country]?.keys?.forEach((key: string) => {
               // console.log('--------- KEY -------------', key, country)
               // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
-              obj[key as keyof typeof obj] = regexSpecialChars(e?.[usersFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[usersFetchProps?.[user?.country || country]?.props?.[key] as keyof typeof e]?.toString() || '')
               // if (key === 'nombre') {
               //   obj[key as keyof typeof obj] = regexSpecialChars(`${e?.FN?.toString()} ${e?.LN?.toString()}`)
               // }
@@ -936,7 +942,7 @@ export const useApiService = () => {
           key: 'usuarios'
         }
       })
-  }, [])
+  }, [user?.country])
 
   const getLogosServiceTS = useCallback(async ({
     taxid = '',
@@ -1041,7 +1047,451 @@ export const useApiService = () => {
           key: 'decimales'
         }
       })
-  }, [])
+  }, [user?.country])
+
+  const getProvinciasServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: Provincia[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getProvinciasXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Provincia[] = container?.flat()?.map((e: Provincia) => {
+            const obj: Provincia|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Provincia lleva mas props dependendiendo del pais
+            provinciasFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[provinciasFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'provincias'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'provincias'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET PROVINCIAS SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'provincias'
+        }
+      })
+  }, [user?.country])
+
+  const getDistritosServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: Distrito[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getDistritosXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Distrito[] = container?.flat()?.map((e: Distrito) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: Distrito|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Distrito lleva mas props dependendiendo del pais
+            distritosFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[distritosFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'distritos'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'distritos'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET DISTRITOS SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'distritos'
+        }
+      })
+  }, [user?.country])
+
+  const getCorregimientosServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: Corregimiento[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getCorregimientosXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Corregimiento[] = container?.flat()?.map((e: Corregimiento) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: Corregimiento|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Corregimiento lleva mas props dependendiendo del pais
+            corregimientosFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[corregimientosFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'corregimientos'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'corregimientos'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET Corregimiento SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'corregimientos'
+        }
+      })
+  }, [user?.country])
+
+  const getCurrenciesServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: Currencie[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getCurrenciesXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Currencie[] = container?.flat()?.map((e: Currencie) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: Currencie|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Currencie lleva mas props dependendiendo del pais
+            currenciesFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[currenciesFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'currencies'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'currencies'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET CURRENCIE SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'currencies'
+        }
+      })
+  }, [user?.country])
+
+  const getIncoTermsServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: IncoTerm[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getIncoTermsXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: IncoTerm[] = container?.flat()?.map((e: IncoTerm) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: IncoTerm|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo IncoTerm lleva mas props dependendiendo del pais
+            incoTermsFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[incoTermsFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'incoterms'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'incoterms'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET INCOTERMS SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'incoterms'
+        }
+      })
+  }, [user?.country])
+
+  const getSegmentosServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: Segmento[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getSegmentosXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Segmento[] = container?.flat()?.map((e: Segmento) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: Segmento|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Segmento lleva mas props dependendiendo del pais
+            segmentosFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[segmentosFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'segmentos'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'segmentos'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET SEGMENTOS SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'segmentos'
+        }
+      })
+  }, [user?.country])
+
+  const getFamiliasServiceTS = useCallback(async ({
+    country = ''
+  }: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: Familia[]
+    key: string
+}> => {
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getFamiliasXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: Familia[] = container?.flat()?.map((e: Familia) => {
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: Familia|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo Familia lleva mas props dependendiendo del pais
+            familiasFetchProps?.[country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[familiasFetchProps?.[country]?.props?.[key] as keyof typeof e]?.toString() || '')
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'familias'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'familias'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET FAMILIAS SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'familias'
+        }
+      })
+  }, [user?.country])
+
+  const getUnitMeasurementServiceTS = useCallback(async (props: {
+    country?: string
+  }): Promise<{
+    code: number
+    data: UnidadDeMedida[]
+    key: string
+  }> => {
+    const {
+      country = ''
+    } = props
+    return globalThis.fetch(urlsByCountry?.PA?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getUnitMeasurementXml()
+    })
+      .then(res => res.text())
+      .then(response => {
+        const dataParsed = parser.parse(response)
+        const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+        if (rows > 0) {
+          const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.T || []
+          const container: any[] = []
+          container.push(dataResponse)
+          const data: UnidadDeMedida[] = container?.flat()?.map((e: UnidadDeMedida) => {
+            console.log('------------ UNIT MEASUREMENT ELEMENT ----------------', e)
+            // console.log('------------- DISTRITOS ELEMENT --------------', e)
+            const obj: UnidadDeMedida|any = {}
+            // Primero creamos el objeto base con sus key por pais ya que el tipo UnidadDeMedida lleva mas props dependendiendo del pais
+            unitMeasurementFetchProps?.[user?.country || country]?.keys?.forEach((key: string) => {
+              // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+              obj[key as keyof typeof obj] = regexSpecialChars(e?.[unitMeasurementFetchProps?.[user?.country || country]?.props?.[key] as keyof typeof e]?.toString() || '')
+              if (key === 'label') {
+                obj[key as keyof typeof obj] = `${e?.Medida || ''} - ${e?.Nombre || ''}`
+              }
+            })
+            return obj
+          })
+          // console.log('CLIENTES FINALES', data)
+          return {
+            code: appCodes.ok,
+            data,
+            key: 'units'
+          }
+        }
+        return {
+          code: appCodes.dataVacio,
+          data: [],
+          key: 'units'
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET UnidadDeMedida SERVICE TS', err)
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'units'
+        }
+      })
+  }, [user?.country])
 
   const getTokenMIPOSServiceTS = async ({
     country,
@@ -1118,6 +1568,176 @@ export const useApiService = () => {
         }
       })
   }
+
+  const recoverPasswordServiceTS = useCallback(async (props: XmlProps): Promise<{code: number}> => {
+    const {
+      country = '',
+      taxid = '',
+      userName = ''
+    } = props
+    return globalThis.fetch(urlsByCountry?.[user?.country || country]?.urlWsSoap || '', {
+      method: 'post',
+      headers: { 'Content-Type': 'text/xml' },
+      body: recoverPasswordXml({ country, taxid, userName })
+    })
+      .then(res => res.text())
+      .then(response => {
+        const data = parser.parse(response)
+        console.log('DATA RESPONSE RECOVER PASSWORD', data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response)
+        const responseCode = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response
+        if (responseCode?.Code === appCodes.ok) {
+          console.log('RECUPERAR CONTRASEÑA OK')
+          return {
+            code: appCodes.ok
+          }
+        } else if (responseCode?.Code === 3085) { // NO EXISTE EL USUARIO
+          return {
+            code: appCodes.invalidData
+          }
+        } else {
+          return {
+            code: appCodes.processError
+          }
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH RECOVER PASSWORD SERVICE ', err)
+        return {
+          code: appCodes.processError
+        }
+      })
+  }, [])
+
+  const getDtesServiceTS = useCallback(async (props?: Filter): Promise<{
+    code: number
+    data: Consultas[]
+    key: string
+  }> => {
+    console.log('------------ DTES XML ------------------', getDtesXml(props))
+    const { signal = new AbortController().signal } = props || {}
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
+      signal,
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getDtesXml(props)
+    })
+      .then(res => res.text())
+      .then(response => {
+        try {
+          const dataParsed = parser.parse(response)
+          const rows = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseData1 || 0
+          if (rows > 0) {
+            const dataResponse: any = dataParsed?.Envelope?.Body?.RequestTransactionResponse?.RequestTransactionResult?.ResponseData?.ResponseDataSet?.diffgram?.NewDataSet?.B || []
+            const container: any[] = []
+            container.push(dataResponse)
+            const data: Consultas[] = container?.flat()?.map((e: Consultas) => {
+              // console.log('------ CONSULTAS ELEMENT ------', e)
+              const obj: Consultas|any = {}
+              // Primero creamos el objeto base con sus key por pais ya que el tipo Consultas lleva mas props dependendiendo del pais
+              consultasFetchProps?.[user?.country || '']?.keys?.forEach((key: string) => {
+                // console.log('--------- KEY -------------', key, country)
+                // Una vez asignada las llaves recorremos las llaves del objeto para asignar la prop del fecth
+                obj[key as keyof typeof obj] = regexSpecialChars(e?.[consultasFetchProps?.[user?.country || '']?.props?.[key] as keyof typeof e]?.toString() || '')
+              })
+              return obj
+            })
+            // console.log('CLIENTES FINALES', data)
+            return {
+              code: appCodes.ok,
+              data,
+              key: 'consultas'
+            }
+          }
+          return {
+            code: appCodes.dataVacio,
+            data: [],
+            key: 'consultas'
+          }
+        } catch (ex) {
+          console.log('ERROR EXCEPTION GET ALL DTES SERVICE TS', ex)
+          return {
+            code: appCodes.processError,
+            data: [],
+            key: 'consultas'
+          }
+        }
+      })
+      .catch((err: Error) => {
+        console.log('ERROR EXCEPTION GET ALL DTES SERVICE TS', err)
+        if (err.message === 'Aborted') {
+          return {
+            code: appCodes.ok,
+            data: [],
+            key: 'consultas'
+          }
+        }
+        return {
+          code: appCodes.processError,
+          data: [],
+          key: 'consultas'
+        }
+      })
+  }, [user?.country, getDtesXml])
+
+  const getDocumentServiceTS = useCallback(async (props?: {documentType: documentTypesToGet, numeroAuth: string}): Promise<{
+    code: number
+    data:{
+      XML: string
+      PDF: string
+    }
+    key: string
+  }> => {
+    console.log('----------------- GET DOCUMENT XML -------------', getDocumentXml(props))
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: getDocumentXml(props)
+    })
+      .then(res => res.text())
+      .then(response => {
+        try {
+          const dataParser = parser.parse(response)
+          const XML = dataParser.Envelope.Body.RequestTransactionResponse
+            .RequestTransactionResult.ResponseData.ResponseData1
+          const HTML = dataParser.Envelope.Body.RequestTransactionResponse
+            .RequestTransactionResult.ResponseData.ResponseData2
+
+          const PDF = dataParser.Envelope.Body.RequestTransactionResponse
+            .RequestTransactionResult.ResponseData.ResponseData3
+
+          return {
+            code: appCodes.ok,
+            data: {
+              XML,
+              HTML,
+              PDF
+            },
+            key: 'document'
+          }
+        } catch (ex) {
+          console.log('ERROR EXCEPTION GET DOCUMENT SERVICE', ex)
+          return {
+            code: appCodes.processError,
+            data: {
+              XML: '',
+              PDF: ''
+            },
+            key: 'document'
+          }
+        }
+      })
+      .catch(err => {
+        console.log('ERROR CATCH GET DOCUMENT SERVICE', err)
+        return {
+          code: appCodes.processError,
+          data: {
+            XML: '',
+            PDF: ''
+          },
+          key: 'document'
+        }
+      })
+  }, [getDocumentXml, user?.country])
 
   const getDashboardService = async ({
     taxid,
@@ -1398,165 +2018,6 @@ export const useApiService = () => {
             nombreContacto: '',
             cTaxId: ''
           }
-        }
-      })
-  }
-
-  const getDTESService = async ({
-    country = 'GT',
-    taxid,
-    requestor,
-    userName,
-    nitReceptor,
-    numeroSerie,
-    establecimientos,
-    allDTESorUsername,
-    tipoDocumento,
-    fechaInicio,
-    fechaFin,
-    amountFrom,
-    amountTo,
-    paymentType,
-    porAnulados,
-    limit,
-    signal
-  }: FetchProps&Filter): Promise<{
-  code: number
-  data?: ConsultaDTE[]
-}> => {
-    const xml = `<?xml version = "1.0" encoding = "utf-8" ?>
-                <soap:Envelope
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-                  <soap:Body>
-                    <RequestTransaction
-                      xmlns="http://www.fact.com.mx/schema/ws">
-                      <Requestor>${requestor}</Requestor>
-                      <Transaction>SEARCH_BASIC</Transaction>
-                      <Country>${country}</Country>
-                      <Entity>${taxid}</Entity>
-                      <User>${requestor}</User>
-                      <UserName>${country}.${taxid}.${userName}</UserName>
-                      <Data1>
-                        <![CDATA[
-                        <SearchCriteria
-                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                          xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-                          <ApplySearchCriteria>true</ApplySearchCriteria>
-                          <SCountryCode>${country}</SCountryCode>
-                          <STaxIdOrName>${taxid}</STaxIdOrName>
-                          <Branch>${establecimientos}|${allDTESorUsername}|</Branch>
-                          <CurrencyCode>GTQ</CurrencyCode>
-                          <RCountryCode>${country}</RCountryCode>
-                          <RTaxIdOrName>${nitReceptor}</RTaxIdOrName>
-                          <SKind>${tipoDocumento}</SKind>
-                          <ReturnBatchAsLike>${Boolean(numeroSerie?.length)}</ReturnBatchAsLike>
-                          <Batch>${numeroSerie}</Batch>
-                          <UseSerialFrom>false</UseSerialFrom>
-                          <UseSerialTo>false</UseSerialTo>
-                          <SerialFrom>0</SerialFrom>
-                          <SerialTo>0</SerialTo>
-                          <UseInternalIDFrom>false</UseInternalIDFrom>
-                          <UseInternalIDTo>false</UseInternalIDTo>
-                          <InternalIDFrom>0</InternalIDFrom>
-                          <InternalIDTo>0</InternalIDTo>
-                          <UseDateFrom>${Boolean(fechaInicio?.length)}</UseDateFrom>
-                          <UseDateTo>${Boolean(fechaFin?.length)}</UseDateTo>
-                          <DateFrom>${fechaInicio || '2000-01-01'}T00:00:00</DateFrom>
-                          <DateTo>${fechaFin || new Date().toISOString().slice(0, 10)}T23:59:59.999</DateTo>
-                          <UseAmountFrom>${(amountFrom || 0) >= 0}</UseAmountFrom>
-                          <UseAmountTo>${(amountTo || 0) > 0}</UseAmountTo>
-                          <AmountFrom>${amountFrom}</AmountFrom>
-                          <AmountTo>${amountTo}</AmountTo>
-                          <Paid>${paymentType}</Paid>
-                          <Cancelled>${porAnulados}</Cancelled>
-                          <Distributed>2</Distributed>
-                          <QueryTop>${limit}</QueryTop>
-                          <OrderBy>0</OrderBy>
-                          <Descending>true</Descending>
-                        </SearchCriteria>]]>
-                      </Data1>
-                      <Data2></Data2>
-                      <Data3></Data3>
-                    </RequestTransaction>
-                  </soap:Body>
-                </soap:Envelope>`
-    // console.log(xml)
-    return globalThis
-      .fetch(urlWsSoap, {
-        signal,
-        method: 'POST',
-        headers: { 'Content-Type': 'text/xml' },
-        body: xml
-      })
-      .then((res) => res.text())
-      .then((response) => {
-        try {
-          const dataParser = parser.parse(response)
-          // console.log('FETCH DTES', dataParser)
-          const rows =
-          dataParser.Envelope.Body.RequestTransactionResponse
-            .RequestTransactionResult.ResponseData.ResponseData1
-          if (rows > 0) {
-            const data =
-            dataParser.Envelope.Body.RequestTransactionResponse
-              .RequestTransactionResult.ResponseData.ResponseDataSet.diffgram
-              .NewDataSet.B
-            const arrayDTES = []
-            arrayDTES.push(data)
-            if (arrayDTES.length) {
-              const dataDTES: ConsultaDTE[] = arrayDTES.flat().map((dte) => {
-                const obj: ConsultaDTE = {
-                  documentType: dte.A,
-                  countryCode: dte.W,
-                  clientTaxid: dte.B,
-                  clientName: dte.C,
-                  userCountryCode: dte.X,
-                  userTaxId: dte.Y,
-                  razonSocial: dte.Z,
-                  numeroSerie: dte.D,
-                  numeroDocumento: dte.E,
-                  establecimiento: dte.S,
-                  fechaEmision: dte.F,
-                  monto: dte.G,
-                  paidTime: dte.H,
-                  cancelled: dte.I,
-                  numeroAuth: dte.DG,
-                  internalID: dte.IntID,
-                  userName: dte.userName
-                }
-                return obj
-              })
-              return {
-                code: appCodes.ok,
-                data: dataDTES
-              }
-            }
-          }
-          return {
-            code: appCodes.dataVacio,
-            data: []
-          }
-        } catch (ex) {
-          console.log('EXCEPTION GET DTES SERVICE', ex)
-          return {
-            code: appCodes.processError,
-            data: []
-          }
-        }
-      })
-      .catch((err) => {
-        console.log('ERROR FECTH DTES', err)
-        if (err.message === 'Aborted') {
-          return {
-            code: appCodes.ok,
-            data: []
-          }
-        }
-        return {
-          code: appCodes.processError,
-          data: []
         }
       })
   }
@@ -2055,7 +2516,7 @@ export const useApiService = () => {
   code: number
 }> => {
     const xml = addEditProductsXml(item)
-    return globalThis.fetch(urlWsSoap, {
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
       method: 'post',
       headers: { 'Content-Type': 'text/xml; charset=UTF-8' },
       body: xml
@@ -2100,7 +2561,7 @@ export const useApiService = () => {
     }): Promise<{code: number}> => {
     const { ean } = item
     const xml = deleteProductsXml({ ean: ean || '' })
-    return globalThis.fetch(urlWsSoap, {
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
       method: 'post',
       headers: { 'Content-Type': 'text/xml' },
       body: xml
@@ -2343,7 +2804,7 @@ export const useApiService = () => {
   const addEditClientServiceTS = async ({ signal = new AbortController().signal, item }: { signal?: AbortSignal, item: Cliente}): Promise<{code: number}> => {
     const xml = addEditClientXml(item)
     console.log('XML A AGREGAR/EDITAR CLIENTE', xml)
-    return globalThis.fetch(urlWsSoap, {
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
       signal,
       method: 'POST',
       headers: {
@@ -2380,7 +2841,7 @@ export const useApiService = () => {
   const deleteClientServiceTS = async ({ item, signal = new AbortController().signal }: {item: Cliente, signal?: AbortSignal}): Promise<{code: number}> => {
     const xml = deleteClientXml(item)
     console.log('COMOOO', xml)
-    return globalThis.fetch(urlWsSoap, {
+    return globalThis.fetch(urlsByCountry?.[user?.country || '']?.urlWsSoap || '', {
       signal,
       method: 'POST',
       headers: { 'Content-Type': 'text/xml' },
@@ -2964,54 +3425,6 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
       })
   }
 
-  const recoverPasswordService = async ({ recoverPassUser }: {recoverPassUser: string}): Promise<{code: number}> => {
-    return globalThis.fetch(urlWsSoap, {
-      method: 'post',
-      headers: { 'Content-Type': 'text/xml' },
-      body: `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-    <soap:Body>
-      <RequestTransaction xmlns="http://www.fact.com.mx/schema/ws">
-        <Requestor>D06A8F37-2D87-43D2-B977-04D503532786</Requestor>
-        <Transaction>PASSWORD_FORGOT</Transaction>
-        <Country>GT</Country>
-        <Entity>000000123456</Entity>
-        <User>D06A8F37-2D87-43D2-B977-04D503532786</User>
-        <UserName>${recoverPassUser}</UserName>
-         <Data1></Data1>
-        <Data2></Data2>
-        <Data3></Data3>
-      </RequestTransaction>
-    </soap:Body>
-  </soap:Envelope>`
-    })
-      .then(res => res.text())
-      .then(response => {
-        const data = parser.parse(response)
-        console.log('DATA RESPONSE RECOVER PASSWORD', data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response)
-        const responseCode = data.Envelope.Body.RequestTransactionResponse.RequestTransactionResult.Response
-        if (responseCode?.Code === appCodes.ok) {
-          console.log('RECUPERAR CONTRASEÑA OK')
-          return {
-            code: appCodes.ok
-          }
-        } else if (responseCode?.Code === 3085) { // NO EXISTE EL USUARIO
-          return {
-            code: appCodes.invalidData
-          }
-        } else {
-          return {
-            code: appCodes.processError
-          }
-        }
-      })
-      .catch(err => {
-        console.log('ERROR CATCH RECOVER PASSWORD SERVICE ', err)
-        return {
-          code: appCodes.processError
-        }
-      })
-  }
-
   const getAllPerfilFacturacionServiceTS = async ({
     taxid = '',
     country = ''
@@ -3162,6 +3575,17 @@ xmlns:soap= "http://schemas.xmlsoap.org/soap/envelope/" >
     getPermissionsServiceTS,
     getAllUsersByTaxIdServiceTS,
     getLogosServiceTS,
-    getDecimalesServiceTS
+    getDecimalesServiceTS,
+    getProvinciasServiceTS,
+    getDistritosServiceTS,
+    getCorregimientosServiceTS,
+    getCurrenciesServiceTS,
+    getIncoTermsServiceTS,
+    getSegmentosServiceTS,
+    getFamiliasServiceTS,
+    getUnitMeasurementServiceTS,
+    recoverPasswordServiceTS,
+    getDtesServiceTS,
+    getDocumentServiceTS
   }
 }
